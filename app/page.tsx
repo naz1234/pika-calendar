@@ -1,0 +1,828 @@
+/* eslint-disable jsx-a11y/no-noninteractive-element-interactions -- modal containers trap Tab focus */
+"use client";
+
+import {
+  FormEvent,
+  KeyboardEvent,
+  PointerEvent,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+
+type CalendarKind = "work" | "personal";
+type Theme = "dark" | "light";
+
+type CalendarEvent = {
+  id: string;
+  calendar: CalendarKind;
+  title: string;
+  date: string;
+  allDay: boolean;
+  startTime: string;
+  endTime: string;
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+type EventDraft = Omit<CalendarEvent, "id" | "createdAt" | "updatedAt">;
+
+const STORAGE_KEY = "daymark-calendar-v1";
+const SETTINGS_KEY = "daymark-settings-v1";
+const STATIC_DATE = new Date(2000, 0, 1);
+const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const SHORT_WEEKDAYS = ["S", "M", "T", "W", "T", "F", "S"];
+
+function pad(value: number) {
+  return String(value).padStart(2, "0");
+}
+
+function dateKey(date: Date) {
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
+function parseDateKey(value: string) {
+  const [year, month, day] = value.split("-").map(Number);
+  return new Date(year, month - 1, day);
+}
+
+function addDays(date: Date, amount: number) {
+  const next = new Date(date);
+  next.setDate(next.getDate() + amount);
+  return next;
+}
+
+function isoWeekNumber(date: Date) {
+  const utc = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const weekday = utc.getUTCDay() || 7;
+  utc.setUTCDate(utc.getUTCDate() + 4 - weekday);
+  const yearStart = new Date(Date.UTC(utc.getUTCFullYear(), 0, 1));
+  return Math.ceil(((utc.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
+}
+
+function monthDays(year: number, month: number) {
+  const first = new Date(year, month, 1);
+  const start = addDays(first, -first.getDay());
+  return Array.from({ length: 42 }, (_, index) => addDays(start, index));
+}
+
+function eventTimeLabel(event: CalendarEvent) {
+  if (event.allDay) return "All day";
+  if (!event.startTime) return "Time not set";
+  const [hour, minute] = event.startTime.split(":").map(Number);
+  return new Intl.DateTimeFormat("en", {
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(new Date(2020, 0, 1, hour, minute));
+}
+
+function sortEvents(a: CalendarEvent, b: CalendarEvent) {
+  if (a.date !== b.date) return a.date.localeCompare(b.date);
+  if (a.allDay !== b.allDay) return a.allDay ? -1 : 1;
+  return a.startTime.localeCompare(b.startTime);
+}
+
+function validImportedEvent(value: unknown): value is CalendarEvent {
+  if (!value || typeof value !== "object") return false;
+  const item = value as Partial<CalendarEvent>;
+  const dateIsReal =
+    /^\d{4}-\d{2}-\d{2}$/.test(item.date ?? "") &&
+    dateKey(parseDateKey(item.date ?? "")) === item.date;
+  const validTime = (time: string | undefined) => /^([01]\d|2[0-3]):[0-5]\d$/.test(time ?? "");
+  const timestampsAreReal =
+    typeof item.createdAt === "string" &&
+    typeof item.updatedAt === "string" &&
+    Number.isFinite(Date.parse(item.createdAt)) &&
+    Number.isFinite(Date.parse(item.updatedAt));
+  return (
+    typeof item.id === "string" && item.id.trim().length > 0 &&
+    (item.calendar === "work" || item.calendar === "personal") &&
+    typeof item.title === "string" && item.title.trim().length > 0 &&
+    dateIsReal &&
+    typeof item.allDay === "boolean" &&
+    typeof item.startTime === "string" &&
+    typeof item.endTime === "string" &&
+    (item.allDay || (validTime(item.startTime) && validTime(item.endTime))) &&
+    typeof item.notes === "string" &&
+    timestampsAreReal
+  );
+}
+
+export default function Home() {
+  const [now, setNow] = useState(STATIC_DATE);
+  const todayKey = dateKey(now);
+  const [view, setView] = useState({ year: now.getFullYear(), month: now.getMonth() });
+  const [selectedDate, setSelectedDate] = useState(todayKey);
+  const [activeCalendar, setActiveCalendar] = useState<CalendarKind>("work");
+  const [theme, setTheme] = useState<Theme>("dark");
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const [hydrated, setHydrated] = useState(false);
+  const [agendaOpen, setAgendaOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [monthPickerOpen, setMonthPickerOpen] = useState(false);
+  const [editor, setEditor] = useState<{ id?: string; draft: EventDraft } | null>(null);
+  const [editorError, setEditorError] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [toast, setToast] = useState("");
+  const [announcement, setAnnouncement] = useState("");
+  const pointerStart = useRef<number | null>(null);
+  const importInput = useRef<HTMLInputElement>(null);
+  const searchInput = useRef<HTMLInputElement>(null);
+  const editorTitleInput = useRef<HTMLInputElement>(null);
+  const menuCloseButton = useRef<HTMLButtonElement>(null);
+  const monthInput = useRef<HTMLInputElement>(null);
+  const editorIsOpen = editor !== null;
+
+  const days = useMemo(() => monthDays(view.year, view.month), [view]);
+  const visibleEvents = useMemo(
+    () => events.filter((event) => event.calendar === activeCalendar),
+    [events, activeCalendar],
+  );
+  const eventsByDate = useMemo(() => {
+    const grouped = new Map<string, CalendarEvent[]>();
+    visibleEvents.forEach((event) => {
+      const current = grouped.get(event.date) ?? [];
+      current.push(event);
+      grouped.set(event.date, current.sort(sortEvents));
+    });
+    return grouped;
+  }, [visibleEvents]);
+  const selectedEvents = eventsByDate.get(selectedDate) ?? [];
+  const monthLabel = new Intl.DateTimeFormat("en", {
+    month: "long",
+    year: "numeric",
+  }).format(new Date(view.year, view.month, 1));
+  const selectedLabel = new Intl.DateTimeFormat("en", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  }).format(parseDateKey(selectedDate));
+
+  const searchResults = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    return visibleEvents
+      .filter((event) => {
+        if (!query) return event.date >= todayKey;
+        return `${event.title} ${event.notes}`.toLowerCase().includes(query);
+      })
+      .sort(sortEvents)
+      .slice(0, 12);
+  }, [searchQuery, todayKey, visibleEvents]);
+
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      const currentDate = new Date();
+      setNow(currentDate);
+      setView({ year: currentDate.getFullYear(), month: currentDate.getMonth() });
+      setSelectedDate(dateKey(currentDate));
+      try {
+        const storedEvents = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "[]");
+        if (Array.isArray(storedEvents)) setEvents(storedEvents.filter(validImportedEvent));
+        const storedSettings = JSON.parse(localStorage.getItem(SETTINGS_KEY) ?? "{}");
+        if (storedSettings.calendar === "work" || storedSettings.calendar === "personal") {
+          setActiveCalendar(storedSettings.calendar);
+        }
+        if (storedSettings.theme === "dark" || storedSettings.theme === "light") {
+          setTheme(storedSettings.theme);
+        }
+      } catch {
+        // Ignore malformed device storage and start with a clean calendar.
+      }
+      setHydrated(true);
+
+      if (process.env.NODE_ENV === "production" && "serviceWorker" in navigator) {
+        navigator.serviceWorker.register("/sw.js").catch(() => undefined);
+      }
+    });
+    return () => cancelAnimationFrame(frame);
+  }, []);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(events));
+    } catch {
+      queueMicrotask(() => {
+        setToast("Events could not be saved on this device");
+        setAnnouncement("Events could not be saved on this device");
+      });
+    }
+  }, [events, hydrated]);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    try {
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify({ calendar: activeCalendar, theme }));
+    } catch {
+      queueMicrotask(() => {
+        setToast("Preferences could not be saved");
+        setAnnouncement("Preferences could not be saved");
+      });
+    }
+    document.documentElement.dataset.theme = theme;
+  }, [activeCalendar, hydrated, theme]);
+
+  useEffect(() => {
+    if (!toast) return;
+    const timeout = window.setTimeout(() => setToast(""), 2600);
+    return () => window.clearTimeout(timeout);
+  }, [toast]);
+
+  useEffect(() => {
+    const onKeyDown = (event: globalThis.KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      setMenuOpen(false);
+      setSearchOpen(false);
+      setMonthPickerOpen(false);
+      setEditor(null);
+      setAgendaOpen(false);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
+
+  useEffect(() => {
+    if (!searchOpen) return;
+    const frame = requestAnimationFrame(() => searchInput.current?.focus());
+    return () => cancelAnimationFrame(frame);
+  }, [searchOpen]);
+
+  useEffect(() => {
+    if (!editorIsOpen) return;
+    const frame = requestAnimationFrame(() => editorTitleInput.current?.focus());
+    return () => cancelAnimationFrame(frame);
+  }, [editorIsOpen]);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const frame = requestAnimationFrame(() => menuCloseButton.current?.focus());
+    return () => cancelAnimationFrame(frame);
+  }, [menuOpen]);
+
+  useEffect(() => {
+    if (!monthPickerOpen) return;
+    const frame = requestAnimationFrame(() => monthInput.current?.focus());
+    return () => cancelAnimationFrame(frame);
+  }, [monthPickerOpen]);
+
+  useEffect(() => {
+    let midnightTimer = 0;
+    const refreshDate = () => setNow(new Date());
+    const scheduleMidnightRefresh = () => {
+      const current = new Date();
+      const nextMidnight = new Date(current.getFullYear(), current.getMonth(), current.getDate() + 1);
+      midnightTimer = window.setTimeout(() => {
+        refreshDate();
+        scheduleMidnightRefresh();
+      }, nextMidnight.getTime() - current.getTime() + 1000);
+    };
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") refreshDate();
+    };
+    scheduleMidnightRefresh();
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => {
+      window.clearTimeout(midnightTimer);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
+  }, []);
+
+  function showToast(message: string) {
+    setToast(message);
+    setAnnouncement(message);
+  }
+
+  function changeMonth(amount: number) {
+    const next = new Date(view.year, view.month + amount, 1);
+    const preferredDay = parseDateKey(selectedDate).getDate();
+    const lastDay = new Date(next.getFullYear(), next.getMonth() + 1, 0).getDate();
+    const nextSelection = new Date(next.getFullYear(), next.getMonth(), Math.min(preferredDay, lastDay));
+    setView({ year: next.getFullYear(), month: next.getMonth() });
+    setSelectedDate(dateKey(nextSelection));
+    const label = new Intl.DateTimeFormat("en", { month: "long", year: "numeric" }).format(next);
+    setAnnouncement(`Showing ${label}`);
+  }
+
+  function goToday() {
+    setView({ year: now.getFullYear(), month: now.getMonth() });
+    setSelectedDate(todayKey);
+    setAgendaOpen(true);
+    setAnnouncement("Showing today");
+  }
+
+  function chooseDay(day: Date) {
+    const key = dateKey(day);
+    setSelectedDate(key);
+    setAgendaOpen(true);
+    if (day.getMonth() !== view.month || day.getFullYear() !== view.year) {
+      setView({ year: day.getFullYear(), month: day.getMonth() });
+    }
+  }
+
+  function focusDay(key: string) {
+    requestAnimationFrame(() => {
+      document.querySelector<HTMLButtonElement>(`[data-date="${key}"]`)?.focus();
+    });
+  }
+
+  function handleDayKey(event: KeyboardEvent<HTMLButtonElement>, day: Date) {
+    let delta = 0;
+    if (event.key === "ArrowLeft") delta = -1;
+    if (event.key === "ArrowRight") delta = 1;
+    if (event.key === "ArrowUp") delta = -7;
+    if (event.key === "ArrowDown") delta = 7;
+    if (!delta) return;
+    event.preventDefault();
+    const next = addDays(day, delta);
+    setSelectedDate(dateKey(next));
+    if (next.getMonth() !== view.month || next.getFullYear() !== view.year) {
+      setView({ year: next.getFullYear(), month: next.getMonth() });
+    }
+    focusDay(dateKey(next));
+  }
+
+  function openCreate(forDate = selectedDate) {
+    setEditorError("");
+    setEditor({
+      draft: {
+        calendar: activeCalendar,
+        title: "",
+        date: forDate,
+        allDay: false,
+        startTime: "09:00",
+        endTime: "10:00",
+        notes: "",
+      },
+    });
+    setAgendaOpen(false);
+  }
+
+  function openEdit(event: CalendarEvent) {
+    setEditorError("");
+    setEditor({
+      id: event.id,
+      draft: {
+        calendar: event.calendar,
+        title: event.title,
+        date: event.date,
+        allDay: event.allDay,
+        startTime: event.startTime,
+        endTime: event.endTime,
+        notes: event.notes,
+      },
+    });
+  }
+
+  function saveEvent(submitEvent: FormEvent) {
+    submitEvent.preventDefault();
+    if (!editor) return;
+    const title = editor.draft.title.trim();
+    if (!title) {
+      setEditorError("Add a title before saving.");
+      return;
+    }
+    if (!editor.draft.allDay && editor.draft.endTime <= editor.draft.startTime) {
+      setEditorError("End time must be later than start time.");
+      return;
+    }
+    const timestamp = new Date().toISOString();
+    if (editor.id) {
+      setEvents((current) =>
+        current.map((event) =>
+          event.id === editor.id
+            ? { ...event, ...editor.draft, title, updatedAt: timestamp }
+            : event,
+        ),
+      );
+      showToast("Event updated");
+    } else {
+      const id = typeof crypto.randomUUID === "function" ? crypto.randomUUID() : `${Date.now()}`;
+      setEvents((current) => [
+        ...current,
+        { ...editor.draft, id, title, createdAt: timestamp, updatedAt: timestamp },
+      ]);
+      showToast("Event added");
+    }
+    const savedDate = editor.draft.date;
+    const savedCalendar = editor.draft.calendar;
+    const saved = parseDateKey(savedDate);
+    setSelectedDate(savedDate);
+    setActiveCalendar(savedCalendar);
+    setView({ year: saved.getFullYear(), month: saved.getMonth() });
+    setEditor(null);
+  }
+
+  function deleteEvent() {
+    if (!editor?.id || !window.confirm("Delete this event?")) return;
+    setEvents((current) => current.filter((event) => event.id !== editor.id));
+    setEditor(null);
+    showToast("Event deleted");
+  }
+
+  function openEventFromSearch(event: CalendarEvent) {
+    const date = parseDateKey(event.date);
+    setView({ year: date.getFullYear(), month: date.getMonth() });
+    setSelectedDate(event.date);
+    setSearchOpen(false);
+    setAgendaOpen(true);
+  }
+
+  function exportBackup() {
+    const payload = JSON.stringify({ version: 1, exportedAt: new Date().toISOString(), events }, null, 2);
+    const url = URL.createObjectURL(new Blob([payload], { type: "application/json" }));
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `daymark-backup-${todayKey}.json`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+    setMenuOpen(false);
+    showToast("Backup downloaded");
+  }
+
+  async function importBackup(file: File) {
+    try {
+      const parsed = JSON.parse(await file.text());
+      const imported = Array.isArray(parsed) ? parsed : parsed.events;
+      if (!Array.isArray(imported)) throw new Error("Invalid backup");
+      const cleanEvents = imported.filter(validImportedEvent);
+      if (!cleanEvents.length && imported.length) throw new Error("Invalid backup");
+      if (new Set(cleanEvents.map((event) => event.id)).size !== cleanEvents.length) {
+        throw new Error("Duplicate event IDs");
+      }
+      if (
+        events.length > 0 &&
+        !window.confirm(`Replace your current ${events.length} event${events.length === 1 ? "" : "s"} with ${cleanEvents.length} from this backup?`)
+      ) {
+        return;
+      }
+      setEvents(cleanEvents);
+      setMenuOpen(false);
+      showToast(`${cleanEvents.length} event${cleanEvents.length === 1 ? "" : "s"} imported`);
+    } catch {
+      showToast("Could not import that backup");
+    } finally {
+      if (importInput.current) importInput.current.value = "";
+    }
+  }
+
+  function clearCalendar() {
+    if (!events.length || !window.confirm("Delete all Work and Personal events from this device?")) return;
+    setEvents([]);
+    setMenuOpen(false);
+    showToast("Calendar cleared");
+  }
+
+  function handlePointerDown(event: PointerEvent<HTMLDivElement>) {
+    pointerStart.current = event.clientX;
+  }
+
+  function handlePointerUp(event: PointerEvent<HTMLDivElement>) {
+    if (pointerStart.current === null) return;
+    const difference = event.clientX - pointerStart.current;
+    pointerStart.current = null;
+    if (Math.abs(difference) < 55) return;
+    changeMonth(difference > 0 ? -1 : 1);
+  }
+
+  function trapDialogFocus(event: KeyboardEvent<HTMLElement>) {
+    if (event.key !== "Tab") return;
+    const focusable = Array.from(
+      event.currentTarget.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [href], [tabindex]:not([tabindex="-1"])',
+      ),
+    ).filter((element) => element.offsetParent !== null);
+    if (!focusable.length) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  }
+
+  if (!hydrated) {
+    return (
+      <main className="calendar-app" data-calendar="work">
+        <div className="app-loading" role="status">
+          <span className="loading-mark" aria-hidden="true"><i>8</i></span>
+          <strong>My Calendar</strong>
+          <span>Opening your private calendar…</span>
+        </div>
+      </main>
+    );
+  }
+
+  return (
+    <main className="calendar-app" data-calendar={activeCalendar}>
+      <header className="topbar">
+        <div className="topbar-main">
+          <button className="icon-button menu-button" onClick={() => setMenuOpen(true)} aria-label="Open menu">
+            <span className="menu-glyph" aria-hidden="true"><i /><i /><i /></span>
+          </button>
+
+          <button className="month-title" onClick={() => setMonthPickerOpen(true)} aria-label={`Choose month. Currently ${monthLabel}`}>
+            <span>{monthLabel}</span>
+            <span className="small-caret" aria-hidden="true">▾</span>
+          </button>
+
+          <div className="top-actions">
+            <button className="today-button" onClick={goToday}>Today</button>
+            <button className="icon-button search-button" onClick={() => setSearchOpen(true)} aria-label="Search events">
+              <span className="search-glyph" aria-hidden="true" />
+            </button>
+          </div>
+        </div>
+
+        <div className="calendar-toolbar">
+          <div className="month-navigation" aria-label="Month navigation">
+            <button className="nav-button" onClick={() => changeMonth(-1)} aria-label="Previous month">‹</button>
+            <button className="nav-button" onClick={() => changeMonth(1)} aria-label="Next month">›</button>
+          </div>
+
+          <div className="calendar-switcher" role="group" aria-label="Calendar mode">
+            {(["work", "personal"] as CalendarKind[]).map((kind) => (
+              <button
+                key={kind}
+                className={activeCalendar === kind ? "active" : ""}
+                onClick={() => setActiveCalendar(kind)}
+                aria-pressed={activeCalendar === kind}
+              >
+                <span className={`mode-dot ${kind}`} aria-hidden="true" />
+                {kind === "work" ? "Work" : "Personal"}
+              </button>
+            ))}
+          </div>
+
+          <p className="event-count" aria-label={`${visibleEvents.length} events in ${activeCalendar}`}>
+            {visibleEvents.length} event{visibleEvents.length === 1 ? "" : "s"}
+          </p>
+        </div>
+      </header>
+
+      <div className="main-content">
+        <div className="month-card" role="grid" aria-label={`${monthLabel} calendar`}>
+          <div className="weekday-strip" role="row">
+            <div className="week-gutter-title" role="columnheader"><span>WK</span></div>
+            {WEEKDAYS.map((day, index) => (
+              <div className="weekday" role="columnheader" key={day} aria-label={day}>
+                <span className="weekday-full">{day.slice(0, 3)}</span>
+                <span className="weekday-short">{SHORT_WEEKDAYS[index]}</span>
+              </div>
+            ))}
+          </div>
+
+          <div
+            className="month-grid"
+            onPointerDown={handlePointerDown}
+            onPointerUp={handlePointerUp}
+          >
+            {Array.from({ length: 6 }, (_, weekIndex) => {
+              const week = days.slice(weekIndex * 7, weekIndex * 7 + 7);
+              return (
+                <div className="week-row" role="row" key={dateKey(week[0])}>
+                  <div className="week-number" role="rowheader" aria-label={`Week ${isoWeekNumber(addDays(week[0], 1))}`}>
+                    {isoWeekNumber(addDays(week[0], 1))}
+                  </div>
+                  {week.map((day) => {
+                    const key = dateKey(day);
+                    const dayEvents = eventsByDate.get(key) ?? [];
+                    const isToday = key === todayKey;
+                    const isSelected = key === selectedDate;
+                    const isOutside = day.getMonth() !== view.month;
+                    const spokenDate = new Intl.DateTimeFormat("en", {
+                      weekday: "long",
+                      month: "long",
+                      day: "numeric",
+                      year: "numeric",
+                    }).format(day);
+                    return (
+                      <div
+                        className={`day-cell${isOutside ? " outside" : ""}${isToday ? " today" : ""}${isSelected ? " selected" : ""}`}
+                        role="gridcell"
+                        aria-selected={isSelected}
+                        key={key}
+                      >
+                        <button
+                          className="day-hit"
+                          data-date={key}
+                          onClick={() => chooseDay(day)}
+                          onDoubleClick={() => openCreate(key)}
+                          onKeyDown={(event) => handleDayKey(event, day)}
+                          tabIndex={isSelected ? 0 : -1}
+                          aria-label={`${spokenDate}, ${dayEvents.length} event${dayEvents.length === 1 ? "" : "s"}`}
+                        >
+                          <span className="day-number">{day.getDate()}</span>
+                        </button>
+                        <div className="cell-events">
+                          {dayEvents.slice(0, 3).map((calendarEvent) => (
+                            <button
+                              key={calendarEvent.id}
+                              className="event-chip"
+                              onClick={() => openEdit(calendarEvent)}
+                              aria-label={`${calendarEvent.title}, ${eventTimeLabel(calendarEvent)}`}
+                            >
+                              <span className="chip-dot" aria-hidden="true" />
+                              <span>{calendarEvent.title}</span>
+                            </button>
+                          ))}
+                          {dayEvents.length > 1 && (
+                            <button className="mobile-more-events" onClick={() => chooseDay(day)} aria-label={`Show ${dayEvents.length} events`}>
+                              +{dayEvents.length - 1}
+                            </button>
+                          )}
+                          {dayEvents.length > 3 && (
+                            <button className="more-events" onClick={() => chooseDay(day)}>
+                              +{dayEvents.length - 3} more
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <aside className={`agenda-panel${agendaOpen ? " open" : ""}`} aria-label={`Agenda for ${selectedLabel}`}>
+          <div className="sheet-handle" aria-hidden="true" />
+          <div className="agenda-header">
+            <div>
+              <p className="eyebrow">{activeCalendar} agenda</p>
+              <h2>{selectedLabel}</h2>
+            </div>
+            <button className="close-button agenda-close" onClick={() => setAgendaOpen(false)} aria-label="Close agenda">×</button>
+          </div>
+          <div className="agenda-list">
+            {selectedEvents.length ? (
+              selectedEvents.map((calendarEvent) => (
+                <button className="agenda-event" key={calendarEvent.id} onClick={() => openEdit(calendarEvent)}>
+                  <span className="agenda-time">{eventTimeLabel(calendarEvent)}</span>
+                  <span className="agenda-event-body">
+                    <strong>{calendarEvent.title}</strong>
+                    {calendarEvent.notes && <span>{calendarEvent.notes}</span>}
+                  </span>
+                  <span className="event-arrow" aria-hidden="true">›</span>
+                </button>
+              ))
+            ) : (
+              <div className="empty-agenda">
+                <span className="empty-orbit" aria-hidden="true"><i /></span>
+                <h3>Your day is clear</h3>
+                <p>Add a {activeCalendar} event or enjoy the open space.</p>
+              </div>
+            )}
+          </div>
+          <button className="agenda-add" onClick={() => openCreate(selectedDate)}>Add event</button>
+        </aside>
+      </div>
+
+      <button className="floating-add" onClick={() => openCreate()} aria-label={`Add ${activeCalendar} event`}>
+        <span aria-hidden="true">+</span>
+      </button>
+
+      {agendaOpen && <button className="mobile-scrim" onClick={() => setAgendaOpen(false)} aria-label="Close agenda" />}
+
+      {menuOpen && (
+        <div className="overlay menu-overlay">
+          <button className="overlay-dismiss" onClick={() => setMenuOpen(false)} aria-label="Close calendar menu" />
+          <aside className="menu-drawer" role="dialog" aria-modal="true" aria-label="Calendar menu" tabIndex={-1} onKeyDown={trapDialogFocus}>
+            <div className="menu-header">
+              <div className="brand-mark" aria-hidden="true"><span>{now.getDate()}</span></div>
+              <div><strong>My Calendar</strong><span>Private on this device</span></div>
+              <button ref={menuCloseButton} className="close-button" onClick={() => setMenuOpen(false)} aria-label="Close menu">×</button>
+            </div>
+            <div className="menu-section">
+              <p className="menu-label">Appearance</p>
+              <div className="theme-toggle" role="group" aria-label="Appearance">
+                <button className={theme === "dark" ? "active" : ""} onClick={() => setTheme("dark")}>Dark</button>
+                <button className={theme === "light" ? "active" : ""} onClick={() => setTheme("light")}>Light</button>
+              </div>
+            </div>
+            <div className="menu-section">
+              <p className="menu-label">Your data</p>
+              <button className="menu-row" onClick={exportBackup}><span>Download backup</span><span aria-hidden="true">↓</span></button>
+              <button className="menu-row" onClick={() => importInput.current?.click()}><span>Import backup</span><span aria-hidden="true">↑</span></button>
+              <input
+                ref={importInput}
+                className="visually-hidden"
+                type="file"
+                accept="application/json,.json"
+                onChange={(event) => event.target.files?.[0] && importBackup(event.target.files[0])}
+              />
+              <button className="menu-row danger" onClick={clearCalendar}><span>Clear calendar data</span><span aria-hidden="true">×</span></button>
+            </div>
+            <p className="device-note">No account or server is used. Back up your events before clearing browser data or changing phones.</p>
+          </aside>
+        </div>
+      )}
+
+      {searchOpen && (
+        <div className="overlay centered-overlay">
+          <button className="overlay-dismiss" onClick={() => setSearchOpen(false)} aria-label="Close search" />
+          <section className="dialog search-dialog" role="dialog" aria-modal="true" aria-labelledby="search-title" tabIndex={-1} onKeyDown={trapDialogFocus}>
+            <div className="dialog-header">
+              <div><p className="eyebrow">{activeCalendar} calendar</p><h2 id="search-title">Find an event</h2></div>
+              <button className="close-button" onClick={() => setSearchOpen(false)} aria-label="Close search">×</button>
+            </div>
+            <label className="search-field">
+              <span className="visually-hidden">Search titles and notes</span>
+              <span className="search-glyph" aria-hidden="true" />
+              <input ref={searchInput} value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder="Search titles and notes" />
+            </label>
+            <p className="result-label">{searchQuery ? "Results" : "Upcoming"}</p>
+            <div className="search-results">
+              {searchResults.length ? searchResults.map((calendarEvent) => (
+                <button key={calendarEvent.id} className="search-result" onClick={() => openEventFromSearch(calendarEvent)}>
+                  <span className="result-date">
+                    <strong>{parseDateKey(calendarEvent.date).getDate()}</strong>
+                    <span>{new Intl.DateTimeFormat("en", { month: "short" }).format(parseDateKey(calendarEvent.date))}</span>
+                  </span>
+                  <span className="result-copy"><strong>{calendarEvent.title}</strong><span>{eventTimeLabel(calendarEvent)}</span></span>
+                  <span aria-hidden="true">›</span>
+                </button>
+              )) : (
+                <div className="empty-results"><p>No matching events</p><span>Try another phrase or add a new event.</span></div>
+              )}
+            </div>
+          </section>
+        </div>
+      )}
+
+      {monthPickerOpen && (
+        <div className="overlay centered-overlay">
+          <button className="overlay-dismiss" onClick={() => setMonthPickerOpen(false)} aria-label="Close month picker" />
+          <form
+            className="dialog month-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="month-picker-title"
+            tabIndex={-1}
+            onKeyDown={trapDialogFocus}
+            onSubmit={(event) => {
+              event.preventDefault();
+              const form = new FormData(event.currentTarget);
+              const value = String(form.get("month"));
+              const [year, month] = value.split("-").map(Number);
+              if (year && month) {
+                const preferredDay = parseDateKey(selectedDate).getDate();
+                const lastDay = new Date(year, month, 0).getDate();
+                setView({ year, month: month - 1 });
+                setSelectedDate(dateKey(new Date(year, month - 1, Math.min(preferredDay, lastDay))));
+              }
+              setMonthPickerOpen(false);
+            }}
+          >
+            <div className="dialog-header">
+              <div><p className="eyebrow">Jump to</p><h2 id="month-picker-title">Choose a month</h2></div>
+              <button type="button" className="close-button" onClick={() => setMonthPickerOpen(false)} aria-label="Close month picker">×</button>
+            </div>
+            <label className="field"><span>Month and year</span><input ref={monthInput} name="month" type="month" defaultValue={`${view.year}-${pad(view.month + 1)}`} required /></label>
+            <button className="primary-button" type="submit">Show month</button>
+          </form>
+        </div>
+      )}
+
+      {editor && (
+        <div className="overlay centered-overlay editor-overlay">
+          <button className="overlay-dismiss" onClick={() => setEditor(null)} aria-label="Close event editor" />
+          <form className="dialog editor-dialog" role="dialog" aria-modal="true" aria-labelledby="editor-title" tabIndex={-1} onKeyDown={trapDialogFocus} onSubmit={saveEvent}>
+            <div className="dialog-header">
+              <div><p className="eyebrow">{editor.id ? "Edit details" : "New event"}</p><h2 id="editor-title">{editor.id ? editor.draft.title || "Untitled event" : "Add to your calendar"}</h2></div>
+              <button type="button" className="close-button" onClick={() => setEditor(null)} aria-label="Close event editor">×</button>
+            </div>
+            <label className="field title-field"><span>Title</span><input ref={editorTitleInput} value={editor.draft.title} onChange={(event) => setEditor({ ...editor, draft: { ...editor.draft, title: event.target.value } })} placeholder="What is happening?" maxLength={80} required /></label>
+            <div className="field-row">
+              <label className="field"><span>Date</span><input type="date" value={editor.draft.date} onChange={(event) => setEditor({ ...editor, draft: { ...editor.draft, date: event.target.value } })} required /></label>
+              <label className="field"><span>Calendar</span><select value={editor.draft.calendar} onChange={(event) => setEditor({ ...editor, draft: { ...editor.draft, calendar: event.target.value as CalendarKind } })}><option value="work">Work</option><option value="personal">Personal</option></select></label>
+            </div>
+            <label className="all-day-toggle"><input type="checkbox" checked={editor.draft.allDay} onChange={(event) => setEditor({ ...editor, draft: { ...editor.draft, allDay: event.target.checked } })} /><span>All-day event</span></label>
+            {!editor.draft.allDay && (
+              <div className="field-row">
+                <label className="field"><span>Starts</span><input type="time" value={editor.draft.startTime} onChange={(event) => setEditor({ ...editor, draft: { ...editor.draft, startTime: event.target.value } })} required /></label>
+                <label className="field"><span>Ends</span><input type="time" value={editor.draft.endTime} onChange={(event) => setEditor({ ...editor, draft: { ...editor.draft, endTime: event.target.value } })} required /></label>
+              </div>
+            )}
+            <label className="field"><span>Notes <em>optional</em></span><textarea value={editor.draft.notes} onChange={(event) => setEditor({ ...editor, draft: { ...editor.draft, notes: event.target.value } })} placeholder="Add a location, reminder, or detail" rows={3} maxLength={500} /></label>
+            {editorError && <p className="form-error" role="alert">{editorError}</p>}
+            <div className="editor-actions">
+              {editor.id && <button type="button" className="delete-button" onClick={deleteEvent}>Delete</button>}
+              <button type="button" className="secondary-button" onClick={() => setEditor(null)}>Cancel</button>
+              <button type="submit" className="primary-button">Save event</button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {toast && <div className="toast" role="status">{toast}</div>}
+      <p className="visually-hidden" aria-live="polite">{announcement}</p>
+    </main>
+  );
+}
