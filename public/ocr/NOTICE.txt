@@ -1,0 +1,12 @@
+Roster image recognition runs locally with Tesseract.js 7.0.0.
+
+Tesseract.js and tesseract.js-core:
+https://github.com/naptha/tesseract.js
+Apache License 2.0
+
+English trained data (`4.0.0_best_int`):
+https://github.com/naptha/tessdata
+Apache License 2.0
+
+These files are served from this site so a roster screenshot is not uploaded to
+an OCR service. Only the derived calendar events are saved in browser storage.

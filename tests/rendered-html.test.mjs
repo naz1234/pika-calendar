@@ -20,9 +20,10 @@ test("exports a deployable static calendar", async () => {
 });
 
 test("ships the local-first and installable app assets", async () => {
-  const [manifestText, source, serviceWorker] = await Promise.all([
+  const [manifestText, source, mergeSource, serviceWorker] = await Promise.all([
     readFile(path.join(clientRoot, "manifest.webmanifest"), "utf8"),
     readFile(path.join(projectRoot, "app", "page.tsx"), "utf8"),
+    readFile(path.join(projectRoot, "app", "roster-merge.ts"), "utf8"),
     readFile(path.join(clientRoot, "sw.js"), "utf8"),
   ]);
   const manifest = JSON.parse(manifestText);
@@ -30,17 +31,24 @@ test("ships the local-first and installable app assets", async () => {
   assert.equal(manifest.name, "My Calendar");
   assert.equal(manifest.display, "standalone");
   assert.equal(manifest.icons.length, 2);
-  assert.match(source, /"work" \| "personal"/);
+  assert.match(mergeSource, /"work" \| "personal"/);
   assert.match(source, /isoWeekNumber/);
   assert.match(source, /localStorage/);
   assert.match(source, /Download backup/);
-  assert.match(serviceWorker, /my-calendar-v2/);
+  assert.match(source, /Import roster image/);
+  assert.match(source, /roster-image/);
+  assert.match(serviceWorker, /my-calendar-v3/);
 
   await Promise.all([
     access(path.join(clientRoot, "icons", "calendar-192.png")),
     access(path.join(clientRoot, "icons", "calendar-512.png")),
     access(path.join(clientRoot, "og.png")),
     access(path.join(clientRoot, "_headers")),
+    access(path.join(clientRoot, "ocr", "worker.min.js")),
+    access(path.join(clientRoot, "ocr", "core", "tesseract-core-lstm.wasm.js")),
+    access(path.join(clientRoot, "ocr", "core", "tesseract-core-simd-lstm.wasm.js")),
+    access(path.join(clientRoot, "ocr", "core", "tesseract-core-relaxedsimd-lstm.wasm.js")),
+    access(path.join(clientRoot, "ocr", "lang", "eng.traineddata.gz")),
   ]);
 });
 
