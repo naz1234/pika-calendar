@@ -37,6 +37,7 @@ const {
   monthKey,
   normalizeRosterCode,
   parseMonthKey,
+  rosterShiftTone,
 } = loadedModule.exports;
 
 const expectedEvents = {
@@ -86,10 +87,24 @@ test("normalizes checkmarks, OCR separators, whitespace, and noisy standard code
   assert.equal(normalizeRosterCode("N3—D.C"), "N3-DC");
   assert.equal(normalizeRosterCode("E3-D0"), "E3-DC");
   assert.equal(normalizeRosterCode("N3-0C"), "N3-DC");
+  assert.equal(normalizeRosterCode("7130C"), "L3-DC");
+  assert.equal(normalizeRosterCode("V I3-DC"), "L3-DC");
   assert.equal(normalizeRosterCode("√ n   e-x"), "N EX");
   assert.equal(normalizeRosterCode("e / r_d"), "E RD");
   assert.equal(normalizeRosterCode("  W-R  "), "WR");
   assert.equal(normalizeRosterCode("something else"), "SOMETHINGELSE");
+});
+
+test("groups only canonical Work roster titles into shift colors", () => {
+  assert.equal(rosterShiftTone("Early"), "early");
+  assert.equal(rosterShiftTone("Early (EX)"), "early");
+  assert.equal(rosterShiftTone("Early RDOT"), "early");
+  assert.equal(rosterShiftTone("Late"), "late");
+  assert.equal(rosterShiftTone("Late (EX)"), "late");
+  assert.equal(rosterShiftTone("Night RDOT"), "night");
+  assert.equal(rosterShiftTone("RD"), "rest");
+  assert.equal(rosterShiftTone("Late appointment"), "");
+  assert.equal(rosterShiftTone("Personal night out"), "");
 });
 
 test("extracts canonical times despite O/0 confusion and OCR punctuation", () => {
@@ -105,6 +120,11 @@ test("infers rest days and normal early, late, and night shifts", () => {
   assert.deepEqual(inferRosterChoice({ rawCode: "E3 DC" }), { choice: "early", warning: "" });
   assert.deepEqual(inferRosterChoice({ rawCode: "L3-DC" }), { choice: "late", warning: "" });
   assert.deepEqual(inferRosterChoice({ rawCode: "N3/DC" }), { choice: "night", warning: "" });
+  assert.deepEqual(
+    inferRosterChoice({ rawCode: "7130C", times: ["13:00", "23:30"], barKind: "blue" }),
+    { choice: "late", warning: "" },
+    "recovers the exact OCR error seen on August 11",
+  );
 });
 
 test("infers early, late, and night rest-day overtime", () => {
@@ -155,6 +175,9 @@ test("returns an actionable warning for an unknown code", () => {
   const result = inferRosterChoice({ rawCode: "???" });
   assert.equal(result.choice, "");
   assert.match(result.warning, /choose a shift manually/i);
+
+  assert.equal(inferRosterChoice({ rawCode: "713RD", times: ["15:00", "23:30"] }).choice, "");
+  assert.equal(inferRosterChoice({ rawCode: "713EX", times: ["15:00", "03:00"] }).choice, "");
 });
 
 test("creates and parses validated month keys", () => {

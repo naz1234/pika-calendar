@@ -37,6 +37,8 @@ export type RosterInferenceInput = {
   barKind?: string | null;
 };
 
+export type RosterShiftTone = "early" | "late" | "night" | "rest";
+
 export const ROSTER_CHOICE_OPTIONS: readonly RosterChoiceOption[] = [
   { value: "rd", label: "RD" },
   { value: "early", label: "Early" },
@@ -166,6 +168,11 @@ export function normalizeRosterCode(rawCode: string): string {
   const standard = compact.match(/([ELN])3[D0O][C0O]/u);
   if (standard) return `${standard[1]}3-DC`;
 
+  // A small checkmark followed by L3-DC can be read as 7130C: the checkmark
+  // becomes 7, L becomes 1, and D becomes 0. Keep this correction narrow so
+  // unrelated or ambiguous roster codes still require manual review.
+  if (/^[7V]?[1I]3[D0O][C0O]$/u.test(compact)) return "L3-DC";
+
   const extension = compact.match(/([ELN])EX/u);
   if (extension) return `${extension[1]} EX`;
 
@@ -176,6 +183,15 @@ export function normalizeRosterCode(rawCode: string): string {
   if (compact === "RD") return "RD";
 
   return compact;
+}
+
+/** Returns the visual group for canonical roster titles without styling unrelated events. */
+export function rosterShiftTone(title: string): RosterShiftTone | "" {
+  const normalized = String(title ?? "").trim().toLowerCase().replace(/\s+/gu, " ");
+  if (normalized === "rd") return "rest";
+
+  const shift = normalized.match(/^(early|late|night)(?: \(ex\)| rdot)?$/u);
+  return (shift?.[1] as RosterShiftTone | undefined) ?? "";
 }
 
 /** Extracts 24-hour clock values from noisy OCR text, including O/0 swaps. */

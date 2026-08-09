@@ -17,6 +17,14 @@
   --personal: #ff8d72;
   --personal-strong: #f2674a;
   --personal-soft: rgba(255, 141, 114, 0.17);
+  --shift-early-ink: #ffd166;
+  --shift-early-bg: #3a2d16;
+  --shift-late-ink: #67d4f2;
+  --shift-late-bg: #123645;
+  --shift-night-ink: #c4b5fd;
+  --shift-night-bg: #292149;
+  --shift-rest-ink: #71e1a2;
+  --shift-rest-bg: #17372b;
   --danger: #ff6b78;
   --shadow: 0 26px 80px rgba(0, 0, 0, 0.42);
   color-scheme: dark;
@@ -38,6 +46,14 @@
   --personal: #d9583f;
   --personal-strong: #c94a32;
   --personal-soft: rgba(217, 88, 63, 0.12);
+  --shift-early-ink: #7a4a00;
+  --shift-early-bg: #fff0c7;
+  --shift-late-ink: #075c73;
+  --shift-late-bg: #ddf5fb;
+  --shift-night-ink: #5636a5;
+  --shift-night-bg: #e9e2ff;
+  --shift-rest-ink: #17663a;
+  --shift-rest-bg: #dcf4e4;
   --danger: #c92e3e;
   --shadow: 0 24px 70px rgba(37, 45, 57, 0.2);
   color-scheme: light;
@@ -577,6 +593,44 @@ textarea:focus-visible {
   background: currentColor;
 }
 
+.shift-early {
+  --event-ink: var(--shift-early-ink);
+  --event-fill: var(--shift-early-bg);
+}
+
+.shift-late {
+  --event-ink: var(--shift-late-ink);
+  --event-fill: var(--shift-late-bg);
+}
+
+.shift-night {
+  --event-ink: var(--shift-night-ink);
+  --event-fill: var(--shift-night-bg);
+}
+
+.shift-rest {
+  --event-ink: var(--shift-rest-ink);
+  --event-fill: var(--shift-rest-bg);
+}
+
+.event-chip.shift-event {
+  color: var(--event-ink);
+}
+
+.event-chip.shift-late .chip-dot {
+  border-radius: 2px;
+}
+
+.event-chip.shift-night .chip-dot {
+  border-radius: 1px;
+  transform: rotate(45deg) scale(0.82);
+}
+
+.event-chip.shift-rest .chip-dot {
+  border: 2px solid currentColor;
+  background: transparent;
+}
+
 .event-chip:nth-child(n+2) {
   display: none;
 }
@@ -693,10 +747,19 @@ textarea:focus-visible {
   text-align: left;
 }
 
+.agenda-event.shift-event {
+  box-shadow: inset 3px 0 var(--event-ink);
+}
+
 .agenda-time {
   color: var(--accent);
   font-size: 0.74rem;
   font-weight: 700;
+}
+
+.agenda-event.shift-event .agenda-time,
+.agenda-event.shift-event .agenda-event-body strong {
+  color: var(--event-ink);
 }
 
 .agenda-event-body {
@@ -1242,6 +1305,16 @@ textarea:focus-visible {
   color: var(--text);
 }
 
+.roster-summary > .shift-event {
+  border-color: color-mix(in srgb, var(--event-ink) 42%, var(--grid-soft));
+  background: var(--event-fill);
+  color: var(--event-ink);
+}
+
+.roster-summary > .shift-event strong {
+  color: var(--event-ink);
+}
+
 .roster-impact,
 .roster-warning {
   margin: 0;
@@ -1282,6 +1355,14 @@ textarea:focus-visible {
 
 .roster-review-row.unresolved {
   border-color: color-mix(in srgb, var(--danger) 54%, var(--grid));
+}
+
+.roster-review-row.shift-event {
+  box-shadow: inset 3px 0 var(--event-ink);
+}
+
+.roster-review-row.shift-event .roster-date strong {
+  color: var(--event-ink);
 }
 
 .roster-date,
@@ -1419,6 +1500,15 @@ textarea:focus-visible {
   border-bottom: 1px solid var(--grid-soft);
   background: transparent;
   text-align: left;
+}
+
+.search-result.shift-event .result-date {
+  background: var(--event-fill);
+  color: var(--event-ink);
+}
+
+.search-result.shift-event .result-copy strong {
+  color: var(--event-ink);
 }
 
 .result-date {
@@ -1664,6 +1754,12 @@ textarea:focus-visible {
     background: var(--accent-soft);
     font-size: 0.63rem;
     font-weight: 650;
+  }
+
+  .event-chip.shift-event {
+    background: var(--event-fill);
+    color: var(--event-ink);
+    box-shadow: inset 3px 0 var(--event-ink);
   }
 
   .event-chip .chip-dot {
