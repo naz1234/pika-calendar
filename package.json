@@ -9,12 +9,13 @@
     "dev": "vinext dev",
     "build": "vinext build && node scripts/prepare-static-output.mjs",
     "start": "vinext start",
-    "test": "npm run build && node --test tests/rendered-html.test.mjs",
+    "test": "npm run build && node --test tests/rendered-html.test.mjs tests/roster-domain.test.mjs tests/roster-merge.test.mjs tests/roster-reader.test.mjs",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next"
   },
   "dependencies": {
     "react": "19.2.6",
-    "react-dom": "19.2.6"
+    "react-dom": "19.2.6",
+    "tesseract.js": "7.0.0"
   },
   "devDependencies": {
     "@eslint/js": "9.39.4",

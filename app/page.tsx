@@ -5,29 +5,53 @@ import {
   FormEvent,
   KeyboardEvent,
   PointerEvent,
+  useCallback,
   useEffect,
   useMemo,
   useRef,
   useState,
 } from "react";
+import {
+  ROSTER_CHOICE_OPTIONS,
+  choiceToEvent,
+  inferRosterChoice,
+  makeDateKey as makeRosterDateKey,
+  makeMonthKey,
+  normalizeRosterCode,
+  type RosterChoice,
+} from "./roster-domain";
+import {
+  mergeRosterMonthEvents,
+  type CalendarEventRecord,
+  type CalendarKind,
+} from "./roster-merge";
+import type { RosterBarKind, RosterProgress } from "./roster-reader";
 
-type CalendarKind = "work" | "personal";
 type Theme = "dark" | "light";
+type CalendarEvent = CalendarEventRecord;
 
-type CalendarEvent = {
-  id: string;
-  calendar: CalendarKind;
-  title: string;
-  date: string;
-  allDay: boolean;
-  startTime: string;
-  endTime: string;
-  notes: string;
-  createdAt: string;
-  updatedAt: string;
+type EventDraft = Omit<CalendarEvent, "id" | "createdAt" | "updatedAt" | "source">;
+
+type RosterReviewRow = {
+  day: number;
+  rawCode: string;
+  times: string[];
+  barKind: RosterBarKind;
+  confidence: number;
+  choice: RosterChoice | "";
+  warning: string;
 };
 
-type EventDraft = Omit<CalendarEvent, "id" | "createdAt" | "updatedAt">;
+type RosterDialogState = {
+  stage: "reading" | "review" | "error";
+  fileName: string;
+  previewUrl: string;
+  progress: RosterProgress;
+  error: string;
+  year?: number;
+  monthIndex?: number;
+  rows: RosterReviewRow[];
+};
 
 const STORAGE_KEY = "daymark-calendar-v1";
 const SETTINGS_KEY = "daymark-settings-v1";
@@ -71,11 +95,15 @@ function monthDays(year: number, month: number) {
 function eventTimeLabel(event: CalendarEvent) {
   if (event.allDay) return "All day";
   if (!event.startTime) return "Time not set";
-  const [hour, minute] = event.startTime.split(":").map(Number);
-  return new Intl.DateTimeFormat("en", {
-    hour: "numeric",
-    minute: "2-digit",
-  }).format(new Date(2020, 0, 1, hour, minute));
+  const formatTime = (value: string) => {
+    const [hour, minute] = value.split(":").map(Number);
+    return new Intl.DateTimeFormat("en", {
+      hour: "numeric",
+      minute: "2-digit",
+    }).format(new Date(2020, 0, 1, hour, minute));
+  };
+  const end = event.endTime ? `–${formatTime(event.endTime)}` : "";
+  return `${formatTime(event.startTime)}${end}${event.endsNextDay ? " (+1 day)" : ""}`;
 }
 
 function sortEvents(a: CalendarEvent, b: CalendarEvent) {
@@ -96,6 +124,16 @@ function validImportedEvent(value: unknown): value is CalendarEvent {
     typeof item.updatedAt === "string" &&
     Number.isFinite(Date.parse(item.createdAt)) &&
     Number.isFinite(Date.parse(item.updatedAt));
+  const sourceIsValid =
+    item.source === undefined ||
+    (
+      item.source !== null &&
+      typeof item.source === "object" &&
+      item.source.type === "roster-image" &&
+      /^\d{4}-\d{2}$/.test(item.source.rosterMonth) &&
+      typeof item.source.key === "string" && item.source.key.length > 0 &&
+      typeof item.source.rawCode === "string"
+    );
   return (
     typeof item.id === "string" && item.id.trim().length > 0 &&
     (item.calendar === "work" || item.calendar === "personal") &&
@@ -105,8 +143,10 @@ function validImportedEvent(value: unknown): value is CalendarEvent {
     typeof item.startTime === "string" &&
     typeof item.endTime === "string" &&
     (item.allDay || (validTime(item.startTime) && validTime(item.endTime))) &&
+    (item.endsNextDay === undefined || typeof item.endsNextDay === "boolean") &&
     typeof item.notes === "string" &&
-    timestampsAreReal
+    timestampsAreReal &&
+    sourceIsValid
   );
 }
 
@@ -128,13 +168,28 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
   const [toast, setToast] = useState("");
   const [announcement, setAnnouncement] = useState("");
+  const [rosterDialog, setRosterDialog] = useState<RosterDialogState | null>(null);
   const pointerStart = useRef<number | null>(null);
   const importInput = useRef<HTMLInputElement>(null);
+  const rosterInput = useRef<HTMLInputElement>(null);
+  const rosterTrigger = useRef<HTMLButtonElement>(null);
+  const rosterCloseButton = useRef<HTMLButtonElement>(null);
+  const rosterRun = useRef(0);
+  const rosterReaderBusy = useRef(false);
   const searchInput = useRef<HTMLInputElement>(null);
   const editorTitleInput = useRef<HTMLInputElement>(null);
   const menuCloseButton = useRef<HTMLButtonElement>(null);
   const monthInput = useRef<HTMLInputElement>(null);
   const editorIsOpen = editor !== null;
+
+  const closeRosterDialog = useCallback(() => {
+    rosterRun.current += 1;
+    setRosterDialog((current) => {
+      if (current?.previewUrl) URL.revokeObjectURL(current.previewUrl);
+      return null;
+    });
+    requestAnimationFrame(() => rosterTrigger.current?.focus());
+  }, []);
 
   const days = useMemo(() => monthDays(view.year, view.month), [view]);
   const visibleEvents = useMemo(
@@ -171,6 +226,37 @@ export default function Home() {
       .sort(sortEvents)
       .slice(0, 12);
   }, [searchQuery, todayKey, visibleEvents]);
+
+  const rosterSummary = useMemo(() => {
+    if (rosterDialog?.stage !== "review") return [];
+    const counts = new Map<string, number>();
+    rosterDialog.rows.forEach((row) => {
+      if (!row.choice) return;
+      const title = choiceToEvent(row.choice).title;
+      counts.set(title, (counts.get(title) ?? 0) + 1);
+    });
+    return [...counts.entries()];
+  }, [rosterDialog]);
+  const unresolvedRosterDays = rosterDialog?.stage === "review"
+    ? rosterDialog.rows.filter((row) => !row.choice).length
+    : 0;
+  const rosterStage = rosterDialog?.stage;
+  const rosterReviewMonth = rosterDialog?.stage === "review" &&
+    rosterDialog.year !== undefined && rosterDialog.monthIndex !== undefined
+    ? makeMonthKey(rosterDialog.year, rosterDialog.monthIndex + 1)
+    : "";
+  const rosterReviewMonthLabel = rosterDialog?.stage === "review" &&
+    rosterDialog.year !== undefined && rosterDialog.monthIndex !== undefined
+    ? new Intl.DateTimeFormat("en", { month: "long", year: "numeric" }).format(
+      new Date(rosterDialog.year, rosterDialog.monthIndex, 1),
+    )
+    : "";
+  const existingRosterCount = rosterReviewMonth
+    ? events.filter((event) => event.source?.type === "roster-image" && event.source.rosterMonth === rosterReviewMonth).length
+    : 0;
+  const manualWorkCount = rosterReviewMonth
+    ? events.filter((event) => event.calendar === "work" && !event.source && event.date.startsWith(`${rosterReviewMonth}-`)).length
+    : 0;
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => {
@@ -239,10 +325,11 @@ export default function Home() {
       setMonthPickerOpen(false);
       setEditor(null);
       setAgendaOpen(false);
+      if (rosterDialog) closeRosterDialog();
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, []);
+  }, [closeRosterDialog, rosterDialog]);
 
   useEffect(() => {
     if (!searchOpen) return;
@@ -267,6 +354,12 @@ export default function Home() {
     const frame = requestAnimationFrame(() => monthInput.current?.focus());
     return () => cancelAnimationFrame(frame);
   }, [monthPickerOpen]);
+
+  useEffect(() => {
+    if (!rosterStage) return;
+    const frame = requestAnimationFrame(() => rosterCloseButton.current?.focus());
+    return () => cancelAnimationFrame(frame);
+  }, [rosterStage]);
 
   useEffect(() => {
     let midnightTimer = 0;
@@ -354,6 +447,7 @@ export default function Home() {
         allDay: false,
         startTime: "09:00",
         endTime: "10:00",
+        endsNextDay: false,
         notes: "",
       },
     });
@@ -371,6 +465,7 @@ export default function Home() {
         allDay: event.allDay,
         startTime: event.startTime,
         endTime: event.endTime,
+        endsNextDay: event.endsNextDay ?? false,
         notes: event.notes,
       },
     });
@@ -384,8 +479,12 @@ export default function Home() {
       setEditorError("Add a title before saving.");
       return;
     }
-    if (!editor.draft.allDay && editor.draft.endTime <= editor.draft.startTime) {
-      setEditorError("End time must be later than start time.");
+    if (
+      !editor.draft.allDay &&
+      editor.draft.endTime <= editor.draft.startTime &&
+      !editor.draft.endsNextDay
+    ) {
+      setEditorError("The end is earlier than the start. Mark it as ending the next day.");
       return;
     }
     const timestamp = new Date().toISOString();
@@ -431,7 +530,7 @@ export default function Home() {
   }
 
   function exportBackup() {
-    const payload = JSON.stringify({ version: 1, exportedAt: new Date().toISOString(), events }, null, 2);
+    const payload = JSON.stringify({ version: 2, exportedAt: new Date().toISOString(), events }, null, 2);
     const url = URL.createObjectURL(new Blob([payload], { type: "application/json" }));
     const anchor = document.createElement("a");
     anchor.href = url;
@@ -466,6 +565,136 @@ export default function Home() {
     } finally {
       if (importInput.current) importInput.current.value = "";
     }
+  }
+
+  function chooseRosterImage() {
+    if (rosterReaderBusy.current) {
+      showToast("Finishing the previous scan. Try again in a moment.");
+      return;
+    }
+    setActiveCalendar("work");
+    rosterInput.current?.click();
+  }
+
+  async function importRosterImage(file: File) {
+    if (rosterReaderBusy.current) {
+      showToast("Finishing the previous scan. Try again in a moment.");
+      if (rosterInput.current) rosterInput.current.value = "";
+      return;
+    }
+    rosterReaderBusy.current = true;
+    if (rosterDialog?.previewUrl) URL.revokeObjectURL(rosterDialog.previewUrl);
+    const previewUrl = URL.createObjectURL(file);
+    const runId = rosterRun.current + 1;
+    rosterRun.current = runId;
+    setMenuOpen(false);
+    setActiveCalendar("work");
+    setRosterDialog({
+      stage: "reading",
+      fileName: file.name,
+      previewUrl,
+      progress: { label: "Opening screenshot", percent: 1 },
+      error: "",
+      rows: [],
+    });
+
+    try {
+      const { readRosterImage } = await import("./roster-reader");
+      const scan = await readRosterImage(
+        file,
+        (progress) => {
+          if (rosterRun.current !== runId) return;
+          setRosterDialog((current) => current && current.previewUrl === previewUrl
+            ? { ...current, progress }
+            : current);
+        },
+        () => rosterRun.current !== runId,
+      );
+      if (rosterRun.current !== runId) return;
+      const rows = scan.observations.map((observation) => {
+        const inference = inferRosterChoice(observation);
+        return {
+          day: observation.day,
+          rawCode: normalizeRosterCode(observation.rawCode) || observation.rawCode || "Unreadable",
+          times: observation.times,
+          barKind: observation.barKind,
+          confidence: observation.confidence,
+          choice: inference.choice,
+          warning: inference.warning,
+        } satisfies RosterReviewRow;
+      });
+      setRosterDialog({
+        stage: "review",
+        fileName: file.name,
+        previewUrl,
+        progress: { label: "Ready to review", percent: 100 },
+        error: "",
+        year: scan.year,
+        monthIndex: scan.monthIndex,
+        rows,
+      });
+      setAnnouncement(`Roster image read. Review ${rows.length} days before importing.`);
+    } catch (error) {
+      if (rosterRun.current !== runId) return;
+      const message = error instanceof Error ? error.message : "The roster screenshot could not be read.";
+      setRosterDialog({
+        stage: "error",
+        fileName: file.name,
+        previewUrl,
+        progress: { label: "Could not read screenshot", percent: 0 },
+        error: message,
+        rows: [],
+      });
+      setAnnouncement(message);
+    } finally {
+      rosterReaderBusy.current = false;
+      if (rosterInput.current) rosterInput.current.value = "";
+    }
+  }
+
+  function updateRosterChoice(day: number, choice: RosterChoice | "") {
+    setRosterDialog((current) => {
+      if (current?.stage !== "review") return current;
+      return {
+        ...current,
+        rows: current.rows.map((row) => row.day === day
+          ? { ...row, choice, warning: choice ? "" : "Choose the correct roster entry." }
+          : row),
+      };
+    });
+  }
+
+  function applyRosterImport() {
+    if (
+      rosterDialog?.stage !== "review" ||
+      rosterDialog.year === undefined ||
+      rosterDialog.monthIndex === undefined ||
+      rosterDialog.rows.some((row) => !row.choice)
+    ) return;
+
+    const year = rosterDialog.year;
+    const monthIndex = rosterDialog.monthIndex;
+    const rosterMonth = makeMonthKey(year, monthIndex + 1);
+    const timestamp = new Date().toISOString();
+    const prepared = rosterDialog.rows.map((row) => {
+      const details = choiceToEvent(row.choice as RosterChoice);
+      const date = makeRosterDateKey(year, monthIndex + 1, row.day);
+      const key = `roster:${date}`;
+      const rawCode = row.rawCode === "Unreadable" ? "Manual review" : row.rawCode;
+      return { details, date, key, rawCode };
+    });
+
+    const mergeResult = mergeRosterMonthEvents(events, prepared, rosterMonth, timestamp);
+    setEvents(mergeResult.events);
+
+    setActiveCalendar("work");
+    setView({ year, month: monthIndex });
+    setSelectedDate(makeRosterDateKey(year, monthIndex + 1, 1));
+    closeRosterDialog();
+    const skipped = mergeResult.skippedManualDuplicates
+      ? `; ${mergeResult.skippedManualDuplicates} matching manual event${mergeResult.skippedManualDuplicates === 1 ? " was" : "s were"} kept`
+      : "";
+    showToast(`${mergeResult.importedCount} Work roster event${mergeResult.importedCount === 1 ? "" : "s"} imported${skipped}`);
   }
 
   function clearCalendar() {
@@ -559,11 +788,26 @@ export default function Home() {
             ))}
           </div>
 
+          {activeCalendar === "work" && (
+            <button ref={rosterTrigger} className="roster-upload-button" onClick={chooseRosterImage} aria-label="Import Work roster image">
+              <span className="upload-glyph" aria-hidden="true">↑</span>
+              <span>Import roster</span>
+            </button>
+          )}
+
           <p className="event-count" aria-label={`${visibleEvents.length} events in ${activeCalendar}`}>
             {visibleEvents.length} event{visibleEvents.length === 1 ? "" : "s"}
           </p>
         </div>
       </header>
+
+      <input
+        ref={rosterInput}
+        className="visually-hidden"
+        type="file"
+        accept="image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp"
+        onChange={(event) => event.target.files?.[0] && importRosterImage(event.target.files[0])}
+      />
 
       <div className="main-content">
         <div className="month-card" role="grid" aria-label={`${monthLabel} calendar`}>
@@ -699,6 +943,15 @@ export default function Home() {
               <div><strong>My Calendar</strong><span>Private on this device</span></div>
               <button ref={menuCloseButton} className="close-button" onClick={() => setMenuOpen(false)} aria-label="Close menu">×</button>
             </div>
+            {activeCalendar === "work" && (
+              <div className="menu-section">
+                <p className="menu-label">Work roster</p>
+                <button className="menu-row roster-menu-row" onClick={chooseRosterImage}>
+                  <span><strong>Import roster image</strong><small>Auto-plot shifts from a screenshot</small></span>
+                  <span aria-hidden="true">↑</span>
+                </button>
+              </div>
+            )}
             <div className="menu-section">
               <p className="menu-label">Appearance</p>
               <div className="theme-toggle" role="group" aria-label="Appearance">
@@ -790,6 +1043,138 @@ export default function Home() {
         </div>
       )}
 
+      {rosterDialog && (
+        <div className="overlay centered-overlay roster-overlay">
+          <button className="overlay-dismiss" onClick={closeRosterDialog} aria-label="Close roster importer" />
+          <section
+            className="dialog roster-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="roster-dialog-title"
+            tabIndex={-1}
+            onKeyDown={trapDialogFocus}
+          >
+            <div className="dialog-header roster-dialog-header">
+              <div>
+                <p className="eyebrow">Work calendar</p>
+                <h2 id="roster-dialog-title">
+                  {rosterDialog.stage === "reading" ? "Reading your roster" :
+                    rosterDialog.stage === "review" ? `Review ${rosterReviewMonthLabel}` :
+                      "Try another screenshot"}
+                </h2>
+              </div>
+              <button ref={rosterCloseButton} className="close-button" onClick={closeRosterDialog} aria-label="Close roster importer">×</button>
+            </div>
+
+            <div className="roster-dialog-body">
+              <div className="roster-preview-card">
+                {/* eslint-disable-next-line @next/next/no-img-element -- local object URL preview */}
+                <img src={rosterDialog.previewUrl} alt="Uploaded roster screenshot preview" />
+                <span>{rosterDialog.fileName}</span>
+              </div>
+
+              {rosterDialog.stage === "reading" && (
+                <div className="roster-reading" role="status" aria-live="polite">
+                  <span className="roster-scan-mark" aria-hidden="true"><i /></span>
+                  <strong>{rosterDialog.progress.label}</strong>
+                  <progress max="100" value={rosterDialog.progress.percent}>{rosterDialog.progress.percent}%</progress>
+                  <p>{rosterDialog.progress.percent}% · The image stays on this device.</p>
+                </div>
+              )}
+
+              {rosterDialog.stage === "error" && (
+                <div className="roster-error" role="alert">
+                  <strong>We could not read this roster.</strong>
+                  <p>{rosterDialog.error}</p>
+                  <p>Use the full monthly view with the month title, all dates, and shift bars visible.</p>
+                  <button className="primary-button" onClick={chooseRosterImage}>Choose another image</button>
+                </div>
+              )}
+
+              {rosterDialog.stage === "review" && rosterDialog.year !== undefined && rosterDialog.monthIndex !== undefined && (
+                <div className="roster-review">
+                  <div className="roster-review-intro">
+                    <div>
+                      <span className="review-check" aria-hidden="true">✓</span>
+                      <p><strong>{rosterDialog.rows.length} days found</strong><span>Check the results, then import to Work.</span></p>
+                    </div>
+                    <span className="local-badge">On-device</span>
+                  </div>
+
+                  <div className="roster-summary" aria-label="Detected roster summary">
+                    {rosterSummary.map(([title, count]) => (
+                      <span key={title}><strong>{count}</strong> {title}</span>
+                    ))}
+                  </div>
+
+                  <p className="roster-impact">
+                    {existingRosterCount
+                      ? `This replaces ${existingRosterCount} previously imported ${rosterReviewMonthLabel} roster event${existingRosterCount === 1 ? "" : "s"}. `
+                      : `This adds a new ${rosterReviewMonthLabel} roster. `}
+                    {manualWorkCount} manual Work event{manualWorkCount === 1 ? "" : "s"} in this month will stay.
+                  </p>
+
+                  {unresolvedRosterDays > 0 && (
+                    <p className="roster-warning" role="alert">
+                      Choose a shift for {unresolvedRosterDays} highlighted day{unresolvedRosterDays === 1 ? "" : "s"} before importing.
+                    </p>
+                  )}
+
+                  <div className="roster-review-list">
+                    {rosterDialog.rows.map((row) => {
+                      const details = row.choice ? choiceToEvent(row.choice) : null;
+                      const dateLabel = new Intl.DateTimeFormat("en", {
+                        weekday: "short",
+                        month: "short",
+                        day: "numeric",
+                      }).format(new Date(rosterDialog.year as number, rosterDialog.monthIndex as number, row.day));
+                      const timeLabel = details?.allDay
+                        ? "All day"
+                        : details
+                          ? `${details.startTime}–${details.endTime}${details.endsNextDay ? " next day" : ""}`
+                          : "Needs review";
+                      return (
+                        <label className={`roster-review-row${row.choice ? "" : " unresolved"}`} key={row.day}>
+                          <span className="roster-date"><strong>{row.day}</strong><span>{dateLabel}</span></span>
+                          <span className="roster-detection">
+                            <span>{row.rawCode}</span>
+                            <small>{row.times.length ? row.times.join(" · ") : row.barKind === "green" ? "Rest day" : "Code detected"}</small>
+                          </span>
+                          <span className="roster-choice-field">
+                            <span className="visually-hidden">Shift for {dateLabel}</span>
+                            <select
+                              value={row.choice}
+                              onChange={(event) => updateRosterChoice(row.day, event.target.value as RosterChoice | "")}
+                              aria-invalid={!row.choice}
+                            >
+                              <option value="">Choose shift</option>
+                              {ROSTER_CHOICE_OPTIONS.map((option) => (
+                                <option key={option.value} value={option.value}>{option.label}</option>
+                              ))}
+                            </select>
+                            <small>{timeLabel}</small>
+                          </span>
+                          {row.warning && <span className="row-warning">{row.warning}</span>}
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="roster-actions">
+              <button className="secondary-button" onClick={closeRosterDialog}>Cancel</button>
+              {rosterDialog.stage === "review" && (
+                <button className="primary-button" onClick={applyRosterImport} disabled={unresolvedRosterDays > 0}>
+                  Import {rosterDialog.rows.length} days
+                </button>
+              )}
+            </div>
+          </section>
+        </div>
+      )}
+
       {editor && (
         <div className="overlay centered-overlay editor-overlay">
           <button className="overlay-dismiss" onClick={() => setEditor(null)} aria-label="Close event editor" />
@@ -803,12 +1188,15 @@ export default function Home() {
               <label className="field"><span>Date</span><input type="date" value={editor.draft.date} onChange={(event) => setEditor({ ...editor, draft: { ...editor.draft, date: event.target.value } })} required /></label>
               <label className="field"><span>Calendar</span><select value={editor.draft.calendar} onChange={(event) => setEditor({ ...editor, draft: { ...editor.draft, calendar: event.target.value as CalendarKind } })}><option value="work">Work</option><option value="personal">Personal</option></select></label>
             </div>
-            <label className="all-day-toggle"><input type="checkbox" checked={editor.draft.allDay} onChange={(event) => setEditor({ ...editor, draft: { ...editor.draft, allDay: event.target.checked } })} /><span>All-day event</span></label>
+            <label className="all-day-toggle"><input type="checkbox" checked={editor.draft.allDay} onChange={(event) => setEditor({ ...editor, draft: { ...editor.draft, allDay: event.target.checked, endsNextDay: event.target.checked ? false : editor.draft.endsNextDay } })} /><span>All-day event</span></label>
             {!editor.draft.allDay && (
-              <div className="field-row">
-                <label className="field"><span>Starts</span><input type="time" value={editor.draft.startTime} onChange={(event) => setEditor({ ...editor, draft: { ...editor.draft, startTime: event.target.value } })} required /></label>
-                <label className="field"><span>Ends</span><input type="time" value={editor.draft.endTime} onChange={(event) => setEditor({ ...editor, draft: { ...editor.draft, endTime: event.target.value } })} required /></label>
-              </div>
+              <>
+                <div className="field-row">
+                  <label className="field"><span>Starts</span><input type="time" value={editor.draft.startTime} onChange={(event) => setEditor({ ...editor, draft: { ...editor.draft, startTime: event.target.value } })} required /></label>
+                  <label className="field"><span>Ends</span><input type="time" value={editor.draft.endTime} onChange={(event) => setEditor({ ...editor, draft: { ...editor.draft, endTime: event.target.value } })} required /></label>
+                </div>
+                <label className="all-day-toggle next-day-toggle"><input type="checkbox" checked={editor.draft.endsNextDay ?? false} onChange={(event) => setEditor({ ...editor, draft: { ...editor.draft, endsNextDay: event.target.checked } })} /><span>Ends the next day</span></label>
+              </>
             )}
             <label className="field"><span>Notes <em>optional</em></span><textarea value={editor.draft.notes} onChange={(event) => setEditor({ ...editor, draft: { ...editor.draft, notes: event.target.value } })} placeholder="Add a location, reminder, or detail" rows={3} maxLength={500} /></label>
             {editorError && <p className="form-error" role="alert">{editorError}</p>}
