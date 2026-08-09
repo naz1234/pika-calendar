@@ -20,9 +20,10 @@ test("exports a deployable static calendar", async () => {
 });
 
 test("ships the local-first and installable app assets", async () => {
-  const [manifestText, source, mergeSource, serviceWorker] = await Promise.all([
+  const [manifestText, source, styles, mergeSource, serviceWorker] = await Promise.all([
     readFile(path.join(clientRoot, "manifest.webmanifest"), "utf8"),
     readFile(path.join(projectRoot, "app", "page.tsx"), "utf8"),
+    readFile(path.join(projectRoot, "app", "globals.css"), "utf8"),
     readFile(path.join(projectRoot, "app", "roster-merge.ts"), "utf8"),
     readFile(path.join(clientRoot, "sw.js"), "utf8"),
   ]);
@@ -37,7 +38,11 @@ test("ships the local-first and installable app assets", async () => {
   assert.match(source, /Download backup/);
   assert.match(source, /Import roster image/);
   assert.match(source, /roster-image/);
-  assert.match(serviceWorker, /my-calendar-v3/);
+  assert.match(source, /eventShiftClass/);
+  for (const tone of ["early", "late", "night", "rest"]) {
+    assert.match(styles, new RegExp(`--shift-${tone}-ink`));
+  }
+  assert.match(serviceWorker, /my-calendar-v4/);
 
   await Promise.all([
     access(path.join(clientRoot, "icons", "calendar-192.png")),

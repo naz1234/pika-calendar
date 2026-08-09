@@ -8,6 +8,7 @@ A private, mobile-first calendar with separate **Work** and **Personal** modes. 
 - Sunday-first month grid with week numbers
 - Work-roster screenshot import with an editable review before saving
 - Automatic Early, Late, Night, RD, extension `(EX)`, and RDOT mapping
+- Distinct Early, Late, Night, and RD colors in the calendar, agenda, and search
 - Add, edit, search, and delete events
 - All-day events, overnight shifts, start/end times, and notes
 - Swipe or use arrows to change months

@@ -18,6 +18,7 @@ import {
   makeDateKey as makeRosterDateKey,
   makeMonthKey,
   normalizeRosterCode,
+  rosterShiftTone,
   type RosterChoice,
 } from "./roster-domain";
 import {
@@ -104,6 +105,15 @@ function eventTimeLabel(event: CalendarEvent) {
   };
   const end = event.endTime ? `–${formatTime(event.endTime)}` : "";
   return `${formatTime(event.startTime)}${end}${event.endsNextDay ? " (+1 day)" : ""}`;
+}
+
+function shiftToneClass(title: string) {
+  const tone = rosterShiftTone(title);
+  return tone ? ` shift-event shift-${tone}` : "";
+}
+
+function eventShiftClass(event: CalendarEvent) {
+  return event.calendar === "work" ? shiftToneClass(event.title) : "";
 }
 
 function sortEvents(a: CalendarEvent, b: CalendarEvent) {
@@ -867,7 +877,7 @@ export default function Home() {
                           {dayEvents.slice(0, 3).map((calendarEvent) => (
                             <button
                               key={calendarEvent.id}
-                              className="event-chip"
+                              className={`event-chip${eventShiftClass(calendarEvent)}`}
                               onClick={() => openEdit(calendarEvent)}
                               aria-label={`${calendarEvent.title}, ${eventTimeLabel(calendarEvent)}`}
                             >
@@ -907,7 +917,7 @@ export default function Home() {
           <div className="agenda-list">
             {selectedEvents.length ? (
               selectedEvents.map((calendarEvent) => (
-                <button className="agenda-event" key={calendarEvent.id} onClick={() => openEdit(calendarEvent)}>
+                <button className={`agenda-event${eventShiftClass(calendarEvent)}`} key={calendarEvent.id} onClick={() => openEdit(calendarEvent)}>
                   <span className="agenda-time">{eventTimeLabel(calendarEvent)}</span>
                   <span className="agenda-event-body">
                     <strong>{calendarEvent.title}</strong>
@@ -993,7 +1003,7 @@ export default function Home() {
             <p className="result-label">{searchQuery ? "Results" : "Upcoming"}</p>
             <div className="search-results">
               {searchResults.length ? searchResults.map((calendarEvent) => (
-                <button key={calendarEvent.id} className="search-result" onClick={() => openEventFromSearch(calendarEvent)}>
+                <button key={calendarEvent.id} className={`search-result${eventShiftClass(calendarEvent)}`} onClick={() => openEventFromSearch(calendarEvent)}>
                   <span className="result-date">
                     <strong>{parseDateKey(calendarEvent.date).getDate()}</strong>
                     <span>{new Intl.DateTimeFormat("en", { month: "short" }).format(parseDateKey(calendarEvent.date))}</span>
@@ -1103,7 +1113,7 @@ export default function Home() {
 
                   <div className="roster-summary" aria-label="Detected roster summary">
                     {rosterSummary.map(([title, count]) => (
-                      <span key={title}><strong>{count}</strong> {title}</span>
+                      <span className={shiftToneClass(title).trim() || undefined} key={title}><strong>{count}</strong> {title}</span>
                     ))}
                   </div>
 
@@ -1134,7 +1144,7 @@ export default function Home() {
                           ? `${details.startTime}–${details.endTime}${details.endsNextDay ? " next day" : ""}`
                           : "Needs review";
                       return (
-                        <label className={`roster-review-row${row.choice ? "" : " unresolved"}`} key={row.day}>
+                        <label className={`roster-review-row${row.choice ? "" : " unresolved"}${details ? shiftToneClass(details.title) : ""}`} key={row.day}>
                           <span className="roster-date"><strong>{row.day}</strong><span>{dateLabel}</span></span>
                           <span className="roster-detection">
                             <span>{row.rawCode}</span>
