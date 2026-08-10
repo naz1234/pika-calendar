@@ -1,5 +1,4 @@
 import {
-  isCalendarId,
   isEncryptedPayload,
   isExpectedVersion,
   readCalendar,
@@ -15,6 +14,7 @@ const JSON_HEADERS = {
   "Content-Type": "application/json; charset=utf-8",
   "X-Content-Type-Options": "nosniff",
 };
+const SHARED_CALENDAR_ID = "pika-calendar-public-shared";
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), { status, headers: JSON_HEADERS });
@@ -29,9 +29,7 @@ function database(context: PagesContext) {
 
 export async function onRequestGet(context: PagesContext) {
   try {
-    const id = new URL(context.request.url).searchParams.get("id");
-    if (!isCalendarId(id)) return json({ error: "A valid calendar id is required." }, 400);
-    const calendar = await readCalendar(database(context), id);
+    const calendar = await readCalendar(database(context), SHARED_CALENDAR_ID);
     return calendar ? json(calendar) : json({ error: "Calendar not found." }, 404);
   } catch (error) {
     return json({ error: error instanceof Error ? error.message : "Calendar sync failed." }, 503);
@@ -44,15 +42,13 @@ export async function onRequestPut(context: PagesContext) {
       return json({ error: "Content-Type must be application/json." }, 415);
     }
     const body = await context.request.json() as {
-      id?: unknown;
       payload?: unknown;
       expectedVersion?: unknown;
     };
-    if (!isCalendarId(body.id)) return json({ error: "A valid calendar id is required." }, 400);
     if (!isEncryptedPayload(body.payload)) return json({ error: "The encrypted calendar is too large or invalid." }, 400);
     if (!isExpectedVersion(body.expectedVersion)) return json({ error: "A valid expectedVersion is required." }, 400);
 
-    const result = await writeCalendar(database(context), body.id, body.payload, body.expectedVersion);
+    const result = await writeCalendar(database(context), SHARED_CALENDAR_ID, body.payload, body.expectedVersion);
     if ("conflict" in result) {
       return json({ error: "The calendar changed on another device.", version: result.version }, 409);
     }

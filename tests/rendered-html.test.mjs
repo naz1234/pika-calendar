@@ -19,8 +19,8 @@ test("exports a deployable static calendar", async () => {
   assert.doesNotMatch(html, /codex-preview|react-loading-skeleton|Starter Project/i);
 });
 
-test("ships the encrypted-sync, roster import, and installable app assets", async () => {
-  const [manifestText, source, styles, mergeSource, pdfReaderSource, pdfDomainSource, syncSource, schemaSource, serviceWorker] = await Promise.all([
+test("ships automatic shared sync, roster import, and installable app assets", async () => {
+  const [manifestText, source, styles, mergeSource, pdfReaderSource, pdfDomainSource, syncSource, apiSource, schemaSource, serviceWorker] = await Promise.all([
     readFile(path.join(clientRoot, "manifest.webmanifest"), "utf8"),
     readFile(path.join(projectRoot, "app", "page.tsx"), "utf8"),
     readFile(path.join(projectRoot, "app", "globals.css"), "utf8"),
@@ -28,6 +28,7 @@ test("ships the encrypted-sync, roster import, and installable app assets", asyn
     readFile(path.join(projectRoot, "app", "roster-pdf-reader.ts"), "utf8"),
     readFile(path.join(projectRoot, "app", "roster-pdf-domain.ts"), "utf8"),
     readFile(path.join(projectRoot, "app", "calendar-sync.ts"), "utf8"),
+    readFile(path.join(projectRoot, "functions", "api", "calendar.ts"), "utf8"),
     readFile(path.join(projectRoot, "db", "schema.ts"), "utf8"),
     readFile(path.join(clientRoot, "sw.js"), "utf8"),
   ]);
@@ -40,7 +41,9 @@ test("ships the encrypted-sync, roster import, and installable app assets", asyn
   assert.match(source, /isoWeekNumber/);
   assert.match(source, /localStorage/);
   assert.match(source, /Download backup/);
-  assert.match(source, /Enable private sync/);
+  assert.match(source, /Automatic shared sync/);
+  assert.match(source, /This is a public shared calendar/);
+  assert.doesNotMatch(source, /Enable private sync|Copy private sync link/);
   assert.match(source, /Import roster file/);
   assert.match(source, /application\/pdf/);
   assert.match(source, /roster-image/);
@@ -49,7 +52,9 @@ test("ships the encrypted-sync, roster import, and installable app assets", asyn
   assert.match(pdfReaderSource, /readRosterPdf/);
   assert.match(pdfDomainSource, /parseIvuPlanTextItems/);
   assert.match(syncSource, /AES-GCM/);
-  assert.match(syncSource, /daymark-sync-secret-v1/);
+  assert.match(syncSource, /pika-calendar-public-sync-000001/);
+  assert.match(apiSource, /SHARED_CALENDAR_ID/);
+  assert.doesNotMatch(apiSource, /searchParams\.get\("id"\)/);
   assert.match(schemaSource, /sqliteTable\("calendars"/);
   for (const tone of ["early", "late", "night", "rest"]) {
     assert.match(styles, new RegExp(`--shift-${tone}-ink`));

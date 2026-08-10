@@ -1,9 +1,8 @@
 import type { CalendarEventRecord } from "./roster-merge";
 
-export const SYNC_SECRET_STORAGE_KEY = "daymark-sync-secret-v1";
+export const SHARED_SYNC_SECRET = "pika-calendar-public-sync-000001";
 
 const API_PATH = "/api/calendar";
-const SECRET_PATTERN = /^[A-Za-z0-9_-]{32}$/;
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 
@@ -52,31 +51,24 @@ async function encryptionKey(secret: string) {
   return crypto.subtle.importKey("raw", keyBytes, "AES-GCM", false, ["encrypt", "decrypt"]);
 }
 
-export function isSyncSecret(value: string | null | undefined): value is string {
-  return typeof value === "string" && SECRET_PATTERN.test(value);
-}
-
-export function generateSyncSecret() {
-  const bytes = new Uint8Array(24);
-  crypto.getRandomValues(bytes);
-  return bytesToBase64Url(bytes);
-}
-
-export function syncSecretFromHash(hash: string) {
-  const secret = new URLSearchParams(hash.replace(/^#/, "")).get("sync");
-  return isSyncSecret(secret) ? secret : "";
-}
-
-export function makeSyncLink(secret: string, currentUrl: string) {
-  if (!isSyncSecret(secret)) throw new Error("Invalid sync secret");
-  const url = new URL(currentUrl);
-  url.hash = new URLSearchParams({ sync: secret }).toString();
-  return url.toString();
-}
-
-export async function calendarIdForSecret(secret: string) {
-  if (!isSyncSecret(secret)) throw new Error("Invalid sync secret");
-  return bytesToBase64Url(await digest(`pika-calendar-id-v1:${secret}`));
+export function mergeSharedCalendarEvents(
+  remoteEvents: readonly CalendarEventRecord[],
+  localEvents: readonly CalendarEventRecord[],
+) {
+  const merged = [...remoteEvents];
+  const indexes = new Map(merged.map((event, index) => [event.id, index]));
+  localEvents.forEach((localEvent) => {
+    const index = indexes.get(localEvent.id);
+    if (index === undefined) {
+      indexes.set(localEvent.id, merged.length);
+      merged.push(localEvent);
+      return;
+    }
+    if (Date.parse(localEvent.updatedAt) > Date.parse(merged[index].updatedAt)) {
+      merged[index] = localEvent;
+    }
+  });
+  return merged;
 }
 
 export async function encryptCalendarEvents(secret: string, events: readonly CalendarEventRecord[]) {
@@ -117,9 +109,8 @@ async function parseError(response: Response) {
   };
 }
 
-export async function fetchRemoteCalendar(secret: string): Promise<RemoteCalendar | null> {
-  const id = await calendarIdForSecret(secret);
-  const response = await fetch(`${API_PATH}?id=${encodeURIComponent(id)}`, {
+export async function fetchRemoteCalendar(): Promise<RemoteCalendar | null> {
+  const response = await fetch(API_PATH, {
     cache: "no-store",
     headers: { Accept: "application/json" },
   });
@@ -132,18 +123,14 @@ export async function fetchRemoteCalendar(secret: string): Promise<RemoteCalenda
 }
 
 export async function saveRemoteCalendar(
-  secret: string,
   events: readonly CalendarEventRecord[],
   expectedVersion: number,
 ) {
-  const [id, payload] = await Promise.all([
-    calendarIdForSecret(secret),
-    encryptCalendarEvents(secret, events),
-  ]);
+  const payload = await encryptCalendarEvents(SHARED_SYNC_SECRET, events);
   const response = await fetch(API_PATH, {
     method: "PUT",
     headers: { "Content-Type": "application/json", Accept: "application/json" },
-    body: JSON.stringify({ id, payload, expectedVersion }),
+    body: JSON.stringify({ payload, expectedVersion }),
   });
   if (response.status === 409) {
     const error = await parseError(response);
