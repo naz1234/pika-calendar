@@ -194,6 +194,26 @@ export function rosterShiftTone(title: string): RosterShiftTone | "" {
   return (shift?.[1] as RosterShiftTone | undefined) ?? "";
 }
 
+/** Returns a compact, readable label for an event in narrow month cells. */
+export function mobileEventCode(title: string): string {
+  const tone = rosterShiftTone(title);
+  if (tone === "rest") return "RD";
+  if (tone === "early") return "ES";
+  if (tone === "late") return "LS";
+  if (tone === "night") return "NS";
+
+  const normalized = String(title ?? "").normalize("NFKC").trim();
+  if (/^(?:annual leave|al)$/iu.test(normalized)) return "AL";
+
+  const words = normalized.match(/[\p{L}\p{N}]+/gu) ?? [];
+  const [firstWord = "", secondWord = ""] = words;
+  if (secondWord) {
+    return `${Array.from(firstWord)[0]}${Array.from(secondWord)[0]}`.toUpperCase();
+  }
+
+  return Array.from(firstWord || "EV").slice(0, 2).join("").toUpperCase();
+}
+
 /** Extracts 24-hour clock values from noisy OCR text, including O/0 swaps. */
 export function extractRosterTimes(rawText: string): string[] {
   const normalized = String(rawText ?? "")

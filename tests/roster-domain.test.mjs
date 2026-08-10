@@ -34,6 +34,7 @@ const {
   isDateKeyInMonth,
   makeDateKey,
   makeMonthKey,
+  mobileEventCode,
   monthKey,
   normalizeRosterCode,
   parseMonthKey,
@@ -105,6 +106,18 @@ test("groups only canonical Work roster titles into shift colors", () => {
   assert.equal(rosterShiftTone("RD"), "rest");
   assert.equal(rosterShiftTone("Late appointment"), "");
   assert.equal(rosterShiftTone("Personal night out"), "");
+});
+
+test("creates readable two-character event labels for mobile month cells", () => {
+  assert.equal(mobileEventCode("RD"), "RD");
+  assert.equal(mobileEventCode("Early"), "ES");
+  assert.equal(mobileEventCode("Early (EX)"), "ES");
+  assert.equal(mobileEventCode("Late RDOT"), "LS");
+  assert.equal(mobileEventCode("Night"), "NS");
+  assert.equal(mobileEventCode("Annual Leave"), "AL");
+  assert.equal(mobileEventCode("AL"), "AL");
+  assert.equal(mobileEventCode("Sick Leave"), "SL");
+  assert.equal(mobileEventCode("Training"), "TR");
 });
 
 test("extracts canonical times despite O/0 confusion and OCR punctuation", () => {

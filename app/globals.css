@@ -360,8 +360,7 @@ textarea:focus-visible {
   box-shadow: 0 2px 9px rgba(0, 0, 0, 0.12);
 }
 
-.mode-dot,
-.chip-dot {
+.mode-dot {
   display: inline-block;
   width: 7px;
   height: 7px;
@@ -589,8 +588,16 @@ textarea:focus-visible {
   text-align: left;
 }
 
-.event-chip .chip-dot {
-  background: currentColor;
+.mobile-event-code {
+  color: currentColor;
+  font-size: 0.58rem;
+  font-weight: 850;
+  line-height: 1;
+  letter-spacing: 0.02em;
+}
+
+.event-title {
+  display: none;
 }
 
 .shift-early {
@@ -615,20 +622,6 @@ textarea:focus-visible {
 
 .event-chip.shift-event {
   color: var(--event-ink);
-}
-
-.event-chip.shift-late .chip-dot {
-  border-radius: 2px;
-}
-
-.event-chip.shift-night .chip-dot {
-  border-radius: 1px;
-  transform: rotate(45deg) scale(0.82);
-}
-
-.event-chip.shift-rest .chip-dot {
-  border: 2px solid currentColor;
-  background: transparent;
 }
 
 .event-chip:nth-child(n+2) {
@@ -1833,8 +1826,15 @@ textarea:focus-visible {
     box-shadow: inset 3px 0 var(--event-ink);
   }
 
-  .event-chip .chip-dot {
+  .mobile-event-code {
     display: none;
+  }
+
+  .event-title {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .event-chip:nth-child(n+2) {
