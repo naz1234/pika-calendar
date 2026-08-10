@@ -1055,6 +1055,51 @@ textarea:focus-visible {
   font-size: 0.68rem;
 }
 
+.sync-menu-row {
+  min-height: 64px;
+}
+
+.sync-menu-row > span:first-child {
+  display: grid;
+  gap: 4px;
+  padding-right: 12px;
+}
+
+.sync-menu-row strong {
+  color: var(--text);
+  font-size: 0.82rem;
+}
+
+.sync-menu-row small {
+  color: var(--muted);
+  font-size: 0.68rem;
+  line-height: 1.35;
+}
+
+.sync-dot {
+  width: 10px;
+  height: 10px;
+  flex: 0 0 10px;
+  border-radius: 50%;
+  background: var(--muted);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--muted) 14%, transparent);
+}
+
+.sync-dot.synced {
+  background: #4ecb8d;
+  box-shadow: 0 0 0 4px rgba(78, 203, 141, 0.14);
+}
+
+.sync-dot.connecting {
+  background: var(--work);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--work) 16%, transparent);
+}
+
+.sync-dot.offline {
+  background: #e9a95d;
+  box-shadow: 0 0 0 4px rgba(233, 169, 93, 0.14);
+}
+
 .device-note {
   margin: 20px 4px 0;
   color: var(--muted);

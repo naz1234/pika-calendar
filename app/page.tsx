@@ -12,6 +12,17 @@ import {
   useState,
 } from "react";
 import {
+  SYNC_SECRET_STORAGE_KEY,
+  SyncConflictError,
+  decryptCalendarEvents,
+  fetchRemoteCalendar,
+  generateSyncSecret,
+  isSyncSecret,
+  makeSyncLink,
+  saveRemoteCalendar,
+  syncSecretFromHash,
+} from "./calendar-sync";
+import {
   ROSTER_CHOICE_OPTIONS,
   choiceToEvent,
   inferRosterChoice,
@@ -30,6 +41,7 @@ import type { RosterBarKind, RosterProgress } from "./roster-reader";
 
 type Theme = "dark" | "light";
 type CalendarEvent = CalendarEventRecord;
+type SyncStatus = "disabled" | "connecting" | "synced" | "offline";
 
 type EventDraft = Omit<CalendarEvent, "id" | "createdAt" | "updatedAt" | "source">;
 
@@ -160,6 +172,15 @@ function validImportedEvent(value: unknown): value is CalendarEvent {
   );
 }
 
+function cleanCalendarEvents(value: unknown) {
+  if (!Array.isArray(value)) return null;
+  const clean = value.filter(validImportedEvent);
+  if (clean.length !== value.length || new Set(clean.map((event) => event.id)).size !== clean.length) {
+    return null;
+  }
+  return clean;
+}
+
 export default function Home() {
   const [now, setNow] = useState(STATIC_DATE);
   const todayKey = dateKey(now);
@@ -169,6 +190,10 @@ export default function Home() {
   const [theme, setTheme] = useState<Theme>("dark");
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [hydrated, setHydrated] = useState(false);
+  const [syncSecret, setSyncSecret] = useState("");
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>("disabled");
+  const [syncReady, setSyncReady] = useState(false);
+  const [syncRetry, setSyncRetry] = useState(0);
   const [agendaOpen, setAgendaOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -186,6 +211,10 @@ export default function Home() {
   const rosterCloseButton = useRef<HTMLButtonElement>(null);
   const rosterRun = useRef(0);
   const rosterReaderBusy = useRef(false);
+  const eventsRef = useRef<CalendarEvent[]>([]);
+  const syncVersion = useRef(0);
+  const lastSyncedEvents = useRef("");
+  const syncWriteBusy = useRef(false);
   const searchInput = useRef<HTMLInputElement>(null);
   const editorTitleInput = useRef<HTMLInputElement>(null);
   const menuCloseButton = useRef<HTMLButtonElement>(null);
@@ -199,6 +228,37 @@ export default function Home() {
       return null;
     });
     requestAnimationFrame(() => rosterTrigger.current?.focus());
+  }, []);
+
+  const connectToSync = useCallback(async (secret: string, localEvents: CalendarEvent[]) => {
+    setSyncSecret(secret);
+    setSyncReady(false);
+    setSyncStatus("connecting");
+    try {
+      const remote = await fetchRemoteCalendar(secret);
+      let nextEvents = localEvents;
+      if (remote) {
+        const decrypted = await decryptCalendarEvents(secret, remote.payload);
+        const clean = cleanCalendarEvents(decrypted);
+        if (!clean) throw new Error("The synced calendar data is invalid.");
+        nextEvents = clean;
+        syncVersion.current = remote.version;
+      } else {
+        const saved = await saveRemoteCalendar(secret, localEvents, 0);
+        syncVersion.current = saved.version;
+      }
+      const serialized = JSON.stringify(nextEvents);
+      lastSyncedEvents.current = serialized;
+      eventsRef.current = nextEvents;
+      setEvents(nextEvents);
+      setSyncReady(true);
+      setSyncStatus("synced");
+      return true;
+    } catch {
+      setSyncReady(true);
+      setSyncStatus("offline");
+      return false;
+    }
   }, []);
 
   const days = useMemo(() => monthDays(view.year, view.month), [view]);
@@ -274,9 +334,12 @@ export default function Home() {
       setNow(currentDate);
       setView({ year: currentDate.getFullYear(), month: currentDate.getMonth() });
       setSelectedDate(dateKey(currentDate));
+      let localEvents: CalendarEvent[] = [];
       try {
         const storedEvents = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "[]");
-        if (Array.isArray(storedEvents)) setEvents(storedEvents.filter(validImportedEvent));
+        localEvents = cleanCalendarEvents(storedEvents) ?? [];
+        eventsRef.current = localEvents;
+        setEvents(localEvents);
         const storedSettings = JSON.parse(localStorage.getItem(SETTINGS_KEY) ?? "{}");
         if (storedSettings.calendar === "work" || storedSettings.calendar === "personal") {
           setActiveCalendar(storedSettings.calendar);
@@ -289,12 +352,35 @@ export default function Home() {
       }
       setHydrated(true);
 
+      const linkedSecret = syncSecretFromHash(window.location.hash);
+      let storedSecret: string | null = null;
+      try {
+        storedSecret = localStorage.getItem(SYNC_SECRET_STORAGE_KEY);
+      } catch {
+        // A private URL fragment can connect browsers that block local storage.
+      }
+      const secret = linkedSecret || (isSyncSecret(storedSecret) ? storedSecret : "");
+      if (secret) {
+        try {
+          localStorage.setItem(SYNC_SECRET_STORAGE_KEY, secret);
+        } catch {
+          // The private link still works even when this browser blocks storage.
+        }
+        void connectToSync(secret, localEvents);
+      } else {
+        setSyncReady(true);
+      }
+
       if (process.env.NODE_ENV === "production" && "serviceWorker" in navigator) {
         navigator.serviceWorker.register("/sw.js").catch(() => undefined);
       }
     });
     return () => cancelAnimationFrame(frame);
-  }, []);
+  }, [connectToSync]);
+
+  useEffect(() => {
+    eventsRef.current = events;
+  }, [events]);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -307,6 +393,93 @@ export default function Home() {
       });
     }
   }, [events, hydrated]);
+
+  useEffect(() => {
+    if (!hydrated || !syncReady || !syncSecret) return;
+    const serialized = JSON.stringify(events);
+    if (serialized === lastSyncedEvents.current || syncWriteBusy.current) return;
+
+    const timeout = window.setTimeout(() => {
+      const snapshot = events;
+      syncWriteBusy.current = true;
+      setSyncStatus("connecting");
+      void (async () => {
+        try {
+          let saved;
+          try {
+            saved = await saveRemoteCalendar(syncSecret, snapshot, syncVersion.current);
+          } catch (error) {
+            if (!(error instanceof SyncConflictError)) throw error;
+            if (syncVersion.current === 0) {
+              const remote = await fetchRemoteCalendar(syncSecret);
+              if (!remote) throw error;
+              const decrypted = await decryptCalendarEvents(syncSecret, remote.payload);
+              const clean = cleanCalendarEvents(decrypted);
+              if (!clean) throw new Error("Invalid synced calendar");
+              syncVersion.current = remote.version;
+              lastSyncedEvents.current = JSON.stringify(clean);
+              eventsRef.current = clean;
+              setEvents(clean);
+              setSyncStatus("synced");
+              return;
+            }
+            syncVersion.current = error.currentVersion;
+            saved = await saveRemoteCalendar(syncSecret, snapshot, syncVersion.current);
+          }
+          syncVersion.current = saved.version;
+          lastSyncedEvents.current = serialized;
+          setSyncStatus("synced");
+        } catch {
+          setSyncStatus("offline");
+        } finally {
+          syncWriteBusy.current = false;
+          if (lastSyncedEvents.current !== JSON.stringify(eventsRef.current)) {
+            setSyncRetry((value) => value + 1);
+          }
+        }
+      })();
+    }, 450);
+
+    return () => window.clearTimeout(timeout);
+  }, [events, hydrated, syncReady, syncRetry, syncSecret]);
+
+  useEffect(() => {
+    if (!syncReady || !syncSecret) return;
+    const refreshFromCloud = async () => {
+      const local = JSON.stringify(eventsRef.current);
+      if (syncWriteBusy.current || local !== lastSyncedEvents.current) return;
+      try {
+        const remote = await fetchRemoteCalendar(syncSecret);
+        if (!remote || remote.version <= syncVersion.current) {
+          setSyncStatus("synced");
+          return;
+        }
+        const decrypted = await decryptCalendarEvents(syncSecret, remote.payload);
+        const clean = cleanCalendarEvents(decrypted);
+        if (!clean) throw new Error("Invalid synced calendar");
+        syncVersion.current = remote.version;
+        lastSyncedEvents.current = JSON.stringify(clean);
+        eventsRef.current = clean;
+        setEvents(clean);
+        setSyncStatus("synced");
+      } catch {
+        setSyncStatus("offline");
+      }
+    };
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") void refreshFromCloud();
+    };
+    const onOnline = () => {
+      setSyncRetry((value) => value + 1);
+      void refreshFromCloud();
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    window.addEventListener("online", onOnline);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("online", onOnline);
+    };
+  }, [syncReady, syncSecret]);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -396,6 +569,39 @@ export default function Home() {
   function showToast(message: string) {
     setToast(message);
     setAnnouncement(message);
+  }
+
+  async function copyPrivateSyncLink(secret = syncSecret) {
+    if (!secret) return;
+    const link = makeSyncLink(secret, window.location.href);
+    try {
+      await navigator.clipboard.writeText(link);
+      showToast("Private sync link copied");
+    } catch {
+      window.prompt("Copy this private sync link", link);
+      showToast("Keep this private link safe");
+    }
+    setMenuOpen(false);
+  }
+
+  async function enableSync() {
+    const secret = generateSyncSecret();
+    try {
+      localStorage.setItem(SYNC_SECRET_STORAGE_KEY, secret);
+    } catch {
+      // The link remains usable in browsers that block local storage.
+    }
+    const link = makeSyncLink(secret, window.location.href);
+    try {
+      await navigator.clipboard.writeText(link);
+    } catch {
+      window.prompt("Copy this private sync link", link);
+    }
+    setMenuOpen(false);
+    const connected = await connectToSync(secret, eventsRef.current);
+    showToast(connected
+      ? "Sync enabled — private link copied"
+      : "Link copied; cloud sync needs server setup");
   }
 
   function changeMonth(amount: number) {
@@ -708,7 +914,8 @@ export default function Home() {
   }
 
   function clearCalendar() {
-    if (!events.length || !window.confirm("Delete all Work and Personal events from this device?")) return;
+    const location = syncSecret ? "from every synced device" : "from this device";
+    if (!events.length || !window.confirm(`Delete all Work and Personal events ${location}?`)) return;
     setEvents([]);
     setMenuOpen(false);
     showToast("Calendar cleared");
@@ -950,7 +1157,13 @@ export default function Home() {
           <aside className="menu-drawer" role="dialog" aria-modal="true" aria-label="Calendar menu" tabIndex={-1} onKeyDown={trapDialogFocus}>
             <div className="menu-header">
               <div className="brand-mark" aria-hidden="true"><span>{now.getDate()}</span></div>
-              <div><strong>My Calendar</strong><span>Private on this device</span></div>
+              <div>
+                <strong>My Calendar</strong>
+                <span>{syncSecret
+                  ? syncStatus === "synced" ? "Private sync is up to date" :
+                    syncStatus === "connecting" ? "Saving private changes…" : "Offline — changes stay on this device"
+                  : "Private on this device"}</span>
+              </div>
               <button ref={menuCloseButton} className="close-button" onClick={() => setMenuOpen(false)} aria-label="Close menu">×</button>
             </div>
             {activeCalendar === "work" && (
@@ -971,6 +1184,17 @@ export default function Home() {
             </div>
             <div className="menu-section">
               <p className="menu-label">Your data</p>
+              {syncSecret ? (
+                <button className="menu-row sync-menu-row" onClick={() => void copyPrivateSyncLink()}>
+                  <span><strong>Copy private sync link</strong><small>Open it in incognito or on another phone</small></span>
+                  <span className={`sync-dot ${syncStatus}`} aria-label={`Sync status: ${syncStatus}`} />
+                </button>
+              ) : (
+                <button className="menu-row sync-menu-row" onClick={() => void enableSync()}>
+                  <span><strong>Enable private sync</strong><small>Keep roster events across browsers and phones</small></span>
+                  <span aria-hidden="true">↗</span>
+                </button>
+              )}
               <button className="menu-row" onClick={exportBackup}><span>Download backup</span><span aria-hidden="true">↓</span></button>
               <button className="menu-row" onClick={() => importInput.current?.click()}><span>Import backup</span><span aria-hidden="true">↑</span></button>
               <input
@@ -982,7 +1206,11 @@ export default function Home() {
               />
               <button className="menu-row danger" onClick={clearCalendar}><span>Clear calendar data</span><span aria-hidden="true">×</span></button>
             </div>
-            <p className="device-note">No account or server is used. Back up your events before clearing browser data or changing phones.</p>
+            <p className="device-note">
+              {syncSecret
+                ? "Anyone with your private sync link can open this calendar. The server stores only encrypted event data; roster pictures never leave your device."
+                : "Events stay only on this device until you enable private sync. Keep downloading backups for extra protection."}
+            </p>
           </aside>
         </div>
       )}

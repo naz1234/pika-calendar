@@ -19,12 +19,14 @@ test("exports a deployable static calendar", async () => {
   assert.doesNotMatch(html, /codex-preview|react-loading-skeleton|Starter Project/i);
 });
 
-test("ships the local-first and installable app assets", async () => {
-  const [manifestText, source, styles, mergeSource, serviceWorker] = await Promise.all([
+test("ships the encrypted-sync and installable app assets", async () => {
+  const [manifestText, source, styles, mergeSource, syncSource, schemaSource, serviceWorker] = await Promise.all([
     readFile(path.join(clientRoot, "manifest.webmanifest"), "utf8"),
     readFile(path.join(projectRoot, "app", "page.tsx"), "utf8"),
     readFile(path.join(projectRoot, "app", "globals.css"), "utf8"),
     readFile(path.join(projectRoot, "app", "roster-merge.ts"), "utf8"),
+    readFile(path.join(projectRoot, "app", "calendar-sync.ts"), "utf8"),
+    readFile(path.join(projectRoot, "db", "schema.ts"), "utf8"),
     readFile(path.join(clientRoot, "sw.js"), "utf8"),
   ]);
   const manifest = JSON.parse(manifestText);
@@ -36,13 +38,18 @@ test("ships the local-first and installable app assets", async () => {
   assert.match(source, /isoWeekNumber/);
   assert.match(source, /localStorage/);
   assert.match(source, /Download backup/);
+  assert.match(source, /Enable private sync/);
   assert.match(source, /Import roster image/);
   assert.match(source, /roster-image/);
   assert.match(source, /eventShiftClass/);
+  assert.match(syncSource, /AES-GCM/);
+  assert.match(syncSource, /daymark-sync-secret-v1/);
+  assert.match(schemaSource, /sqliteTable\("calendars"/);
   for (const tone of ["early", "late", "night", "rest"]) {
     assert.match(styles, new RegExp(`--shift-${tone}-ink`));
   }
-  assert.match(serviceWorker, /my-calendar-v4/);
+  assert.match(serviceWorker, /my-calendar-v5/);
+  assert.match(serviceWorker, /pathname\.startsWith\("\/api\/"\)/);
 
   await Promise.all([
     access(path.join(clientRoot, "icons", "calendar-192.png")),
