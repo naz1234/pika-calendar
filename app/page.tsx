@@ -31,6 +31,7 @@ import {
   type RosterChoice,
 } from "./roster-domain";
 import {
+  eventDisplayRemark,
   mergeRosterMonthEvents,
   type CalendarEventRecord,
   type CalendarKind,
@@ -1082,17 +1083,23 @@ export default function Home() {
                           <span className="day-number">{day.getDate()}</span>
                         </button>
                         <div className="cell-events">
-                          {dayEvents.slice(0, 3).map((calendarEvent) => (
-                            <button
-                              key={calendarEvent.id}
-                              className={`event-chip${eventShiftClass(calendarEvent)}`}
-                              onClick={() => openEdit(calendarEvent)}
-                              aria-label={`${calendarEvent.title}, ${eventTimeLabel(calendarEvent)}`}
-                            >
-                              <span className="mobile-event-code" aria-hidden="true">{mobileEventCode(calendarEvent.title)}</span>
-                              <span className="event-title">{calendarEvent.title}</span>
-                            </button>
-                          ))}
+                          {dayEvents.slice(0, 3).map((calendarEvent) => {
+                            const remark = eventDisplayRemark(calendarEvent);
+                            return (
+                              <button
+                                key={calendarEvent.id}
+                                className={`event-chip${eventShiftClass(calendarEvent)}`}
+                                onClick={() => openEdit(calendarEvent)}
+                                aria-label={`${calendarEvent.title}, ${eventTimeLabel(calendarEvent)}${remark ? `, Remark: ${remark}` : ""}`}
+                              >
+                                <span className={`mobile-event-summary${remark ? " has-remark" : ""}`} aria-hidden="true">
+                                  <span className="mobile-event-code">{mobileEventCode(calendarEvent.title)}</span>
+                                  {remark && <span className="mobile-remark-indicator">!</span>}
+                                </span>
+                                <span className="event-title">{calendarEvent.title}</span>
+                              </button>
+                            );
+                          })}
                           {dayEvents.length > 1 && (
                             <button className="mobile-more-events" onClick={() => chooseDay(day)} aria-label={`Show ${dayEvents.length} events`}>
                               +{dayEvents.length - 1}
@@ -1124,21 +1131,24 @@ export default function Home() {
           </div>
           <div className="agenda-list">
             {selectedEvents.length ? (
-              selectedEvents.map((calendarEvent) => (
-                <button className={`agenda-event${eventShiftClass(calendarEvent)}`} key={calendarEvent.id} onClick={() => openEdit(calendarEvent)}>
-                  <span className="agenda-time">{eventTimeLabel(calendarEvent)}</span>
-                  <span className="agenda-event-body">
-                    <strong>{calendarEvent.title}</strong>
-                    {calendarEvent.notes && (
-                      <span className="agenda-note">
-                        <span className="agenda-note-label">Remark</span>
-                        <span className="agenda-note-text">{calendarEvent.notes}</span>
-                      </span>
-                    )}
-                  </span>
-                  <span className="event-arrow" aria-hidden="true">›</span>
-                </button>
-              ))
+              selectedEvents.map((calendarEvent) => {
+                const remark = eventDisplayRemark(calendarEvent);
+                return (
+                  <button className={`agenda-event${eventShiftClass(calendarEvent)}`} key={calendarEvent.id} onClick={() => openEdit(calendarEvent)}>
+                    <span className="agenda-time">{eventTimeLabel(calendarEvent)}</span>
+                    <span className="agenda-event-body">
+                      <strong>{calendarEvent.title}</strong>
+                      {remark && (
+                        <span className="agenda-note">
+                          <span className="agenda-note-label">Remark</span>
+                          <span className="agenda-note-text">{remark}</span>
+                        </span>
+                      )}
+                    </span>
+                    <span className="event-arrow" aria-hidden="true">›</span>
+                  </button>
+                );
+              })
             ) : (
               <div className="empty-agenda">
                 <span className="empty-orbit" aria-hidden="true"><i /></span>

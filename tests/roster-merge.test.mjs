@@ -29,7 +29,7 @@ const mergeModule = await loadTypeScriptModule(
   (specifier) => specifier === "./roster-domain" ? domain : (() => { throw new Error(`Unexpected require: ${specifier}`); })(),
 );
 const { choiceToEvent } = domain;
-const { mergeRosterMonthEvents } = mergeModule;
+const { eventDisplayRemark, mergeRosterMonthEvents } = mergeModule;
 
 const firstTimestamp = "2026-07-01T00:00:00.000Z";
 const secondTimestamp = "2026-07-02T00:00:00.000Z";
@@ -59,6 +59,14 @@ function prepared(date, choice, rawCode) {
     rawCode,
   };
 }
+
+test("shows user remarks but hides untouched roster import metadata", () => {
+  const source = { type: "roster-image", rosterMonth: "2026-07", key: "roster:2026-07-01", rawCode: "E3-DC" };
+  assert.equal(eventDisplayRemark(event({ notes: "" })), "");
+  assert.equal(eventDisplayRemark(event({ notes: "  Bring passport  " })), "Bring passport");
+  assert.equal(eventDisplayRemark(event({ notes: "Imported from roster image · E3-DC", source })), "");
+  assert.equal(eventDisplayRemark(event({ notes: "Changed flight", source })), "Changed flight");
+});
 
 test("imports only into Work and preserves Personal, manual Work, and other roster months", () => {
   const current = [
