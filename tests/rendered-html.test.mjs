@@ -48,6 +48,10 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   assert.match(source, /Import roster file/);
   assert.match(source, /application\/pdf/);
   assert.match(source, /roster-image/);
+  assert.doesNotMatch(source, /roster-upload-button|upload-glyph/);
+  assert.match(source, /agenda-note/);
+  assert.match(source, />Remark</);
+  assert.match(styles, /\.agenda-note-text/);
   assert.match(source, /eventShiftClass/);
   assert.match(source, /mobileEventCode/);
   assert.match(source, /mobile-event-code/);

@@ -214,7 +214,7 @@ export default function Home() {
   const pointerStart = useRef<number | null>(null);
   const importInput = useRef<HTMLInputElement>(null);
   const rosterInput = useRef<HTMLInputElement>(null);
-  const rosterTrigger = useRef<HTMLButtonElement>(null);
+  const menuTrigger = useRef<HTMLButtonElement>(null);
   const rosterCloseButton = useRef<HTMLButtonElement>(null);
   const rosterRun = useRef(0);
   const rosterReaderBusy = useRef(false);
@@ -235,7 +235,7 @@ export default function Home() {
       if (current?.previewUrl) URL.revokeObjectURL(current.previewUrl);
       return null;
     });
-    requestAnimationFrame(() => rosterTrigger.current?.focus());
+    requestAnimationFrame(() => menuTrigger.current?.focus());
   }, []);
 
   const connectToSync = useCallback(async (localEvents: CalendarEvent[], shouldMigrateLocal: boolean) => {
@@ -976,7 +976,7 @@ export default function Home() {
     <main className="calendar-app" data-calendar={activeCalendar}>
       <header className="topbar">
         <div className="topbar-main">
-          <button className="icon-button menu-button" onClick={() => setMenuOpen(true)} aria-label="Open menu">
+          <button ref={menuTrigger} className="icon-button menu-button" onClick={() => setMenuOpen(true)} aria-label="Open menu">
             <span className="menu-glyph" aria-hidden="true"><i /><i /><i /></span>
           </button>
 
@@ -1012,13 +1012,6 @@ export default function Home() {
               </button>
             ))}
           </div>
-
-          {activeCalendar === "work" && (
-            <button ref={rosterTrigger} className="roster-upload-button" onClick={chooseRosterFile} aria-label="Import Work roster image or PDF">
-              <span className="upload-glyph" aria-hidden="true">↑</span>
-              <span>Import roster</span>
-            </button>
-          )}
 
           <p className="event-count" aria-label={`${visibleEvents.length} events in ${activeCalendar}`}>
             {visibleEvents.length} event{visibleEvents.length === 1 ? "" : "s"}
@@ -1136,7 +1129,12 @@ export default function Home() {
                   <span className="agenda-time">{eventTimeLabel(calendarEvent)}</span>
                   <span className="agenda-event-body">
                     <strong>{calendarEvent.title}</strong>
-                    {calendarEvent.notes && <span>{calendarEvent.notes}</span>}
+                    {calendarEvent.notes && (
+                      <span className="agenda-note">
+                        <span className="agenda-note-label">Remark</span>
+                        <span className="agenda-note-text">{calendarEvent.notes}</span>
+                      </span>
+                    )}
                   </span>
                   <span className="event-arrow" aria-hidden="true">›</span>
                 </button>
