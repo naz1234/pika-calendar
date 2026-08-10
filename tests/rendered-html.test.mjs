@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { access, readFile } from "node:fs/promises";
+import { access, readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
@@ -19,12 +19,14 @@ test("exports a deployable static calendar", async () => {
   assert.doesNotMatch(html, /codex-preview|react-loading-skeleton|Starter Project/i);
 });
 
-test("ships the encrypted-sync and installable app assets", async () => {
-  const [manifestText, source, styles, mergeSource, syncSource, schemaSource, serviceWorker] = await Promise.all([
+test("ships the encrypted-sync, roster import, and installable app assets", async () => {
+  const [manifestText, source, styles, mergeSource, pdfReaderSource, pdfDomainSource, syncSource, schemaSource, serviceWorker] = await Promise.all([
     readFile(path.join(clientRoot, "manifest.webmanifest"), "utf8"),
     readFile(path.join(projectRoot, "app", "page.tsx"), "utf8"),
     readFile(path.join(projectRoot, "app", "globals.css"), "utf8"),
     readFile(path.join(projectRoot, "app", "roster-merge.ts"), "utf8"),
+    readFile(path.join(projectRoot, "app", "roster-pdf-reader.ts"), "utf8"),
+    readFile(path.join(projectRoot, "app", "roster-pdf-domain.ts"), "utf8"),
     readFile(path.join(projectRoot, "app", "calendar-sync.ts"), "utf8"),
     readFile(path.join(projectRoot, "db", "schema.ts"), "utf8"),
     readFile(path.join(clientRoot, "sw.js"), "utf8"),
@@ -39,9 +41,13 @@ test("ships the encrypted-sync and installable app assets", async () => {
   assert.match(source, /localStorage/);
   assert.match(source, /Download backup/);
   assert.match(source, /Enable private sync/);
-  assert.match(source, /Import roster image/);
+  assert.match(source, /Import roster file/);
+  assert.match(source, /application\/pdf/);
   assert.match(source, /roster-image/);
   assert.match(source, /eventShiftClass/);
+  assert.match(pdfReaderSource, /pdfjs-dist/);
+  assert.match(pdfReaderSource, /readRosterPdf/);
+  assert.match(pdfDomainSource, /parseIvuPlanTextItems/);
   assert.match(syncSource, /AES-GCM/);
   assert.match(syncSource, /daymark-sync-secret-v1/);
   assert.match(schemaSource, /sqliteTable\("calendars"/);
@@ -62,6 +68,10 @@ test("ships the encrypted-sync and installable app assets", async () => {
     access(path.join(clientRoot, "ocr", "core", "tesseract-core-relaxedsimd-lstm.wasm.js")),
     access(path.join(clientRoot, "ocr", "lang", "eng.traineddata.gz")),
   ]);
+
+  const staticAssets = await readdir(path.join(clientRoot, "_next", "static"), { recursive: true });
+  assert.ok(staticAssets.some((asset) => /pdf\.worker\.min\..+\.mjs$/i.test(asset)));
+  assert.ok(staticAssets.some((asset) => /roster-pdf-reader-.+\.js$/i.test(asset)));
 });
 
 test("calculates ISO week numbers across year boundaries", async () => {
