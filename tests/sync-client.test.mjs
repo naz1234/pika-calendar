@@ -28,13 +28,10 @@ const loadedModule = { exports: {} };
 Function("module", "exports", compiled.outputText)(loadedModule, loadedModule.exports);
 
 const {
-  calendarIdForSecret,
+  SHARED_SYNC_SECRET,
   decryptCalendarEvents,
   encryptCalendarEvents,
-  generateSyncSecret,
-  isSyncSecret,
-  makeSyncLink,
-  syncSecretFromHash,
+  mergeSharedCalendarEvents,
 } = loadedModule.exports;
 
 const sampleEvents = [{
@@ -50,29 +47,21 @@ const sampleEvents = [{
   updatedAt: "2026-08-10T10:00:00.000Z",
 }];
 
-test("generates unguessable URL-safe sync secrets and stable ids", async () => {
-  const first = generateSyncSecret();
-  const second = generateSyncSecret();
-  assert.match(first, /^[A-Za-z0-9_-]{32}$/);
-  assert.equal(isSyncSecret(first), true);
-  assert.notEqual(first, second);
-  assert.match(await calendarIdForSecret(first), /^[A-Za-z0-9_-]{43}$/);
-  assert.equal(await calendarIdForSecret(first), await calendarIdForSecret(first));
+test("uses one stable public sync secret in every browser", () => {
+  assert.match(SHARED_SYNC_SECRET, /^[A-Za-z0-9_-]{32}$/);
 });
 
-test("round-trips events through authenticated browser encryption", async () => {
-  const secret = generateSyncSecret();
-  const encrypted = await encryptCalendarEvents(secret, sampleEvents);
+test("round-trips shared events through browser encryption", async () => {
+  const encrypted = await encryptCalendarEvents(SHARED_SYNC_SECRET, sampleEvents);
   assert.doesNotMatch(encrypted, /Early|2026-08-11/);
-  assert.deepEqual(await decryptCalendarEvents(secret, encrypted), sampleEvents);
-  await assert.rejects(() => decryptCalendarEvents(generateSyncSecret(), encrypted));
+  assert.deepEqual(await decryptCalendarEvents(SHARED_SYNC_SECRET, encrypted), sampleEvents);
+  await assert.rejects(() => decryptCalendarEvents("x".repeat(32), encrypted));
 });
 
-test("puts the secret in a URL fragment and reads it back", () => {
-  const secret = generateSyncSecret();
-  const link = makeSyncLink(secret, "https://calendar.example/?from=app");
-  const url = new URL(link);
-  assert.equal(url.search, "?from=app");
-  assert.equal(syncSecretFromHash(url.hash), secret);
-  assert.equal(syncSecretFromHash("#sync=too-short"), "");
+test("merges one-time local events without replacing newer shared copies", () => {
+  const newerRemote = { ...sampleEvents[0], title: "Updated Early", updatedAt: "2026-08-10T12:00:00.000Z" };
+  const localOnly = { ...sampleEvents[0], id: "event-2", title: "RD" };
+  const merged = mergeSharedCalendarEvents([newerRemote], [sampleEvents[0], localOnly]);
+
+  assert.deepEqual(merged, [newerRemote, localOnly]);
 });
