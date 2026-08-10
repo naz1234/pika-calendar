@@ -256,6 +256,7 @@ textarea:focus-visible {
 }
 
 .month-title {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -263,13 +264,38 @@ textarea:focus-visible {
   min-width: 0;
   width: 100%;
   height: 44px;
+  overflow: hidden;
   padding: 0;
+  border-radius: 10px;
   background: transparent;
   color: var(--text);
+  cursor: pointer;
   font-size: clamp(1.12rem, 4.8vw, 1.48rem);
   font-weight: 680;
   letter-spacing: -0.035em;
+  user-select: none;
   white-space: nowrap;
+}
+
+.month-title:focus-within {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.month-title-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.month-title-input:focus-visible {
+  outline: 0;
 }
 
 .search-button {
@@ -1668,10 +1694,6 @@ textarea:focus-visible {
   font-size: 0.71rem;
 }
 
-.month-dialog {
-  padding-bottom: max(22px, env(safe-area-inset-bottom));
-}
-
 .field {
   display: grid;
   gap: 7px;
@@ -1709,11 +1731,6 @@ textarea:focus-visible {
   min-height: 82px;
   resize: vertical;
   cursor: text;
-}
-
-.month-dialog .primary-button {
-  width: 100%;
-  margin-top: 18px;
 }
 
 .field-row {
@@ -1904,10 +1921,6 @@ textarea:focus-visible {
 
   .search-dialog {
     width: min(100%, 540px);
-  }
-
-  .month-dialog {
-    width: min(100%, 420px);
   }
 
   .roster-dialog {

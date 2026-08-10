@@ -206,7 +206,6 @@ export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [monthPickerOpen, setMonthPickerOpen] = useState(false);
   const [editor, setEditor] = useState<{ id?: string; draft: EventDraft } | null>(null);
   const [editorError, setEditorError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -228,7 +227,6 @@ export default function Home() {
   const searchInput = useRef<HTMLInputElement>(null);
   const editorTitleInput = useRef<HTMLInputElement>(null);
   const menuCloseButton = useRef<HTMLButtonElement>(null);
-  const monthInput = useRef<HTMLInputElement>(null);
   const editorIsOpen = editor !== null;
 
   const closeRosterDialog = useCallback(() => {
@@ -541,7 +539,6 @@ export default function Home() {
       if (event.key !== "Escape") return;
       setMenuOpen(false);
       setSearchOpen(false);
-      setMonthPickerOpen(false);
       setEditor(null);
       setAgendaOpen(false);
       if (rosterDialog) closeRosterDialog();
@@ -567,12 +564,6 @@ export default function Home() {
     const frame = requestAnimationFrame(() => menuCloseButton.current?.focus());
     return () => cancelAnimationFrame(frame);
   }, [menuOpen]);
-
-  useEffect(() => {
-    if (!monthPickerOpen) return;
-    const frame = requestAnimationFrame(() => monthInput.current?.focus());
-    return () => cancelAnimationFrame(frame);
-  }, [monthPickerOpen]);
 
   useEffect(() => {
     if (!rosterStage) return;
@@ -615,6 +606,18 @@ export default function Home() {
     setView({ year: next.getFullYear(), month: next.getMonth() });
     setSelectedDate(dateKey(nextSelection));
     const label = new Intl.DateTimeFormat("en", { month: "long", year: "numeric" }).format(next);
+    setAnnouncement(`Showing ${label}`);
+  }
+
+  function chooseMonth(value: string) {
+    const [year, month] = value.split("-").map(Number);
+    if (!year || month < 1 || month > 12) return;
+    const preferredDay = parseDateKey(selectedDate).getDate();
+    const lastDay = new Date(year, month, 0).getDate();
+    const nextSelection = new Date(year, month - 1, Math.min(preferredDay, lastDay));
+    setView({ year, month: month - 1 });
+    setSelectedDate(dateKey(nextSelection));
+    const label = new Intl.DateTimeFormat("en", { month: "long", year: "numeric" }).format(nextSelection);
     setAnnouncement(`Showing ${label}`);
   }
 
@@ -983,16 +986,16 @@ export default function Home() {
             <span className="menu-glyph" aria-hidden="true"><i /><i /><i /></span>
           </button>
 
-          <button
-            className="month-title"
-            onClick={() => setMonthPickerOpen(true)}
-            aria-label={`Choose month. Currently ${monthLabel}`}
-            aria-haspopup="dialog"
-            aria-expanded={monthPickerOpen}
-            aria-controls="month-picker-dialog"
-          >
-            <span>{monthLabel}</span>
-          </button>
+          <label className="month-title">
+            <span aria-hidden="true">{monthLabel}</span>
+            <input
+              className="month-title-input"
+              type="month"
+              value={`${view.year}-${pad(view.month + 1)}`}
+              onChange={(event) => chooseMonth(event.currentTarget.value)}
+              aria-label={`Choose month. Currently ${monthLabel}`}
+            />
+          </label>
 
           <button className="icon-button search-button" onClick={() => setSearchOpen(true)} aria-label="Search events">
             <span className="search-glyph" aria-hidden="true" />
@@ -1259,41 +1262,6 @@ export default function Home() {
               )}
             </div>
           </section>
-        </div>
-      )}
-
-      {monthPickerOpen && (
-        <div className="overlay centered-overlay">
-          <button className="overlay-dismiss" onClick={() => setMonthPickerOpen(false)} aria-label="Close month picker" />
-          <form
-            id="month-picker-dialog"
-            className="dialog month-dialog"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="month-picker-title"
-            tabIndex={-1}
-            onKeyDown={trapDialogFocus}
-            onSubmit={(event) => {
-              event.preventDefault();
-              const form = new FormData(event.currentTarget);
-              const value = String(form.get("month"));
-              const [year, month] = value.split("-").map(Number);
-              if (year && month) {
-                const preferredDay = parseDateKey(selectedDate).getDate();
-                const lastDay = new Date(year, month, 0).getDate();
-                setView({ year, month: month - 1 });
-                setSelectedDate(dateKey(new Date(year, month - 1, Math.min(preferredDay, lastDay))));
-              }
-              setMonthPickerOpen(false);
-            }}
-          >
-            <div className="dialog-header">
-              <div><p className="eyebrow">Jump to</p><h2 id="month-picker-title">Choose a month</h2></div>
-              <button type="button" className="close-button" onClick={() => setMonthPickerOpen(false)} aria-label="Close month picker">×</button>
-            </div>
-            <label className="field"><span>Month and year</span><input ref={monthInput} name="month" type="month" defaultValue={`${view.year}-${pad(view.month + 1)}`} required /></label>
-            <button className="primary-button" type="submit">Show month</button>
-          </form>
         </div>
       )}
 
