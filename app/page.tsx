@@ -58,6 +58,7 @@ type RosterReviewRow = {
 type RosterDialogState = {
   stage: "reading" | "review" | "error";
   fileName: string;
+  fileKind: "image" | "pdf";
   previewUrl: string;
   progress: RosterProgress;
   error: string;
@@ -783,7 +784,7 @@ export default function Home() {
     }
   }
 
-  function chooseRosterImage() {
+  function chooseRosterFile() {
     if (rosterReaderBusy.current) {
       showToast("Finishing the previous scan. Try again in a moment.");
       return;
@@ -792,7 +793,7 @@ export default function Home() {
     rosterInput.current?.click();
   }
 
-  async function importRosterImage(file: File) {
+  async function importRosterFile(file: File) {
     if (rosterReaderBusy.current) {
       showToast("Finishing the previous scan. Try again in a moment.");
       if (rosterInput.current) rosterInput.current.value = "";
@@ -801,6 +802,9 @@ export default function Home() {
     rosterReaderBusy.current = true;
     if (rosterDialog?.previewUrl) URL.revokeObjectURL(rosterDialog.previewUrl);
     const previewUrl = URL.createObjectURL(file);
+    const fileKind = file.type.toLowerCase() === "application/pdf" || /\.pdf$/iu.test(file.name)
+      ? "pdf"
+      : "image";
     const runId = rosterRun.current + 1;
     rosterRun.current = runId;
     setMenuOpen(false);
@@ -808,15 +812,18 @@ export default function Home() {
     setRosterDialog({
       stage: "reading",
       fileName: file.name,
+      fileKind,
       previewUrl,
-      progress: { label: "Opening screenshot", percent: 1 },
+      progress: { label: fileKind === "pdf" ? "Opening IVU.plan PDF" : "Opening screenshot", percent: 1 },
       error: "",
       rows: [],
     });
 
     try {
-      const { readRosterImage } = await import("./roster-reader");
-      const scan = await readRosterImage(
+      const readRosterFile = fileKind === "pdf"
+        ? (await import("./roster-pdf-reader")).readRosterPdf
+        : (await import("./roster-reader")).readRosterImage;
+      const scan = await readRosterFile(
         file,
         (progress) => {
           if (rosterRun.current !== runId) return;
@@ -842,6 +849,7 @@ export default function Home() {
       setRosterDialog({
         stage: "review",
         fileName: file.name,
+        fileKind,
         previewUrl,
         progress: { label: "Ready to review", percent: 100 },
         error: "",
@@ -849,15 +857,16 @@ export default function Home() {
         monthIndex: scan.monthIndex,
         rows,
       });
-      setAnnouncement(`Roster image read. Review ${rows.length} days before importing.`);
+      setAnnouncement(`Roster ${fileKind === "pdf" ? "PDF" : "image"} read. Review ${rows.length} days before importing.`);
     } catch (error) {
       if (rosterRun.current !== runId) return;
-      const message = error instanceof Error ? error.message : "The roster screenshot could not be read.";
+      const message = error instanceof Error ? error.message : "The roster file could not be read.";
       setRosterDialog({
         stage: "error",
         fileName: file.name,
+        fileKind,
         previewUrl,
-        progress: { label: "Could not read screenshot", percent: 0 },
+        progress: { label: "Could not read roster file", percent: 0 },
         error: message,
         rows: [],
       });
@@ -1006,7 +1015,7 @@ export default function Home() {
           </div>
 
           {activeCalendar === "work" && (
-            <button ref={rosterTrigger} className="roster-upload-button" onClick={chooseRosterImage} aria-label="Import Work roster image">
+            <button ref={rosterTrigger} className="roster-upload-button" onClick={chooseRosterFile} aria-label="Import Work roster image or PDF">
               <span className="upload-glyph" aria-hidden="true">↑</span>
               <span>Import roster</span>
             </button>
@@ -1022,8 +1031,8 @@ export default function Home() {
         ref={rosterInput}
         className="visually-hidden"
         type="file"
-        accept="image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp"
-        onChange={(event) => event.target.files?.[0] && importRosterImage(event.target.files[0])}
+        accept="image/png,image/jpeg,image/webp,application/pdf,.png,.jpg,.jpeg,.webp,.pdf"
+        onChange={(event) => event.target.files?.[0] && importRosterFile(event.target.files[0])}
       />
 
       <div className="main-content">
@@ -1169,8 +1178,8 @@ export default function Home() {
             {activeCalendar === "work" && (
               <div className="menu-section">
                 <p className="menu-label">Work roster</p>
-                <button className="menu-row roster-menu-row" onClick={chooseRosterImage}>
-                  <span><strong>Import roster image</strong><small>Auto-plot shifts from a screenshot</small></span>
+                <button className="menu-row roster-menu-row" onClick={chooseRosterFile}>
+                  <span><strong>Import roster file</strong><small>Use a screenshot or IVU.plan PDF</small></span>
                   <span aria-hidden="true">↑</span>
                 </button>
               </div>
@@ -1298,7 +1307,7 @@ export default function Home() {
                 <h2 id="roster-dialog-title">
                   {rosterDialog.stage === "reading" ? "Reading your roster" :
                     rosterDialog.stage === "review" ? `Review ${rosterReviewMonthLabel}` :
-                      "Try another screenshot"}
+                      "Try another roster file"}
                 </h2>
               </div>
               <button ref={rosterCloseButton} className="close-button" onClick={closeRosterDialog} aria-label="Close roster importer">×</button>
@@ -1306,8 +1315,17 @@ export default function Home() {
 
             <div className="roster-dialog-body">
               <div className="roster-preview-card">
-                {/* eslint-disable-next-line @next/next/no-img-element -- local object URL preview */}
-                <img src={rosterDialog.previewUrl} alt="Uploaded roster screenshot preview" />
+                {rosterDialog.fileKind === "pdf" ? (
+                  <div className="roster-pdf-preview" aria-label="Uploaded IVU.plan PDF">
+                    <span aria-hidden="true">PDF</span>
+                    <strong>IVU.plan duty schedule</strong>
+                  </div>
+                ) : (
+                  <>
+                    {/* eslint-disable-next-line @next/next/no-img-element -- local object URL preview */}
+                    <img src={rosterDialog.previewUrl} alt="Uploaded roster screenshot preview" />
+                  </>
+                )}
                 <span>{rosterDialog.fileName}</span>
               </div>
 
@@ -1316,7 +1334,7 @@ export default function Home() {
                   <span className="roster-scan-mark" aria-hidden="true"><i /></span>
                   <strong>{rosterDialog.progress.label}</strong>
                   <progress max="100" value={rosterDialog.progress.percent}>{rosterDialog.progress.percent}%</progress>
-                  <p>{rosterDialog.progress.percent}% · The image stays on this device.</p>
+                  <p>{rosterDialog.progress.percent}% · The file stays on this device.</p>
                 </div>
               )}
 
@@ -1324,8 +1342,8 @@ export default function Home() {
                 <div className="roster-error" role="alert">
                   <strong>We could not read this roster.</strong>
                   <p>{rosterDialog.error}</p>
-                  <p>Use the full monthly view with the month title, all dates, and shift bars visible.</p>
-                  <button className="primary-button" onClick={chooseRosterImage}>Choose another image</button>
+                  <p>Use a full monthly screenshot, or export the monthly duty schedule directly from IVU.plan.</p>
+                  <button className="primary-button" onClick={chooseRosterFile}>Choose another file</button>
                 </div>
               )}
 

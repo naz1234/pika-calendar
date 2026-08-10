@@ -6,7 +6,7 @@ A private, mobile-first calendar with separate **Work** and **Personal** modes. 
 
 - Work and Personal calendar modes
 - Sunday-first month grid with week numbers
-- Work-roster screenshot import with an editable review before saving
+- Work-roster screenshot or IVU.plan PDF import with an editable review before saving
 - Automatic Early, Late, Night, RD, extension `(EX)`, and RDOT mapping
 - Distinct Early, Late, Night, and RD colors in the calendar, agenda, and search
 - Add, edit, search, and delete events
@@ -24,7 +24,7 @@ Events are cached in the browser so the calendar keeps working offline. By defau
 
 The link contains a random 192-bit secret in its URL fragment. Events are encrypted in the browser with AES-GCM before the server receives them; the D1 database stores only an opaque calendar ID and encrypted payload. Anyone who has the private link can open the calendar, so treat it like a password. No account is required.
 
-Roster screenshots are still read entirely in your browser. The screenshot is not uploaded or saved; only the encrypted Work events you approve are synced. Re-importing the same month replaces only that month’s earlier roster-image events, while manual Work events and all Personal events remain.
+Roster screenshots and PDFs are read entirely in your browser. The source file is not uploaded or saved; only the encrypted Work events you approve are synced. Re-importing the same month replaces only that month’s earlier roster-import events, while manual Work events and all Personal events remain.
 
 Use **Menu → Download backup** occasionally as an extra recovery copy.
 
@@ -92,10 +92,15 @@ The generated static site is written to `dist/client`.
 ## Import a Work roster
 
 1. Switch to **Work**.
-2. Tap **Import roster** in the toolbar or **Menu → Import roster image**.
-3. Choose the full monthly roster screenshot with the month title visible.
+2. Tap **Import roster** in the toolbar or **Menu → Import roster file**.
+3. Choose the full monthly roster screenshot with the month title visible, or an exported IVU.plan monthly duty-schedule PDF.
 4. Review every detected day. Correct any highlighted item with its shift picker.
 5. Tap **Import days**.
+
+Supported input formats:
+
+- IVU.plan Portal monthly duty-schedule PDF with selectable text
+- PNG, JPG, or WebP full-month roster screenshot
 
 Supported roster codes and output:
 
