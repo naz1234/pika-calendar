@@ -62,7 +62,7 @@ The calendar continues to work from its offline browser cache when this setup is
 3. In the Pages project, add a **D1 database binding** named `DB` for Production and Preview, pointing to that database.
 4. Redeploy the Pages project so the root `functions/` directory is activated.
 
-Cloudflare Pages discovers `functions/api/calendar.ts` automatically. Do not move `functions/` into `dist/client`.
+Cloudflare Pages discovers the routes in `functions/api/` automatically. Do not move `functions/` into `dist/client`.
 
 ## Use automatic shared sync
 
