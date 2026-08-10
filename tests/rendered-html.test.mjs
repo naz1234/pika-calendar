@@ -112,6 +112,25 @@ test("calculates ISO week numbers across year boundaries", async () => {
   assert.equal(isoWeekNumber(new Date(2026, 7, 3)), 32);
 });
 
+test("uses the centered swipe-first calendar header", async () => {
+  const [source, styles] = await Promise.all([
+    readFile(path.join(projectRoot, "app", "page.tsx"), "utf8"),
+    readFile(path.join(projectRoot, "app", "globals.css"), "utf8"),
+  ]);
+
+  assert.match(source, /className="month-title"[\s\S]*?setMonthPickerOpen\(true\)[\s\S]*?aria-controls="month-picker-dialog"/);
+  assert.match(source, /id="month-picker-dialog"[\s\S]*?name="month" type="month"/);
+  assert.match(source, /className="icon-button search-button"[\s\S]*?aria-label="Search events"[\s\S]*?className="search-glyph"/);
+  assert.match(source, /className="calendar-switcher"[\s\S]*?aria-label="Calendar mode"[\s\S]*?setActiveCalendar\(kind\)[\s\S]*?aria-pressed=\{activeCalendar === kind\}/);
+  assert.doesNotMatch(source, /className="today-button"|className="month-navigation"|aria-label="Previous month"|aria-label="Next month"|mode-dot|small-caret/);
+  assert.match(source, /onPointerDown=\{handlePointerDown\}/);
+  assert.match(source, /onPointerUp=\{handlePointerUp\}/);
+  assert.match(source, /changeMonth\(difference > 0 \? -1 : 1\)/);
+  assert.match(styles, /\.topbar-main\s*\{[^}]*display:\s*grid;[^}]*grid-template-columns:\s*44px minmax\(0, 1fr\) 44px;/s);
+  assert.match(styles, /\.month-grid\s*\{[^}]*touch-action:\s*pan-y;/s);
+  assert.match(styles, /\.calendar-switcher button\.active\s*\{[^}]*background:\s*var\(--header-accent\);/s);
+});
+
 test("references only files present in the exported site", async () => {
   const html = await readFile(path.join(clientRoot, "index.html"), "utf8");
   const references = [
