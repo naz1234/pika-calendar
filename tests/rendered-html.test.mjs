@@ -44,6 +44,10 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   assert.match(source, /Download backup/);
   assert.match(source, /Automatic shared sync/);
   assert.match(source, /This is a public shared calendar/);
+  assert.match(source, />Settings</);
+  assert.match(source, /aria-expanded=\{settingsOpen\}/);
+  assert.match(source, /calendar-settings-panel/);
+  assert.match(styles, /\.settings-toggle/);
   assert.doesNotMatch(source, /Enable private sync|Copy private sync link/);
   assert.match(source, /Import roster file/);
   assert.match(source, /application\/pdf/);

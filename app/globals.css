@@ -1085,6 +1085,56 @@ textarea:focus-visible {
   color: var(--danger);
 }
 
+.settings-section {
+  padding: 14px 0;
+}
+
+.settings-toggle {
+  min-height: 62px;
+  padding: 0 12px;
+  border: 1px solid var(--grid);
+  border-radius: 12px;
+  background: var(--surface-soft);
+  color: var(--text);
+}
+
+.settings-toggle > span:first-child {
+  display: grid;
+  gap: 4px;
+}
+
+.settings-toggle strong {
+  font-size: 0.86rem;
+}
+
+.settings-toggle small {
+  color: var(--muted);
+  font-size: 0.68rem;
+}
+
+.settings-chevron {
+  color: var(--muted-strong);
+  font-size: 1.35rem;
+  transition: transform 160ms ease;
+}
+
+.settings-toggle.open .settings-chevron {
+  transform: rotate(90deg);
+}
+
+.settings-panel {
+  padding-top: 14px;
+}
+
+.settings-group {
+  padding: 16px 0;
+  border-top: 1px solid var(--grid-soft);
+}
+
+.settings-panel .device-note {
+  margin: 18px 4px 4px;
+}
+
 .roster-menu-row {
   min-height: 60px;
 }

@@ -204,6 +204,7 @@ export default function Home() {
   const [syncRetry, setSyncRetry] = useState(0);
   const [agendaOpen, setAgendaOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [monthPickerOpen, setMonthPickerOpen] = useState(false);
   const [editor, setEditor] = useState<{ id?: string; draft: EventDraft } | null>(null);
@@ -977,7 +978,15 @@ export default function Home() {
     <main className="calendar-app" data-calendar={activeCalendar}>
       <header className="topbar">
         <div className="topbar-main">
-          <button ref={menuTrigger} className="icon-button menu-button" onClick={() => setMenuOpen(true)} aria-label="Open menu">
+          <button
+            ref={menuTrigger}
+            className="icon-button menu-button"
+            onClick={() => {
+              setSettingsOpen(false);
+              setMenuOpen(true);
+            }}
+            aria-label="Open menu"
+          >
             <span className="menu-glyph" aria-hidden="true"><i /><i /><i /></span>
           </button>
 
@@ -1189,33 +1198,48 @@ export default function Home() {
                 </button>
               </div>
             )}
-            <div className="menu-section">
-              <p className="menu-label">Appearance</p>
-              <div className="theme-toggle" role="group" aria-label="Appearance">
-                <button className={theme === "dark" ? "active" : ""} onClick={() => setTheme("dark")}>Dark</button>
-                <button className={theme === "light" ? "active" : ""} onClick={() => setTheme("light")}>Light</button>
-              </div>
+            <div className="menu-section settings-section">
+              <button
+                className={`menu-row settings-toggle${settingsOpen ? " open" : ""}`}
+                onClick={() => setSettingsOpen((current) => !current)}
+                aria-expanded={settingsOpen}
+                aria-controls="calendar-settings-panel"
+              >
+                <span><strong>Settings</strong><small>Appearance, sync, backups, and data</small></span>
+                <span className="settings-chevron" aria-hidden="true">›</span>
+              </button>
+              {settingsOpen && (
+                <div id="calendar-settings-panel" className="settings-panel">
+                  <div className="settings-group">
+                    <p className="menu-label">Appearance</p>
+                    <div className="theme-toggle" role="group" aria-label="Appearance">
+                      <button className={theme === "dark" ? "active" : ""} onClick={() => setTheme("dark")}>Dark</button>
+                      <button className={theme === "light" ? "active" : ""} onClick={() => setTheme("light")}>Light</button>
+                    </div>
+                  </div>
+                  <div className="settings-group">
+                    <p className="menu-label">Your data</p>
+                    <div className="menu-row sync-menu-row" role="status">
+                      <span><strong>Automatic shared sync</strong><small>The same calendar opens in every browser and phone</small></span>
+                      <span className={`sync-dot ${syncStatus}`} aria-label={`Sync status: ${syncStatus}`} />
+                    </div>
+                    <button className="menu-row" onClick={exportBackup}><span>Download backup</span><span aria-hidden="true">↓</span></button>
+                    <button className="menu-row" onClick={() => importInput.current?.click()}><span>Import backup</span><span aria-hidden="true">↑</span></button>
+                    <input
+                      ref={importInput}
+                      className="visually-hidden"
+                      type="file"
+                      accept="application/json,.json"
+                      onChange={(event) => event.target.files?.[0] && importBackup(event.target.files[0])}
+                    />
+                    <button className="menu-row danger" onClick={clearCalendar}><span>Clear calendar data</span><span aria-hidden="true">×</span></button>
+                  </div>
+                  <p className="device-note">
+                    This is a public shared calendar. Anyone with the site URL can view, add, edit, or delete events. Roster files never leave your device.
+                  </p>
+                </div>
+              )}
             </div>
-            <div className="menu-section">
-              <p className="menu-label">Your data</p>
-              <div className="menu-row sync-menu-row" role="status">
-                <span><strong>Automatic shared sync</strong><small>The same calendar opens in every browser and phone</small></span>
-                <span className={`sync-dot ${syncStatus}`} aria-label={`Sync status: ${syncStatus}`} />
-              </div>
-              <button className="menu-row" onClick={exportBackup}><span>Download backup</span><span aria-hidden="true">↓</span></button>
-              <button className="menu-row" onClick={() => importInput.current?.click()}><span>Import backup</span><span aria-hidden="true">↑</span></button>
-              <input
-                ref={importInput}
-                className="visually-hidden"
-                type="file"
-                accept="application/json,.json"
-                onChange={(event) => event.target.files?.[0] && importBackup(event.target.files[0])}
-              />
-              <button className="menu-row danger" onClick={clearCalendar}><span>Clear calendar data</span><span aria-hidden="true">×</span></button>
-            </div>
-            <p className="device-note">
-              This is a public shared calendar. Anyone with the site URL can view, add, edit, or delete events. Roster files never leave your device.
-            </p>
           </aside>
         </div>
       )}
