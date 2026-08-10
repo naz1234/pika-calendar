@@ -66,7 +66,7 @@ type RosterDialogState = {
 
 const STORAGE_KEY = "daymark-calendar-v1";
 const SETTINGS_KEY = "daymark-settings-v1";
-const SHARED_SYNC_MIGRATION_KEY = "daymark-shared-sync-migrated-v1";
+const SHARED_SYNC_MIGRATION_KEY = "daymark-shared-sync-migrated-v2";
 const STATIC_DATE = new Date(2000, 0, 1);
 const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const SHORT_WEEKDAYS = ["S", "M", "T", "W", "T", "F", "S"];

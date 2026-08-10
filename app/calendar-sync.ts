@@ -2,7 +2,7 @@ import type { CalendarEventRecord } from "./roster-merge";
 
 export const SHARED_SYNC_SECRET = "pika-calendar-public-sync-000001";
 
-const API_PATH = "/api/calendar";
+const API_PATH = "/api/shared-calendar";
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 

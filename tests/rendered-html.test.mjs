@@ -20,7 +20,7 @@ test("exports a deployable static calendar", async () => {
 });
 
 test("ships automatic shared sync, roster import, and installable app assets", async () => {
-  const [manifestText, source, styles, mergeSource, pdfReaderSource, pdfDomainSource, syncSource, apiSource, schemaSource, serviceWorker] = await Promise.all([
+  const [manifestText, source, styles, mergeSource, pdfReaderSource, pdfDomainSource, syncSource, sharedApiSource, legacyApiSource, schemaSource, serviceWorker] = await Promise.all([
     readFile(path.join(clientRoot, "manifest.webmanifest"), "utf8"),
     readFile(path.join(projectRoot, "app", "page.tsx"), "utf8"),
     readFile(path.join(projectRoot, "app", "globals.css"), "utf8"),
@@ -28,6 +28,7 @@ test("ships automatic shared sync, roster import, and installable app assets", a
     readFile(path.join(projectRoot, "app", "roster-pdf-reader.ts"), "utf8"),
     readFile(path.join(projectRoot, "app", "roster-pdf-domain.ts"), "utf8"),
     readFile(path.join(projectRoot, "app", "calendar-sync.ts"), "utf8"),
+    readFile(path.join(projectRoot, "functions", "api", "shared-calendar.ts"), "utf8"),
     readFile(path.join(projectRoot, "functions", "api", "calendar.ts"), "utf8"),
     readFile(path.join(projectRoot, "db", "schema.ts"), "utf8"),
     readFile(path.join(clientRoot, "sw.js"), "utf8"),
@@ -53,13 +54,15 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   assert.match(pdfDomainSource, /parseIvuPlanTextItems/);
   assert.match(syncSource, /AES-GCM/);
   assert.match(syncSource, /pika-calendar-public-sync-000001/);
-  assert.match(apiSource, /SHARED_CALENDAR_ID/);
-  assert.doesNotMatch(apiSource, /searchParams\.get\("id"\)/);
+  assert.match(syncSource, /\/api\/shared-calendar/);
+  assert.match(sharedApiSource, /pika-calendar-public-shared-v2/);
+  assert.doesNotMatch(sharedApiSource, /searchParams\.get\("id"\)/);
+  assert.match(legacyApiSource, /searchParams\.get\("id"\)/);
   assert.match(schemaSource, /sqliteTable\("calendars"/);
   for (const tone of ["early", "late", "night", "rest"]) {
     assert.match(styles, new RegExp(`--shift-${tone}-ink`));
   }
-  assert.match(serviceWorker, /my-calendar-v5/);
+  assert.match(serviceWorker, /my-calendar-v6/);
   assert.match(serviceWorker, /pathname\.startsWith\("\/api\/"\)/);
 
   await Promise.all([
