@@ -385,28 +385,6 @@ textarea:focus-visible {
   font-size: 0.75rem;
 }
 
-.roster-upload-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-  min-width: 38px;
-  min-height: 38px;
-  padding: 0 11px;
-  border: 1px solid color-mix(in srgb, var(--work) 38%, var(--grid));
-  border-radius: 12px;
-  background: var(--work-soft);
-  color: var(--work);
-  font-size: 0.75rem;
-  font-weight: 750;
-  white-space: nowrap;
-}
-
-.upload-glyph {
-  font-size: 1.05rem;
-  line-height: 1;
-}
-
 .main-content {
   display: grid;
   min-height: 0;
@@ -768,12 +746,40 @@ textarea:focus-visible {
   white-space: nowrap;
 }
 
-.agenda-event-body span {
-  overflow: hidden;
-  color: var(--muted);
-  font-size: 0.73rem;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.agenda-event-body > .agenda-note {
+  display: grid;
+  gap: 3px;
+  margin-top: 2px;
+  padding: 7px 8px;
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--grid));
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--accent-soft) 78%, var(--surface-raised));
+  white-space: normal;
+}
+
+.agenda-note-label {
+  color: var(--accent);
+  font-size: 0.59rem;
+  font-weight: 850;
+  letter-spacing: 0.09em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.agenda-note-text {
+  color: var(--muted-strong);
+  font-size: 0.75rem;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.agenda-event.shift-event .agenda-note {
+  border-color: color-mix(in srgb, var(--event-ink) 38%, var(--grid));
+  background: color-mix(in srgb, var(--event-fill) 80%, var(--surface-raised));
+}
+
+.agenda-event.shift-event .agenda-note-label {
+  color: var(--event-ink);
 }
 
 .event-arrow {
@@ -1755,18 +1761,6 @@ textarea:focus-visible {
   clip: rect(0, 0, 0, 0) !important;
   white-space: nowrap !important;
   border: 0 !important;
-}
-
-@media (max-width: 539px) {
-  .roster-upload-button {
-    width: 38px;
-    flex: 0 0 38px;
-    padding: 0;
-  }
-
-  .roster-upload-button > span:last-child {
-    display: none;
-  }
 }
 
 @media (min-width: 540px) {
