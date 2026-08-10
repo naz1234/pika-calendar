@@ -14,16 +14,19 @@ A private, mobile-first calendar with separate **Work** and **Personal** modes. 
 - Swipe or use arrows to change months
 - Dark and light themes
 - JSON backup and restore
+- Optional encrypted sync across private/incognito windows and other phones
 - Installable mobile web app with offline app-shell support
 - Responsive layout for phones, tablets, and desktop
 
 ## Important: where events are saved
 
-Events are stored only in the browser on the device where you create them. There is no server, login, or automatic sync.
+Events are cached in the browser so the calendar keeps working offline. By default they stay on that device. Use **Menu → Enable private sync** to copy a private link that opens the same calendar in incognito or on another phone.
 
-Roster screenshots are also read entirely in your browser. The screenshot is not uploaded or saved; only the Work events you approve are stored. Re-importing the same month replaces only that month’s earlier roster-image events, while manual Work events and all Personal events remain.
+The link contains a random 192-bit secret in its URL fragment. Events are encrypted in the browser with AES-GCM before the server receives them; the D1 database stores only an opaque calendar ID and encrypted payload. Anyone who has the private link can open the calendar, so treat it like a password. No account is required.
 
-Use **Menu → Download backup** occasionally. Clearing browser data, changing domains, or moving to another phone can remove local events unless you have a backup.
+Roster screenshots are still read entirely in your browser. The screenshot is not uploaded or saved; only the encrypted Work events you approve are synced. Re-importing the same month replaces only that month’s earlier roster-image events, while manual Work events and all Personal events remain.
+
+Use **Menu → Download backup** occasionally as an extra recovery copy.
 
 ## Upload to GitHub
 
@@ -49,6 +52,23 @@ Create a new Pages project from the GitHub repository and use these settings:
 The project includes `.node-version`, but setting the Cloudflare environment variable `NODE_VERSION` to `22.23.2` is also safe.
 
 After Cloudflare finishes the first deployment, open the Pages URL on your phone. In Safari or Chrome, use **Add to Home Screen** if you want it to behave more like an app.
+
+## Configure encrypted sync on Cloudflare Pages
+
+The calendar continues to work device-only when this setup is omitted. To enable cross-device sync:
+
+1. In Cloudflare, create a D1 database named `pika-calendar`.
+2. Open the database console and run the SQL from the generated file in `drizzle/`.
+3. In the Pages project, add a **D1 database binding** named `DB` for Production and Preview, pointing to that database.
+4. Redeploy the Pages project so the root `functions/` directory is activated.
+
+Cloudflare Pages discovers `functions/api/calendar.ts` automatically. Do not move `functions/` into `dist/client`.
+
+## Use private sync
+
+1. On the phone that already has the roster, open **Menu → Enable private sync**. The current events are uploaded in encrypted form and the private sync link is copied.
+2. Send that link to your other phone, or paste it into an incognito window.
+3. Open the link once. That browser saves the secret locally and loads the same events. Use **Copy private sync link** later to connect another browser.
 
 ## Run locally (optional)
 

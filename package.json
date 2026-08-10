@@ -9,10 +9,12 @@
     "dev": "vinext dev",
     "build": "vinext build && node scripts/prepare-static-output.mjs",
     "start": "vinext start",
-    "test": "npm run build && node --test tests/rendered-html.test.mjs tests/roster-domain.test.mjs tests/roster-merge.test.mjs tests/roster-reader.test.mjs",
-    "lint": "eslint . --ignore-pattern dist --ignore-pattern .next"
+    "test": "npm run build && node --test tests/rendered-html.test.mjs tests/roster-domain.test.mjs tests/roster-merge.test.mjs tests/roster-reader.test.mjs tests/sync-client.test.mjs tests/calendar-store.test.mjs",
+    "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
+    "db:generate": "drizzle-kit generate"
   },
   "dependencies": {
+    "drizzle-orm": "0.45.2",
     "react": "19.2.6",
     "react-dom": "19.2.6",
     "tesseract.js": "7.0.0"
@@ -26,6 +28,7 @@
     "@types/react-dom": "19.2.3",
     "@vitejs/plugin-react": "6.0.2",
     "@vitejs/plugin-rsc": "0.5.26",
+    "drizzle-kit": "0.31.10",
     "eslint": "9.39.4",
     "eslint-plugin-jsx-a11y": "6.10.2",
     "eslint-plugin-react": "7.37.5",

@@ -1,4 +1,4 @@
-const CACHE_NAME = "my-calendar-v4";
+const CACHE_NAME = "my-calendar-v5";
 const APP_SHELL = [
   "/manifest.webmanifest",
   "/icons/calendar-192.png",
@@ -35,6 +35,7 @@ self.addEventListener("fetch", (event) => {
   if (request.method !== "GET") return;
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
+  if (url.pathname.startsWith("/api/")) return;
 
   if (request.mode === "navigate") {
     event.respondWith((async () => {
