@@ -11,7 +11,7 @@ A mobile-first shared calendar with separate **Work** and **Personal** modes. It
 - Distinct Early, Late, Night, and RD colors in the calendar, agenda, and search
 - Add, edit, search, and delete events
 - All-day events, overnight shifts, start/end times, and notes
-- Swipe or use arrows to change months
+- Swipe left or right to change months
 - Dark and light themes
 - JSON backup and restore
 - Automatic public shared sync across normal, private/incognito, and other browsers

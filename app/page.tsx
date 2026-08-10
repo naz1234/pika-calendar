@@ -618,13 +618,6 @@ export default function Home() {
     setAnnouncement(`Showing ${label}`);
   }
 
-  function goToday() {
-    setView({ year: now.getFullYear(), month: now.getMonth() });
-    setSelectedDate(todayKey);
-    setAgendaOpen(true);
-    setAnnouncement("Showing today");
-  }
-
   function chooseDay(day: Date) {
     const key = dateKey(day);
     setSelectedDate(key);
@@ -990,25 +983,23 @@ export default function Home() {
             <span className="menu-glyph" aria-hidden="true"><i /><i /><i /></span>
           </button>
 
-          <button className="month-title" onClick={() => setMonthPickerOpen(true)} aria-label={`Choose month. Currently ${monthLabel}`}>
+          <button
+            className="month-title"
+            onClick={() => setMonthPickerOpen(true)}
+            aria-label={`Choose month. Currently ${monthLabel}`}
+            aria-haspopup="dialog"
+            aria-expanded={monthPickerOpen}
+            aria-controls="month-picker-dialog"
+          >
             <span>{monthLabel}</span>
-            <span className="small-caret" aria-hidden="true">▾</span>
           </button>
 
-          <div className="top-actions">
-            <button className="today-button" onClick={goToday}>Today</button>
-            <button className="icon-button search-button" onClick={() => setSearchOpen(true)} aria-label="Search events">
-              <span className="search-glyph" aria-hidden="true" />
-            </button>
-          </div>
+          <button className="icon-button search-button" onClick={() => setSearchOpen(true)} aria-label="Search events">
+            <span className="search-glyph" aria-hidden="true" />
+          </button>
         </div>
 
         <div className="calendar-toolbar">
-          <div className="month-navigation" aria-label="Month navigation">
-            <button className="nav-button" onClick={() => changeMonth(-1)} aria-label="Previous month">‹</button>
-            <button className="nav-button" onClick={() => changeMonth(1)} aria-label="Next month">›</button>
-          </div>
-
           <div className="calendar-switcher" role="group" aria-label="Calendar mode">
             {(["work", "personal"] as CalendarKind[]).map((kind) => (
               <button
@@ -1017,15 +1008,10 @@ export default function Home() {
                 onClick={() => setActiveCalendar(kind)}
                 aria-pressed={activeCalendar === kind}
               >
-                <span className={`mode-dot ${kind}`} aria-hidden="true" />
                 {kind === "work" ? "Work" : "Personal"}
               </button>
             ))}
           </div>
-
-          <p className="event-count" aria-label={`${visibleEvents.length} events in ${activeCalendar}`}>
-            {visibleEvents.length} event{visibleEvents.length === 1 ? "" : "s"}
-          </p>
         </div>
       </header>
 
@@ -1280,6 +1266,7 @@ export default function Home() {
         <div className="overlay centered-overlay">
           <button className="overlay-dismiss" onClick={() => setMonthPickerOpen(false)} aria-label="Close month picker" />
           <form
+            id="month-picker-dialog"
             className="dialog month-dialog"
             role="dialog"
             aria-modal="true"
