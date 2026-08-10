@@ -118,15 +118,17 @@ test("uses the centered swipe-first calendar header", async () => {
     readFile(path.join(projectRoot, "app", "globals.css"), "utf8"),
   ]);
 
-  assert.match(source, /className="month-title"[\s\S]*?setMonthPickerOpen\(true\)[\s\S]*?aria-controls="month-picker-dialog"/);
-  assert.match(source, /id="month-picker-dialog"[\s\S]*?name="month" type="month"/);
+  assert.match(source, /<label className="month-title">[\s\S]*?className="month-title-input"[\s\S]*?type="month"[\s\S]*?onChange=\{\(event\) => chooseMonth\(event\.currentTarget\.value\)\}/);
+  assert.match(source, /function chooseMonth\(value: string\)[\s\S]*?setView\(\{ year, month: month - 1 \}\)[\s\S]*?setSelectedDate\(dateKey\(nextSelection\)\)/);
   assert.match(source, /className="icon-button search-button"[\s\S]*?aria-label="Search events"[\s\S]*?className="search-glyph"/);
   assert.match(source, /className="calendar-switcher"[\s\S]*?aria-label="Calendar mode"[\s\S]*?setActiveCalendar\(kind\)[\s\S]*?aria-pressed=\{activeCalendar === kind\}/);
-  assert.doesNotMatch(source, /className="today-button"|className="month-navigation"|aria-label="Previous month"|aria-label="Next month"|mode-dot|small-caret/);
+  assert.doesNotMatch(source, /monthPickerOpen|month-picker-dialog|month-dialog|Show month|Close month picker|className="today-button"|className="month-navigation"|aria-label="Previous month"|aria-label="Next month"|mode-dot|small-caret/);
   assert.match(source, /onPointerDown=\{handlePointerDown\}/);
   assert.match(source, /onPointerUp=\{handlePointerUp\}/);
   assert.match(source, /changeMonth\(difference > 0 \? -1 : 1\)/);
   assert.match(styles, /\.topbar-main\s*\{[^}]*display:\s*grid;[^}]*grid-template-columns:\s*44px minmax\(0, 1fr\) 44px;/s);
+  assert.match(styles, /\.month-title-input\s*\{[^}]*position:\s*absolute;[^}]*inset:\s*0;[^}]*opacity:\s*0;/s);
+  assert.doesNotMatch(styles, /\.month-dialog/);
   assert.match(styles, /\.month-grid\s*\{[^}]*touch-action:\s*pan-y;/s);
   assert.match(styles, /\.calendar-switcher button\.active\s*\{[^}]*background:\s*var\(--header-accent\);/s);
 });
