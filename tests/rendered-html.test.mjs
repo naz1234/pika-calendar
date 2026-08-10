@@ -52,6 +52,9 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   assert.match(source, /agenda-note/);
   assert.match(source, />Remark</);
   assert.match(styles, /\.agenda-note-text/);
+  assert.match(source, /eventDisplayRemark/);
+  assert.match(source, /mobile-remark-indicator/);
+  assert.match(styles, /\.mobile-event-summary\.has-remark/);
   assert.match(source, /eventShiftClass/);
   assert.match(source, /mobileEventCode/);
   assert.match(source, /mobile-event-code/);

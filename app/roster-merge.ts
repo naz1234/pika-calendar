@@ -37,6 +37,19 @@ export type RosterMergeResult = {
   skippedManualDuplicates: number;
 };
 
+/** Returns user-visible remarks while hiding untouched roster import metadata. */
+export function eventDisplayRemark(
+  event: Pick<CalendarEventRecord, "notes" | "source">,
+): string {
+  const remark = event.notes.trim();
+  if (!remark) return "";
+
+  const importedNote = event.source?.type === "roster-image"
+    ? `Imported from roster image · ${event.source.rawCode}`
+    : "";
+  return remark === importedNote ? "" : remark;
+}
+
 function sameShift(event: CalendarEventRecord, entry: PreparedRosterEntry) {
   return (
     event.date === entry.date &&

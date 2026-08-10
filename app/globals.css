@@ -566,12 +566,49 @@ textarea:focus-visible {
   text-align: left;
 }
 
+.mobile-event-summary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: 13px;
+}
+
+.mobile-event-summary.has-remark {
+  padding: 1px 3px;
+  border: 1px solid currentColor;
+  border-radius: 5px;
+  background: var(--accent-soft);
+  box-shadow: 0 0 0 2px color-mix(in srgb, currentColor 13%, transparent);
+}
+
+.event-chip.shift-event .mobile-event-summary.has-remark {
+  background: var(--event-fill);
+}
+
 .mobile-event-code {
   color: currentColor;
   font-size: 0.58rem;
   font-weight: 850;
   line-height: 1;
   letter-spacing: 0.02em;
+}
+
+.mobile-remark-indicator {
+  display: inline-grid;
+  place-items: center;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--surface);
+  font-size: 0.48rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.event-chip.shift-event .mobile-remark-indicator {
+  background: var(--event-ink);
 }
 
 .event-title {
@@ -1820,7 +1857,7 @@ textarea:focus-visible {
     box-shadow: inset 3px 0 var(--event-ink);
   }
 
-  .mobile-event-code {
+  .mobile-event-summary {
     display: none;
   }
 
