@@ -49,6 +49,9 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   assert.match(source, /application\/pdf/);
   assert.match(source, /roster-image/);
   assert.match(source, /eventShiftClass/);
+  assert.match(source, /mobileEventCode/);
+  assert.match(source, /mobile-event-code/);
+  assert.doesNotMatch(source, /chip-dot/);
   assert.match(pdfReaderSource, /pdfjs-dist/);
   assert.match(pdfReaderSource, /readRosterPdf/);
   assert.match(pdfDomainSource, /parseIvuPlanTextItems/);

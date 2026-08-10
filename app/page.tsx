@@ -25,6 +25,7 @@ import {
   inferRosterChoice,
   makeDateKey as makeRosterDateKey,
   makeMonthKey,
+  mobileEventCode,
   normalizeRosterCode,
   rosterShiftTone,
   type RosterChoice,
@@ -1095,8 +1096,8 @@ export default function Home() {
                               onClick={() => openEdit(calendarEvent)}
                               aria-label={`${calendarEvent.title}, ${eventTimeLabel(calendarEvent)}`}
                             >
-                              <span className="chip-dot" aria-hidden="true" />
-                              <span>{calendarEvent.title}</span>
+                              <span className="mobile-event-code" aria-hidden="true">{mobileEventCode(calendarEvent.title)}</span>
+                              <span className="event-title">{calendarEvent.title}</span>
                             </button>
                           ))}
                           {dayEvents.length > 1 && (
