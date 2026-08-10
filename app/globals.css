@@ -557,7 +557,7 @@ textarea:focus-visible {
   align-items: center;
   justify-content: center;
   width: 100%;
-  height: 15px;
+  height: 22px;
   padding: 0 2px;
   border-radius: 4px;
   background: transparent;
@@ -571,19 +571,23 @@ textarea:focus-visible {
   align-items: center;
   justify-content: center;
   gap: 2px;
-  min-height: 13px;
+  min-width: 31px;
+  min-height: 19px;
+  padding: 2px 5px;
+  border: 1px solid color-mix(in srgb, currentColor 58%, transparent);
+  border-radius: 6px;
+  background: var(--accent-soft);
+  box-shadow: 0 3px 9px color-mix(in srgb, currentColor 16%, transparent);
+}
+
+.event-chip.shift-event .mobile-event-summary {
+  background: var(--event-fill);
 }
 
 .mobile-event-summary.has-remark {
-  padding: 1px 3px;
-  border: 1px solid currentColor;
-  border-radius: 5px;
-  background: var(--accent-soft);
-  box-shadow: 0 0 0 2px color-mix(in srgb, currentColor 13%, transparent);
-}
-
-.event-chip.shift-event .mobile-event-summary.has-remark {
-  background: var(--event-fill);
+  border-width: 2px;
+  box-shadow: 0 0 0 2px color-mix(in srgb, currentColor 20%, transparent),
+    0 3px 9px color-mix(in srgb, currentColor 18%, transparent);
 }
 
 .mobile-event-code {
@@ -749,14 +753,23 @@ textarea:focus-visible {
   gap: 10px;
   width: 100%;
   min-height: 65px;
-  padding: 10px 8px;
-  border-bottom: 1px solid var(--grid-soft);
-  background: transparent;
+  margin-bottom: 8px;
+  padding: 11px 10px;
+  border: 1px solid var(--grid);
+  border-radius: 12px;
+  background: var(--surface-soft);
+  box-shadow: 0 5px 14px rgba(0, 0, 0, 0.12);
   text-align: left;
 }
 
+.agenda-event:last-child {
+  margin-bottom: 0;
+}
+
 .agenda-event.shift-event {
-  box-shadow: inset 3px 0 var(--event-ink);
+  border-color: color-mix(in srgb, var(--event-ink) 46%, var(--grid));
+  background: var(--event-fill);
+  box-shadow: inset 4px 0 var(--event-ink), 0 6px 16px color-mix(in srgb, var(--event-ink) 14%, transparent);
 }
 
 .agenda-time {
