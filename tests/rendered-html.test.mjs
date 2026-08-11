@@ -21,8 +21,9 @@ test("exports a deployable static calendar", async () => {
 });
 
 test("ships automatic shared sync, roster import, and installable app assets", async () => {
-  const [manifestText, source, styles, mergeSource, shiftSummarySource, pdfReaderSource, pdfDomainSource, syncSource, sharedApiSource, legacyApiSource, schemaSource, serviceWorker] = await Promise.all([
+  const [manifestText, packageText, source, styles, mergeSource, shiftSummarySource, pdfReaderSource, pdfDomainSource, syncSource, sharedApiSource, legacyApiSource, schemaSource, serviceWorker] = await Promise.all([
     readFile(path.join(clientRoot, "manifest.webmanifest"), "utf8"),
+    readFile(path.join(projectRoot, "package.json"), "utf8"),
     readFile(path.join(projectRoot, "app", "page.tsx"), "utf8"),
     readFile(path.join(projectRoot, "app", "globals.css"), "utf8"),
     readFile(path.join(projectRoot, "app", "roster-merge.ts"), "utf8"),
@@ -36,6 +37,7 @@ test("ships automatic shared sync, roster import, and installable app assets", a
     readFile(path.join(clientRoot, "sw.js"), "utf8"),
   ]);
   const manifest = JSON.parse(manifestText);
+  const packageJson = JSON.parse(packageText);
 
   assert.equal(manifest.name, "My Calendar");
   assert.equal(manifest.display, "standalone");
@@ -101,6 +103,9 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   assert.match(pdfReaderSource, /pdfjs-dist\/legacy\/build\/pdf\.mjs/);
   assert.match(pdfReaderSource, /import "pdfjs-dist\/legacy\/build\/pdf\.worker\.min\.mjs"/);
   assert.doesNotMatch(pdfReaderSource, /GlobalWorkerOptions|pdfWorkerUrl|\?url/);
+  assert.equal(packageJson.dependencies["pdfjs-dist"], "5.4.624");
+  assert.match(pdfReaderSource, /typeof file\.arrayBuffer === "function"/);
+  assert.match(pdfReaderSource, /new FileReader\(\)/);
   assert.match(pdfReaderSource, /readRosterPdf/);
   assert.match(pdfDomainSource, /parseIvuPlanTextItems/);
   assert.match(syncSource, /AES-GCM/);
@@ -113,9 +118,14 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   for (const tone of ["early", "late", "night", "rest"]) {
     assert.match(styles, new RegExp(`--shift-${tone}-ink`));
   }
-  assert.match(serviceWorker, /my-calendar-v12/);
+  assert.match(serviceWorker, /my-calendar-v13/);
+  assert.match(serviceWorker, /includeUncontrolled: true/);
+  assert.match(serviceWorker, /try[\s\S]*?await client\.navigate\(client\.url\);[\s\S]*?catch/);
   assert.match(serviceWorker, /client\.navigate\(client\.url\)/);
   assert.match(source, /controllerchange/);
+  assert.match(source, /updateViaCache: "none"/);
+  assert.match(source, /pageshow/);
+  assert.match(source, /visibilitychange/);
   assert.match(source, /registration\.update\(\)/);
   assert.match(serviceWorker, /pathname\.startsWith\("\/api\/"\)/);
 
@@ -135,7 +145,11 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   ]);
 
   const staticAssets = await readdir(path.join(clientRoot, "_next", "static"), { recursive: true });
-  assert.ok(staticAssets.some((asset) => /roster-pdf-reader-.+\.js$/i.test(asset)));
+  const pdfAsset = staticAssets.find((asset) => /roster-pdf-reader-.+\.js$/i.test(asset));
+  assert.ok(pdfAsset);
+  const pdfBundle = await readFile(path.join(clientRoot, "_next", "static", pdfAsset), "utf8");
+  assert.match(pdfBundle, /5\.4\.624/);
+  assert.doesNotMatch(pdfBundle, /6\.2\.108/);
 });
 
 test("calculates ISO week numbers across year boundaries", async () => {

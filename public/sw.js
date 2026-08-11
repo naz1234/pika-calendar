@@ -1,5 +1,5 @@
 const CACHE_PREFIX = "my-calendar-v";
-const CACHE_NAME = "my-calendar-v12";
+const CACHE_NAME = "my-calendar-v13";
 const APP_SHELL = [
   "/manifest.webmanifest",
   "/icons/calendar-192.png",
@@ -33,10 +33,16 @@ async function activateApp() {
   await self.clients.claim();
 
   if (isUpgrade) {
-    const windows = await self.clients.matchAll({ type: "window" });
-    await Promise.all(windows.map((client) => (
-      typeof client.navigate === "function" ? client.navigate(client.url) : undefined
-    )));
+    const windows = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+    await Promise.all(windows.map(async (client) => {
+      if (typeof client.navigate !== "function") return;
+      try {
+        await client.navigate(client.url);
+      } catch {
+        // Some iOS PWA clients cannot navigate while backgrounded. Activation
+        // must still finish so the repaired cache controls their next launch.
+      }
+    }));
   }
 }
 

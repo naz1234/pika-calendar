@@ -454,6 +454,12 @@ export default function Home() {
       refreshingForServiceWorker = true;
       window.location.reload();
     };
+    const updateServiceWorker = () => {
+      if (document.visibilityState !== "visible") return;
+      void navigator.serviceWorker.getRegistration()
+        .then((registration) => registration?.update())
+        .catch(() => undefined);
+    };
     const frame = requestAnimationFrame(() => {
       const currentDate = new Date();
       setNow(currentDate);
@@ -487,7 +493,9 @@ export default function Home() {
 
       if (process.env.NODE_ENV === "production" && "serviceWorker" in navigator) {
         navigator.serviceWorker.addEventListener("controllerchange", refreshForServiceWorker);
-        navigator.serviceWorker.register("/sw.js")
+        window.addEventListener("pageshow", updateServiceWorker);
+        document.addEventListener("visibilitychange", updateServiceWorker);
+        navigator.serviceWorker.register("/sw.js", { updateViaCache: "none" })
           .then((registration) => registration.update())
           .catch(() => undefined);
       }
@@ -496,6 +504,8 @@ export default function Home() {
       cancelAnimationFrame(frame);
       if ("serviceWorker" in navigator) {
         navigator.serviceWorker.removeEventListener("controllerchange", refreshForServiceWorker);
+        window.removeEventListener("pageshow", updateServiceWorker);
+        document.removeEventListener("visibilitychange", updateServiceWorker);
       }
     };
   }, [connectToSync]);
