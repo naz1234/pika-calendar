@@ -1279,10 +1279,6 @@ export default function Home() {
         </aside>
       </div>
 
-      <button className="floating-add" onClick={() => openCreate()} aria-label={`Add ${activeCalendar} event`}>
-        <span aria-hidden="true">+</span>
-      </button>
-
       {agendaOpen && <button className="mobile-scrim" onClick={() => setAgendaOpen(false)} aria-label="Close agenda" />}
 
       {menuOpen && (

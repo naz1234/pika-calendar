@@ -96,7 +96,7 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   for (const tone of ["early", "late", "night", "rest"]) {
     assert.match(styles, new RegExp(`--shift-${tone}-ink`));
   }
-  assert.match(serviceWorker, /my-calendar-v10/);
+  assert.match(serviceWorker, /my-calendar-v11/);
   assert.match(serviceWorker, /pathname\.startsWith\("\/api\/"\)/);
 
   await Promise.all([
@@ -139,6 +139,10 @@ test("uses the centered swipe-first calendar header", async () => {
   assert.match(source, /function chooseMonth\(value: string\)[\s\S]*?setView\(\{ year, month: month - 1 \}\)[\s\S]*?setSelectedDate\(dateKey\(nextSelection\)\)/);
   assert.match(source, /className="icon-button search-button"[\s\S]*?aria-label="Search events"[\s\S]*?className="search-glyph"/);
   assert.match(source, /className="calendar-switcher"[\s\S]*?aria-label="Calendar mode"[\s\S]*?setActiveCalendar\(kind\)[\s\S]*?aria-pressed=\{activeCalendar === kind\}/);
+  assert.match(source, /className="day-hit"[\s\S]*?onClick=\{\(\) => chooseDay\(day\)\}/);
+  assert.match(source, /className="agenda-add"[\s\S]*?openCreate\(selectedDate\)/);
+  assert.doesNotMatch(source, /floating-add/);
+  assert.doesNotMatch(styles, /\.floating-add/);
   assert.doesNotMatch(source, /monthPickerOpen|month-picker-dialog|month-dialog|Show month|Close month picker|className="today-button"|className="month-navigation"|aria-label="Previous month"|aria-label="Next month"|mode-dot|small-caret/);
   assert.match(source, /onPointerDown=\{handlePointerDown\}/);
   assert.match(source, /onPointerUp=\{handlePointerUp\}/);
