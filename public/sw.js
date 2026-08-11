@@ -1,4 +1,5 @@
-const CACHE_NAME = "my-calendar-v11";
+const CACHE_PREFIX = "my-calendar-v";
+const CACHE_NAME = "my-calendar-v12";
 const APP_SHELL = [
   "/manifest.webmanifest",
   "/icons/calendar-192.png",
@@ -25,12 +26,22 @@ self.addEventListener("install", (event) => {
   event.waitUntil(precacheApp().then(() => self.skipWaiting()));
 });
 
+async function activateApp() {
+  const keys = await caches.keys();
+  const isUpgrade = keys.some((key) => key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME);
+  await Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key)));
+  await self.clients.claim();
+
+  if (isUpgrade) {
+    const windows = await self.clients.matchAll({ type: "window" });
+    await Promise.all(windows.map((client) => (
+      typeof client.navigate === "function" ? client.navigate(client.url) : undefined
+    )));
+  }
+}
+
 self.addEventListener("activate", (event) => {
-  event.waitUntil(
-    caches.keys()
-      .then((keys) => Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))))
-      .then(() => self.clients.claim())
-  );
+  event.waitUntil(activateApp());
 });
 
 self.addEventListener("fetch", (event) => {

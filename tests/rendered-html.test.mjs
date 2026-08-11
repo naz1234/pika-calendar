@@ -99,8 +99,8 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   assert.match(source, /event-run-continues-next/);
   assert.doesNotMatch(source, /chip-dot/);
   assert.match(pdfReaderSource, /pdfjs-dist\/legacy\/build\/pdf\.mjs/);
-  assert.match(pdfReaderSource, /pdfjs-dist\/legacy\/build\/pdf\.worker\.min\.mjs\?url/);
-  assert.doesNotMatch(pdfReaderSource, /from "pdfjs-dist"|pdfjs-dist\/build\/pdf\.worker/);
+  assert.match(pdfReaderSource, /import "pdfjs-dist\/legacy\/build\/pdf\.worker\.min\.mjs"/);
+  assert.doesNotMatch(pdfReaderSource, /GlobalWorkerOptions|pdfWorkerUrl|\?url/);
   assert.match(pdfReaderSource, /readRosterPdf/);
   assert.match(pdfDomainSource, /parseIvuPlanTextItems/);
   assert.match(syncSource, /AES-GCM/);
@@ -113,7 +113,10 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   for (const tone of ["early", "late", "night", "rest"]) {
     assert.match(styles, new RegExp(`--shift-${tone}-ink`));
   }
-  assert.match(serviceWorker, /my-calendar-v11/);
+  assert.match(serviceWorker, /my-calendar-v12/);
+  assert.match(serviceWorker, /client\.navigate\(client\.url\)/);
+  assert.match(source, /controllerchange/);
+  assert.match(source, /registration\.update\(\)/);
   assert.match(serviceWorker, /pathname\.startsWith\("\/api\/"\)/);
 
   await Promise.all([
@@ -132,7 +135,6 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   ]);
 
   const staticAssets = await readdir(path.join(clientRoot, "_next", "static"), { recursive: true });
-  assert.ok(staticAssets.some((asset) => /pdf\.worker\.min\..+\.mjs$/i.test(asset)));
   assert.ok(staticAssets.some((asset) => /roster-pdf-reader-.+\.js$/i.test(asset)));
 });
 
