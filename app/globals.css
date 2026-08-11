@@ -1268,6 +1268,12 @@ textarea:focus-visible {
   text-align: left;
 }
 
+.menu-link,
+.menu-link:visited {
+  color: var(--muted-strong);
+  text-decoration: none;
+}
+
 .menu-row.danger {
   color: var(--danger);
 }

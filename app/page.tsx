@@ -1301,6 +1301,16 @@ export default function Home() {
                   <span><strong>Import roster file</strong><small>Use a screenshot or IVU.plan PDF</small></span>
                   <span aria-hidden="true">↑</span>
                 </button>
+                <a
+                  className="menu-row roster-menu-row menu-link"
+                  href="https://riy.ivu-cloud.com/mbweb/main/matter/desktop/main-menu"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Open IVU Website to download the original roster PDF in a new tab"
+                >
+                  <span><strong>IVU Website</strong><small>Download the original roster PDF</small></span>
+                  <span aria-hidden="true">↗</span>
+                </a>
               </div>
             )}
             <div className="menu-section settings-section">
