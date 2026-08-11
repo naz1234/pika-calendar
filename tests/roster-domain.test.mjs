@@ -38,6 +38,8 @@ const {
   monthKey,
   normalizeRosterCode,
   parseMonthKey,
+  rosterShiftRunKey,
+  rosterShiftRunPosition,
   rosterShiftTone,
 } = loadedModule.exports;
 
@@ -118,6 +120,42 @@ test("creates readable two-character event labels for mobile month cells", () =>
   assert.equal(mobileEventCode("AL"), "AL");
   assert.equal(mobileEventCode("Sick Leave"), "SL");
   assert.equal(mobileEventCode("Training"), "TR");
+});
+
+test("joins only identical consecutive Work shifts within a calendar row", () => {
+  const shift = (title, overrides = {}) => ({
+    calendar: "work",
+    title,
+    allDay: false,
+    startTime: "23:00",
+    endTime: "07:30",
+    endsNextDay: true,
+    ...overrides,
+  });
+  const night = shift("Night");
+
+  assert.ok(rosterShiftRunKey(night));
+  assert.notEqual(rosterShiftRunKey(shift("Night RDOT")), rosterShiftRunKey(night));
+  assert.notEqual(rosterShiftRunKey(shift("Night (EX)", { startTime: "19:00" })), rosterShiftRunKey(night));
+  assert.equal(rosterShiftRunKey(shift("Night", { calendar: "personal" })), "");
+  assert.equal(rosterShiftRunKey(shift("Night meeting")), "");
+
+  assert.deepEqual(rosterShiftRunPosition(night, night, night, 3), {
+    continuesPrevious: true,
+    continuesNext: true,
+  });
+  assert.deepEqual(rosterShiftRunPosition(night, night, night, 0), {
+    continuesPrevious: false,
+    continuesNext: true,
+  });
+  assert.deepEqual(rosterShiftRunPosition(night, night, night, 6), {
+    continuesPrevious: true,
+    continuesNext: false,
+  });
+  assert.deepEqual(rosterShiftRunPosition(night, shift("Late"), shift("Night RDOT"), 3), {
+    continuesPrevious: false,
+    continuesNext: false,
+  });
 });
 
 test("extracts canonical times despite O/0 confusion and OCR punctuation", () => {
