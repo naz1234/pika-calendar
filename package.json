@@ -9,7 +9,7 @@
     "dev": "vinext dev",
     "build": "vinext build && node scripts/prepare-static-output.mjs",
     "start": "vinext start",
-    "test": "npm run build && node --test tests/rendered-html.test.mjs tests/roster-domain.test.mjs tests/roster-merge.test.mjs tests/roster-reader.test.mjs tests/roster-pdf-domain.test.mjs tests/sync-client.test.mjs tests/calendar-api.test.mjs tests/calendar-store.test.mjs",
+    "test": "npm run build && node --test tests/rendered-html.test.mjs tests/roster-domain.test.mjs tests/roster-merge.test.mjs tests/roster-reader.test.mjs tests/roster-pdf-domain.test.mjs tests/shift-summary.test.mjs tests/sync-client.test.mjs tests/calendar-api.test.mjs tests/calendar-store.test.mjs",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "db:generate": "drizzle-kit generate"
   },
