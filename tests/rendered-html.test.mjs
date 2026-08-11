@@ -70,6 +70,8 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   assert.match(source, /summary-mobile/);
   assert.match(source, /summary-desktop/);
   assert.match(styles, /\.monthly-shift-summary/);
+  assert.match(styles, /\.main-content\s*\{[^}]*display: block;[^}]*overflow-y: auto;/s);
+  assert.match(styles, /@media \(min-width: 900px\)[\s\S]*?\.main-content\s*\{[^}]*display: grid;/);
   assert.match(shiftSummarySource, /countMonthlyWorkShifts/);
   assert.match(shiftSummarySource, /calculateMonthlyExpectedSalary/);
   assert.match(source, /Expected salary/);
@@ -94,7 +96,7 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   for (const tone of ["early", "late", "night", "rest"]) {
     assert.match(styles, new RegExp(`--shift-${tone}-ink`));
   }
-  assert.match(serviceWorker, /my-calendar-v8/);
+  assert.match(serviceWorker, /my-calendar-v9/);
   assert.match(serviceWorker, /pathname\.startsWith\("\/api\/"\)/);
 
   await Promise.all([

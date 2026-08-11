@@ -357,7 +357,7 @@ textarea:focus-visible {
 }
 
 .main-content {
-  display: grid;
+  display: block;
   min-height: 0;
   overflow-y: auto;
 }
@@ -2215,6 +2215,7 @@ textarea:focus-visible {
   }
 
   .main-content {
+    display: grid;
     grid-template-columns: minmax(0, 1fr) 310px;
     width: 100%;
     max-width: 1480px;
