@@ -61,6 +61,11 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   assert.match(styles, /\.settings-toggle/);
   assert.doesNotMatch(source, /Enable private sync|Copy private sync link/);
   assert.match(source, /Import roster file/);
+  assert.match(source, />IVU Website</);
+  assert.match(source, /href="https:\/\/riy\.ivu-cloud\.com\/mbweb\/main\/matter\/desktop\/main-menu"/);
+  assert.match(source, /target="_blank"[\s\S]*?rel="noopener noreferrer"/);
+  assert.match(source, /Download the original roster PDF/);
+  assert.match(styles, /\.menu-link[\s\S]*?text-decoration: none;/);
   assert.match(source, /application\/pdf/);
   assert.match(source, /roster-image/);
   assert.doesNotMatch(source, /roster-upload-button|upload-glyph/);
