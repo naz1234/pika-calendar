@@ -1,5 +1,5 @@
-import { GlobalWorkerOptions, getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
-import pdfWorkerUrl from "pdfjs-dist/legacy/build/pdf.worker.min.mjs?url";
+import { getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
+import "pdfjs-dist/legacy/build/pdf.worker.min.mjs";
 import { parseIvuPlanTextItems, type PositionedPdfText } from "./roster-pdf-domain";
 import {
   parseRosterMonthHeader,
@@ -22,7 +22,6 @@ export async function readRosterPdf(
   isCancelled: () => boolean,
 ): Promise<RosterScan> {
   validatePdf(file);
-  GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
   onProgress({ label: "Opening IVU.plan PDF", percent: 5 });
   const loadingTask = getDocument({
     data: new Uint8Array(await file.arrayBuffer()),

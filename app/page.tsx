@@ -448,6 +448,12 @@ export default function Home() {
     : 0;
 
   useEffect(() => {
+    let refreshingForServiceWorker = false;
+    const refreshForServiceWorker = () => {
+      if (refreshingForServiceWorker) return;
+      refreshingForServiceWorker = true;
+      window.location.reload();
+    };
     const frame = requestAnimationFrame(() => {
       const currentDate = new Date();
       setNow(currentDate);
@@ -480,10 +486,18 @@ export default function Home() {
       void connectToSync(localEvents, shouldMigrateLocal);
 
       if (process.env.NODE_ENV === "production" && "serviceWorker" in navigator) {
-        navigator.serviceWorker.register("/sw.js").catch(() => undefined);
+        navigator.serviceWorker.addEventListener("controllerchange", refreshForServiceWorker);
+        navigator.serviceWorker.register("/sw.js")
+          .then((registration) => registration.update())
+          .catch(() => undefined);
       }
     });
-    return () => cancelAnimationFrame(frame);
+    return () => {
+      cancelAnimationFrame(frame);
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.removeEventListener("controllerchange", refreshForServiceWorker);
+      }
+    };
   }, [connectToSync]);
 
   useEffect(() => {
