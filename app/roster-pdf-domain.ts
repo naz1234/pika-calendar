@@ -37,7 +37,8 @@ function normalizedCode(value: string) {
 }
 
 function extractPdfTimes(text: string) {
-  const matches = text.match(/\b(?:[01]?\d|2[0-3])[:.]?[0-5]\d\+?\b/g) ?? [];
+  const normalized = text.replace(/\b03[:.]0\s*(?:…|\.{3})/gu, "03:00");
+  const matches = normalized.match(/\b(?:[01]?\d|2[0-3])[:.]?[0-5]\d\+?\b/g) ?? [];
   const times: string[] = [];
   matches.forEach((match) => {
     const digits = match.replace(/\D/g, "");
