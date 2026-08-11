@@ -13,6 +13,7 @@ test("exports a deployable static calendar", async () => {
   assert.match(html, /<title>My Calendar<\/title>/i);
   assert.match(html, /mobile-first Work and Personal calendar/i);
   assert.match(html, /rel="manifest" href="\/manifest\.webmanifest"/i);
+  assert.match(html, /rel="apple-touch-icon"[^>]*href="\/icons\/calendar-apple-180\.png"/i);
   assert.match(html, /viewport-fit=cover/i);
   assert.match(html, /property="og:image"/i);
   assert.match(html, /My Calendar/);
@@ -38,7 +39,16 @@ test("ships automatic shared sync, roster import, and installable app assets", a
 
   assert.equal(manifest.name, "My Calendar");
   assert.equal(manifest.display, "standalone");
-  assert.equal(manifest.icons.length, 2);
+  assert.equal(manifest.icons.length, 4);
+  assert.deepEqual(
+    manifest.icons.map(({ src, sizes, purpose }) => ({ src, sizes, purpose })),
+    [
+      { src: "/icons/calendar-192.png", sizes: "192x192", purpose: "any" },
+      { src: "/icons/calendar-512.png", sizes: "512x512", purpose: "any" },
+      { src: "/icons/calendar-maskable-192.png", sizes: "192x192", purpose: "maskable" },
+      { src: "/icons/calendar-maskable-512.png", sizes: "512x512", purpose: "maskable" },
+    ],
+  );
   assert.match(mergeSource, /"work" \| "personal"/);
   assert.match(source, /isoWeekNumber/);
   assert.match(source, /localStorage/);
@@ -102,6 +112,9 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   await Promise.all([
     access(path.join(clientRoot, "icons", "calendar-192.png")),
     access(path.join(clientRoot, "icons", "calendar-512.png")),
+    access(path.join(clientRoot, "icons", "calendar-maskable-192.png")),
+    access(path.join(clientRoot, "icons", "calendar-maskable-512.png")),
+    access(path.join(clientRoot, "icons", "calendar-apple-180.png")),
     access(path.join(clientRoot, "og.png")),
     access(path.join(clientRoot, "_headers")),
     access(path.join(clientRoot, "ocr", "worker.min.js")),
