@@ -39,6 +39,20 @@ export type RosterInferenceInput = {
 
 export type RosterShiftTone = "early" | "late" | "night" | "rest";
 
+export type RosterShiftRunEvent = {
+  calendar: string;
+  title: string;
+  allDay: boolean;
+  startTime: string;
+  endTime: string;
+  endsNextDay?: boolean;
+};
+
+export type RosterShiftRunPosition = {
+  continuesPrevious: boolean;
+  continuesNext: boolean;
+};
+
 export const ROSTER_CHOICE_OPTIONS: readonly RosterChoiceOption[] = [
   { value: "rd", label: "RD" },
   { value: "early", label: "Early" },
@@ -212,6 +226,33 @@ export function mobileEventCode(title: string): string {
   }
 
   return Array.from(firstWord || "EV").slice(0, 2).join("").toUpperCase();
+}
+
+/** Creates an exact visual-run key while keeping EX/RDOT and different hours separate. */
+export function rosterShiftRunKey(event: RosterShiftRunEvent | undefined): string {
+  if (!event || event.calendar !== "work" || !rosterShiftTone(event.title)) return "";
+  const title = event.title.trim().toLowerCase().replace(/\s+/gu, " ");
+  return [
+    title,
+    event.allDay ? "all-day" : "timed",
+    event.startTime,
+    event.endTime,
+    event.endsNextDay ? "next-day" : "same-day",
+  ].join("|");
+}
+
+/** Determines whether one event slot joins its neighbours inside the same calendar week. */
+export function rosterShiftRunPosition(
+  current: RosterShiftRunEvent,
+  previous: RosterShiftRunEvent | undefined,
+  next: RosterShiftRunEvent | undefined,
+  columnIndex: number,
+): RosterShiftRunPosition {
+  const key = rosterShiftRunKey(current);
+  return {
+    continuesPrevious: Boolean(key && columnIndex > 0 && rosterShiftRunKey(previous) === key),
+    continuesNext: Boolean(key && columnIndex < 6 && rosterShiftRunKey(next) === key),
+  };
 }
 
 /** Extracts 24-hour clock values from noisy OCR text, including O/0 swaps. */

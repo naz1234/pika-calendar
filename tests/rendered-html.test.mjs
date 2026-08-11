@@ -61,7 +61,9 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   assert.match(source, /mobile-remark-indicator/);
   assert.match(styles, /\.mobile-event-summary\.has-remark/);
   assert.match(styles, /\.mobile-event-summary\s*\{[^}]*border:/s);
-  assert.match(styles, /\.event-chip\.shift-event \.mobile-event-summary\s*\{[^}]*background: var\(--event-fill\)/s);
+  assert.match(styles, /\.event-chip\.shift-event\s*\{[^}]*background: var\(--event-fill\)/s);
+  assert.match(styles, /\.event-chip\.shift-event\.event-run-continues-previous/);
+  assert.match(styles, /\.event-chip\.shift-event \.mobile-event-code[^}]*text-align: left/s);
   assert.match(styles, /\.agenda-event\.shift-event\s*\{[^}]*background: var\(--event-fill\)/s);
   assert.match(source, /eventShiftClass/);
   assert.match(source, /Monthly Work summary/);
@@ -71,6 +73,9 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   assert.match(shiftSummarySource, /countMonthlyWorkShifts/);
   assert.match(source, /mobileEventCode/);
   assert.match(source, /mobile-event-code/);
+  assert.match(source, /rosterShiftRunPosition/);
+  assert.match(source, /event-run-continues-previous/);
+  assert.match(source, /event-run-continues-next/);
   assert.doesNotMatch(source, /chip-dot/);
   assert.match(pdfReaderSource, /pdfjs-dist/);
   assert.match(pdfReaderSource, /readRosterPdf/);
@@ -85,7 +90,7 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   for (const tone of ["early", "late", "night", "rest"]) {
     assert.match(styles, new RegExp(`--shift-${tone}-ink`));
   }
-  assert.match(serviceWorker, /my-calendar-v7/);
+  assert.match(serviceWorker, /my-calendar-v8/);
   assert.match(serviceWorker, /pathname\.startsWith\("\/api\/"\)/);
 
   await Promise.all([

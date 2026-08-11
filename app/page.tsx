@@ -27,6 +27,7 @@ import {
   makeMonthKey,
   mobileEventCode,
   normalizeRosterCode,
+  rosterShiftRunPosition,
   rosterShiftTone,
   type RosterChoice,
 } from "./roster-domain";
@@ -1103,9 +1104,11 @@ export default function Home() {
                   <div className="week-number" role="rowheader" aria-label={`Week ${isoWeekNumber(addDays(week[0], 1))}`}>
                     {isoWeekNumber(addDays(week[0], 1))}
                   </div>
-                  {week.map((day) => {
+                  {week.map((day, dayIndex) => {
                     const key = dateKey(day);
                     const dayEvents = eventsByDate.get(key) ?? [];
+                    const previousDayEvents = eventsByDate.get(dateKey(addDays(day, -1))) ?? [];
+                    const nextDayEvents = eventsByDate.get(dateKey(addDays(day, 1))) ?? [];
                     const isToday = key === todayKey;
                     const isSelected = key === selectedDate;
                     const isOutside = day.getMonth() !== view.month;
@@ -1134,20 +1137,32 @@ export default function Home() {
                           <span className="day-number">{day.getDate()}</span>
                         </button>
                         <div className="cell-events">
-                          {dayEvents.slice(0, 3).map((calendarEvent) => {
+                          {dayEvents.slice(0, 3).map((calendarEvent, eventIndex) => {
                             const remark = eventDisplayRemark(calendarEvent);
+                            const shiftClass = eventShiftClass(calendarEvent);
+                            const isShift = Boolean(shiftClass);
+                            const run = rosterShiftRunPosition(
+                              calendarEvent,
+                              previousDayEvents[eventIndex],
+                              nextDayEvents[eventIndex],
+                              dayIndex,
+                            );
+                            const runClass = isShift
+                              ? `${run.continuesPrevious ? " event-run-continues-previous" : " event-run-start"}${run.continuesNext ? " event-run-continues-next" : " event-run-end"}`
+                              : "";
+                            const showShiftLabel = !isShift || !run.continuesPrevious;
                             return (
                               <button
                                 key={calendarEvent.id}
-                                className={`event-chip${eventShiftClass(calendarEvent)}`}
+                                className={`event-chip${shiftClass}${runClass}`}
                                 onClick={() => openEdit(calendarEvent)}
                                 aria-label={`${calendarEvent.title}, ${eventTimeLabel(calendarEvent)}${remark ? `, Remark: ${remark}` : ""}`}
                               >
                                 <span className={`mobile-event-summary${remark ? " has-remark" : ""}`} aria-hidden="true">
-                                  <span className="mobile-event-code">{mobileEventCode(calendarEvent.title)}</span>
+                                  <span className="mobile-event-code">{showShiftLabel ? mobileEventCode(calendarEvent.title) : ""}</span>
                                   {remark && <span className="mobile-remark-indicator">!</span>}
                                 </span>
-                                <span className="event-title">{calendarEvent.title}</span>
+                                <span className="event-title">{isShift ? (showShiftLabel ? mobileEventCode(calendarEvent.title) : "") : calendarEvent.title}</span>
                               </button>
                             );
                           })}
