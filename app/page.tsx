@@ -39,7 +39,9 @@ import {
 } from "./roster-merge";
 import type { RosterBarKind, RosterProgress } from "./roster-reader";
 import {
+  calculateMonthlyExpectedSalary,
   countMonthlyWorkShifts,
+  type MonthlySalaryForecast,
   type MonthlyShiftSummary as MonthlyShiftCounts,
 } from "./shift-summary";
 
@@ -134,14 +136,25 @@ function eventShiftClass(event: CalendarEvent) {
   return event.calendar === "work" ? shiftToneClass(event.title) : "";
 }
 
+function formatSar(value: number) {
+  return new Intl.NumberFormat("en-SA", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value);
+}
+
 function MonthlyShiftSummary({
   className,
   monthLabel,
+  salaryMonthLabel,
   summary,
+  salaryForecast,
 }: {
   className: string;
   monthLabel: string;
+  salaryMonthLabel: string;
   summary: MonthlyShiftCounts;
+  salaryForecast: MonthlySalaryForecast;
 }) {
   return (
     <section className={`monthly-shift-summary ${className}`} aria-label={`${monthLabel} Work shift summary`}>
@@ -175,6 +188,18 @@ function MonthlyShiftSummary({
           <dd>{summary.rdot}</dd>
         </div>
       </dl>
+      <div className="monthly-salary-card">
+        <div className="monthly-salary-title">
+          <span className="monthly-salary-icon" aria-hidden="true">SAR</span>
+          <span>Expected salary<small>{salaryMonthLabel} pay forecast</small></span>
+        </div>
+        <strong className="monthly-salary-amount">SAR {formatSar(salaryForecast.expectedSalary)}</strong>
+        <div className="monthly-salary-breakdown" aria-label="Expected salary breakdown">
+          <span>Salary + laundry<strong>SAR {formatSar(salaryForecast.salaryWithLaundry)}</strong></span>
+          <span>Night allowance<strong>SAR {formatSar(salaryForecast.nightAllowance)}</strong></span>
+          <span>{salaryForecast.overtimeHours.toFixed(1)} overtime hours<strong>SAR {formatSar(salaryForecast.expectedOvertime)}</strong></span>
+        </div>
+      </div>
     </section>
   );
 }
@@ -371,6 +396,14 @@ export default function Home() {
     () => countMonthlyWorkShifts(events, `${view.year}-${pad(view.month + 1)}`),
     [events, view.month, view.year],
   );
+  const monthlySalaryForecast = useMemo(
+    () => calculateMonthlyExpectedSalary(events, `${view.year}-${pad(view.month + 1)}`),
+    [events, view.month, view.year],
+  );
+  const salaryMonthLabel = new Intl.DateTimeFormat("en", {
+    month: "long",
+    year: "numeric",
+  }).format(new Date(view.year, view.month + 1, 1));
 
   const searchResults = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -1190,7 +1223,9 @@ export default function Home() {
           <MonthlyShiftSummary
             className="summary-mobile"
             monthLabel={monthLabel}
+            salaryMonthLabel={salaryMonthLabel}
             summary={monthlyShiftSummary}
+            salaryForecast={monthlySalaryForecast}
           />
         )}
 
@@ -1235,7 +1270,9 @@ export default function Home() {
             <MonthlyShiftSummary
               className="summary-desktop"
               monthLabel={monthLabel}
+              salaryMonthLabel={salaryMonthLabel}
               summary={monthlyShiftSummary}
+              salaryForecast={monthlySalaryForecast}
             />
           )}
           <button className="agenda-add" onClick={() => openCreate(selectedDate)}>Add event</button>

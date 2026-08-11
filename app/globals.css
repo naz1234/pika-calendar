@@ -486,6 +486,86 @@ textarea:focus-visible {
   --summary-fill: var(--shift-rest-bg);
 }
 
+.monthly-salary-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px 14px;
+  margin-top: 10px;
+  padding: 12px;
+  border: 1px solid color-mix(in srgb, var(--work) 42%, var(--grid));
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--work-soft), var(--surface-soft));
+}
+
+.monthly-salary-title {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  color: var(--text);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.monthly-salary-title > span:last-child {
+  display: grid;
+  gap: 2px;
+}
+
+.monthly-salary-title small {
+  color: var(--muted);
+  font-size: 0.58rem;
+  font-weight: 650;
+}
+
+.monthly-salary-icon {
+  display: grid;
+  place-items: center;
+  width: 31px;
+  height: 31px;
+  flex: 0 0 auto;
+  border: 1px solid color-mix(in srgb, var(--work) 54%, transparent);
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--work) 13%, transparent);
+  color: var(--work);
+  font-size: 0.52rem;
+  letter-spacing: 0.02em;
+}
+
+.monthly-salary-amount {
+  align-self: center;
+  color: var(--text);
+  font-size: 1.35rem;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.monthly-salary-breakdown {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.monthly-salary-breakdown > span {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  padding-top: 8px;
+  border-top: 1px solid color-mix(in srgb, var(--work) 22%, var(--grid));
+  color: var(--muted);
+  font-size: 0.56rem;
+  line-height: 1.25;
+}
+
+.monthly-salary-breakdown strong {
+  overflow: hidden;
+  color: var(--muted-strong);
+  font-size: 0.65rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .weekday-strip,
 .week-row {
   display: grid;
@@ -2201,6 +2281,46 @@ textarea:focus-visible {
   .summary-desktop .monthly-summary-stat dd {
     margin-top: 5px;
     font-size: 1.25rem;
+  }
+
+  .summary-desktop .monthly-salary-card {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+    padding: 9px;
+    border-radius: 11px;
+  }
+
+  .summary-desktop .monthly-salary-icon {
+    width: 25px;
+    height: 25px;
+    border-radius: 7px;
+    font-size: 0.44rem;
+  }
+
+  .summary-desktop .monthly-salary-title {
+    gap: 6px;
+    font-size: 0.62rem;
+  }
+
+  .summary-desktop .monthly-salary-title small {
+    font-size: 0.5rem;
+  }
+
+  .summary-desktop .monthly-salary-amount {
+    font-size: 1.02rem;
+  }
+
+  .summary-desktop .monthly-salary-breakdown {
+    gap: 5px;
+  }
+
+  .summary-desktop .monthly-salary-breakdown > span {
+    padding-top: 6px;
+    font-size: 0.48rem;
+  }
+
+  .summary-desktop .monthly-salary-breakdown strong {
+    font-size: 0.55rem;
   }
 
   .month-grid {

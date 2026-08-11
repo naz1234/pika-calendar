@@ -71,6 +71,10 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   assert.match(source, /summary-desktop/);
   assert.match(styles, /\.monthly-shift-summary/);
   assert.match(shiftSummarySource, /countMonthlyWorkShifts/);
+  assert.match(shiftSummarySource, /calculateMonthlyExpectedSalary/);
+  assert.match(source, /Expected salary/);
+  assert.match(source, /salaryMonthLabel/);
+  assert.match(styles, /\.monthly-salary-card/);
   assert.match(source, /mobileEventCode/);
   assert.match(source, /mobile-event-code/);
   assert.match(source, /rosterShiftRunPosition/);
