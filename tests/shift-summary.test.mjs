@@ -23,7 +23,7 @@ assert.deepEqual(
 
 const loadedModule = { exports: {} };
 Function("module", "exports", compiled.outputText)(loadedModule, loadedModule.exports);
-const { countMonthlyWorkShifts } = loadedModule.exports;
+const { calculateMonthlyExpectedSalary, countMonthlyWorkShifts } = loadedModule.exports;
 
 function event(title, date = "2026-07-01", calendar = "work") {
   return { title, date, calendar };
@@ -65,5 +65,37 @@ test("ignores Personal events, other months, and non-canonical titles", () => {
     night: 0,
     extensions: 0,
     rdot: 0,
+  });
+});
+
+test("forecasts salary with the Railog overtime formula", () => {
+  const events = [
+    { ...event("Night"), startTime: "23:00", endTime: "07:30", endsNextDay: true },
+    { ...event("Early (EX)", "2026-07-05"), startTime: "03:00", endTime: "15:30" },
+    { ...event("Late (EX)", "2026-07-12"), startTime: "15:00", endTime: "03:00", endsNextDay: true },
+    { ...event("Night RDOT", "2026-07-19"), startTime: "23:00", endTime: "07:30", endsNextDay: true },
+  ];
+
+  assert.deepEqual(calculateMonthlyExpectedSalary(events, "2026-07"), {
+    salaryWithLaundry: 15100,
+    overtimeHours: 16,
+    nightAllowance: 45,
+    expectedOvertime: 1875,
+    expectedSalary: 17020,
+  });
+});
+
+test("salary forecasting ignores Personal and out-of-month overtime", () => {
+  const events = [
+    { ...event("Early RDOT", "2026-07-01", "personal"), startTime: "07:00", endTime: "15:30" },
+    { ...event("Early RDOT", "2026-08-01"), startTime: "07:00", endTime: "15:30" },
+  ];
+
+  assert.deepEqual(calculateMonthlyExpectedSalary(events, "2026-07"), {
+    salaryWithLaundry: 15100,
+    overtimeHours: 0,
+    nightAllowance: 0,
+    expectedOvertime: 0,
+    expectedSalary: 15100,
   });
 });
