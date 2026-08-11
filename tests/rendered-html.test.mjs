@@ -70,7 +70,7 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   assert.match(source, /summary-mobile/);
   assert.match(source, /summary-desktop/);
   assert.match(styles, /\.monthly-shift-summary/);
-  assert.match(styles, /\.main-content\s*\{[^}]*display: block;[^}]*overflow-y: auto;/s);
+  assert.match(styles, /\.main-content\s*\{[^}]*display: block;[^}]*overflow: visible;/s);
   assert.match(styles, /@media \(min-width: 900px\)[\s\S]*?\.main-content\s*\{[^}]*display: grid;/);
   assert.match(shiftSummarySource, /countMonthlyWorkShifts/);
   assert.match(shiftSummarySource, /calculateMonthlyExpectedSalary/);
@@ -96,7 +96,7 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   for (const tone of ["early", "late", "night", "rest"]) {
     assert.match(styles, new RegExp(`--shift-${tone}-ink`));
   }
-  assert.match(serviceWorker, /my-calendar-v9/);
+  assert.match(serviceWorker, /my-calendar-v10/);
   assert.match(serviceWorker, /pathname\.startsWith\("\/api\/"\)/);
 
   await Promise.all([
@@ -144,6 +144,10 @@ test("uses the centered swipe-first calendar header", async () => {
   assert.match(source, /onPointerUp=\{handlePointerUp\}/);
   assert.match(source, /changeMonth\(difference > 0 \? -1 : 1\)/);
   assert.match(styles, /\.topbar-main\s*\{[^}]*display:\s*grid;[^}]*grid-template-columns:\s*44px minmax\(0, 1fr\) 44px;/s);
+  assert.match(styles, /\.calendar-app\s*\{[^}]*overflow-y:\s*auto;[^}]*overscroll-behavior-y:\s*contain;/s);
+  assert.match(styles, /\.topbar\s*\{[^}]*padding:\s*max\(10px, env\(safe-area-inset-top\)\)[^}]*8px/s);
+  assert.match(styles, /\.calendar-toolbar\s*\{[^}]*margin-top:\s*4px;/s);
+  assert.match(styles, /@media \(min-width: 900px\)[\s\S]*?\.calendar-app\s*\{[^}]*overflow:\s*hidden;/s);
   assert.match(styles, /\.month-title-input\s*\{[^}]*position:\s*absolute;[^}]*inset:\s*0;[^}]*opacity:\s*0;/s);
   assert.doesNotMatch(styles, /\.month-dialog/);
   assert.match(styles, /\.month-grid\s*\{[^}]*touch-action:\s*pan-y;/s);

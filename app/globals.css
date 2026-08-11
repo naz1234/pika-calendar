@@ -125,7 +125,9 @@ textarea:focus-visible {
     radial-gradient(circle at 83% -12%, color-mix(in srgb, var(--accent) 11%, transparent), transparent 28rem),
     var(--bg);
   color: var(--text);
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
 }
 
 .calendar-app[data-calendar="personal"] {
@@ -188,7 +190,7 @@ textarea:focus-visible {
 .topbar {
   position: relative;
   z-index: 20;
-  padding: max(20px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) 16px max(14px, env(safe-area-inset-left));
+  padding: max(10px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) 8px max(10px, env(safe-area-inset-left));
   border-bottom: 1px solid var(--grid-soft);
   background: color-mix(in srgb, var(--surface) 91%, transparent);
   backdrop-filter: blur(18px);
@@ -207,7 +209,7 @@ textarea:focus-visible {
   align-items: center;
   justify-content: center;
   width: 100%;
-  margin-top: 16px;
+  margin-top: 4px;
 }
 
 .icon-button,
@@ -328,8 +330,8 @@ textarea:focus-visible {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 4px;
-  width: min(100%, 190px);
-  padding: 4px;
+  width: min(100%, 178px);
+  padding: 3px;
   border: 0;
   border-radius: 999px;
   background: var(--surface-soft);
@@ -340,12 +342,12 @@ textarea:focus-visible {
   align-items: center;
   justify-content: center;
   gap: 7px;
-  min-height: 36px;
-  padding: 0 14px;
+  min-height: 34px;
+  padding: 0 12px;
   border-radius: 999px;
   background: transparent;
   color: var(--muted);
-  font-size: 0.78rem;
+  font-size: 0.75rem;
   font-weight: 650;
   transition: background 170ms ease, color 170ms ease, box-shadow 170ms ease;
 }
@@ -359,7 +361,7 @@ textarea:focus-visible {
 .main-content {
   display: block;
   min-height: 0;
-  overflow-y: auto;
+  overflow: visible;
 }
 
 .month-card {
@@ -2194,6 +2196,8 @@ textarea:focus-visible {
     grid-template-rows: auto minmax(0, 1fr);
     height: 100dvh;
     padding: 18px;
+    overflow: hidden;
+    overscroll-behavior: none;
   }
 
   .topbar {
