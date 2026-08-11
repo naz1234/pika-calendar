@@ -20,11 +20,12 @@ test("exports a deployable static calendar", async () => {
 });
 
 test("ships automatic shared sync, roster import, and installable app assets", async () => {
-  const [manifestText, source, styles, mergeSource, pdfReaderSource, pdfDomainSource, syncSource, sharedApiSource, legacyApiSource, schemaSource, serviceWorker] = await Promise.all([
+  const [manifestText, source, styles, mergeSource, shiftSummarySource, pdfReaderSource, pdfDomainSource, syncSource, sharedApiSource, legacyApiSource, schemaSource, serviceWorker] = await Promise.all([
     readFile(path.join(clientRoot, "manifest.webmanifest"), "utf8"),
     readFile(path.join(projectRoot, "app", "page.tsx"), "utf8"),
     readFile(path.join(projectRoot, "app", "globals.css"), "utf8"),
     readFile(path.join(projectRoot, "app", "roster-merge.ts"), "utf8"),
+    readFile(path.join(projectRoot, "app", "shift-summary.ts"), "utf8"),
     readFile(path.join(projectRoot, "app", "roster-pdf-reader.ts"), "utf8"),
     readFile(path.join(projectRoot, "app", "roster-pdf-domain.ts"), "utf8"),
     readFile(path.join(projectRoot, "app", "calendar-sync.ts"), "utf8"),
@@ -63,6 +64,11 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   assert.match(styles, /\.event-chip\.shift-event \.mobile-event-summary\s*\{[^}]*background: var\(--event-fill\)/s);
   assert.match(styles, /\.agenda-event\.shift-event\s*\{[^}]*background: var\(--event-fill\)/s);
   assert.match(source, /eventShiftClass/);
+  assert.match(source, /Monthly Work summary/);
+  assert.match(source, /summary-mobile/);
+  assert.match(source, /summary-desktop/);
+  assert.match(styles, /\.monthly-shift-summary/);
+  assert.match(shiftSummarySource, /countMonthlyWorkShifts/);
   assert.match(source, /mobileEventCode/);
   assert.match(source, /mobile-event-code/);
   assert.doesNotMatch(source, /chip-dot/);
@@ -79,7 +85,7 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   for (const tone of ["early", "late", "night", "rest"]) {
     assert.match(styles, new RegExp(`--shift-${tone}-ink`));
   }
-  assert.match(serviceWorker, /my-calendar-v6/);
+  assert.match(serviceWorker, /my-calendar-v7/);
   assert.match(serviceWorker, /pathname\.startsWith\("\/api\/"\)/);
 
   await Promise.all([

@@ -37,6 +37,10 @@ import {
   type CalendarKind,
 } from "./roster-merge";
 import type { RosterBarKind, RosterProgress } from "./roster-reader";
+import {
+  countMonthlyWorkShifts,
+  type MonthlyShiftSummary as MonthlyShiftCounts,
+} from "./shift-summary";
 
 type Theme = "dark" | "light";
 type CalendarEvent = CalendarEventRecord;
@@ -127,6 +131,51 @@ function shiftToneClass(title: string) {
 
 function eventShiftClass(event: CalendarEvent) {
   return event.calendar === "work" ? shiftToneClass(event.title) : "";
+}
+
+function MonthlyShiftSummary({
+  className,
+  monthLabel,
+  summary,
+}: {
+  className: string;
+  monthLabel: string;
+  summary: MonthlyShiftCounts;
+}) {
+  return (
+    <section className={`monthly-shift-summary ${className}`} aria-label={`${monthLabel} Work shift summary`}>
+      <div className="monthly-summary-heading">
+        <div>
+          <p className="eyebrow">Monthly Work summary</p>
+          <h2>{monthLabel}</h2>
+        </div>
+        <span>3 categories</span>
+      </div>
+      <dl className="monthly-summary-counts">
+        <div className="monthly-summary-stat summary-night">
+          <dt>
+            <span className="summary-stat-icon" aria-hidden="true">N</span>
+            <span className="summary-stat-label">Night shifts<small>Regular Night</small></span>
+          </dt>
+          <dd>{summary.night}</dd>
+        </div>
+        <div className="monthly-summary-stat summary-extension">
+          <dt>
+            <span className="summary-stat-icon" aria-hidden="true">EX</span>
+            <span className="summary-stat-label">Extensions<small>All shift types</small></span>
+          </dt>
+          <dd>{summary.extensions}</dd>
+        </div>
+        <div className="monthly-summary-stat summary-rdot">
+          <dt>
+            <span className="summary-stat-icon" aria-hidden="true">OT</span>
+            <span className="summary-stat-label">RDOT<small>Rest-day overtime</small></span>
+          </dt>
+          <dd>{summary.rdot}</dd>
+        </div>
+      </dl>
+    </section>
+  );
 }
 
 function sortEvents(a: CalendarEvent, b: CalendarEvent) {
@@ -317,6 +366,10 @@ export default function Home() {
     month: "long",
     day: "numeric",
   }).format(parseDateKey(selectedDate));
+  const monthlyShiftSummary = useMemo(
+    () => countMonthlyWorkShifts(events, `${view.year}-${pad(view.month + 1)}`),
+    [events, view.month, view.year],
+  );
 
   const searchResults = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -1118,6 +1171,14 @@ export default function Home() {
           </div>
         </div>
 
+        {activeCalendar === "work" && (
+          <MonthlyShiftSummary
+            className="summary-mobile"
+            monthLabel={monthLabel}
+            summary={monthlyShiftSummary}
+          />
+        )}
+
         <aside className={`agenda-panel${agendaOpen ? " open" : ""}`} aria-label={`Agenda for ${selectedLabel}`}>
           <div className="sheet-handle" aria-hidden="true" />
           <div className="agenda-header">
@@ -1155,6 +1216,13 @@ export default function Home() {
               </div>
             )}
           </div>
+          {activeCalendar === "work" && (
+            <MonthlyShiftSummary
+              className="summary-desktop"
+              monthLabel={monthLabel}
+              summary={monthlyShiftSummary}
+            />
+          )}
           <button className="agenda-add" onClick={() => openCreate(selectedDate)}>Add event</button>
         </aside>
       </div>
