@@ -227,8 +227,7 @@ textarea:focus-visible {
 }
 
 .icon-button:active,
-.close-button:active,
-.floating-add:active {
+.close-button:active {
   transform: scale(0.96);
 }
 
@@ -382,7 +381,7 @@ textarea:focus-visible {
 }
 
 .summary-mobile {
-  margin: 12px 12px calc(88px + env(safe-area-inset-bottom));
+  margin: 12px 12px calc(24px + env(safe-area-inset-bottom));
 }
 
 .summary-desktop {
@@ -1128,30 +1127,6 @@ textarea:focus-visible {
 .agenda-add {
   width: 100%;
   margin-top: 14px;
-}
-
-.floating-add {
-  position: fixed;
-  z-index: 45;
-  right: max(18px, env(safe-area-inset-right));
-  bottom: max(20px, env(safe-area-inset-bottom));
-  display: grid;
-  place-items: center;
-  width: 58px;
-  height: 58px;
-  border: 1px solid color-mix(in srgb, var(--accent) 72%, #fff);
-  border-radius: 19px;
-  background: var(--accent-strong);
-  color: #fff;
-  box-shadow: 0 13px 32px color-mix(in srgb, var(--accent-strong) 34%, transparent);
-  transition: transform 160ms ease, box-shadow 160ms ease;
-}
-
-.floating-add span {
-  font-size: 2.15rem;
-  font-weight: 250;
-  line-height: 1;
-  transform: translateY(-1px);
 }
 
 .mobile-scrim {
@@ -2355,11 +2330,6 @@ textarea:focus-visible {
   .agenda-list {
     flex: 1;
   }
-
-  .floating-add {
-    right: max(34px, calc((100vw - 1480px) / 2 + 332px));
-    bottom: 36px;
-  }
 }
 
 @media (min-width: 1180px) {
@@ -2390,10 +2360,6 @@ textarea:focus-visible {
   .event-chip {
     height: 22px;
     font-size: 0.67rem;
-  }
-
-  .floating-add {
-    right: max(38px, calc((100vw - 1480px) / 2 + 366px));
   }
 }
 
