@@ -63,7 +63,7 @@ function textItem(str, x, y, width = Math.max(8, str.length * 5), height = 8) {
   return { str, x, y, width, height };
 }
 
-function augustFixture() {
+function augustFixture(overrides = new Map()) {
   const centers = Array.from({ length: 7 }, (_, index) => 70 + index * 100);
   const items = [
     textItem("Duty schedule for:", 20, 585),
@@ -79,7 +79,7 @@ function augustFixture() {
     const row = Math.floor(offset / 7);
     const dayY = 530 - row * 78;
     items.push(textItem(String(day), centers[column] - 42, dayY, 10));
-    codes.get(day).forEach((value, line) => {
+    (overrides.get(day) ?? codes.get(day)).forEach((value, line) => {
       items.push(textItem(value, centers[column] - 24, dayY - 19 - line * 13));
     });
   }
@@ -105,6 +105,21 @@ test("reads every day from an IVU.plan monthly PDF grid", () => {
   assert.equal(observations[29].rawCode, "L3-DC");
   assert.deepEqual(observations[29].times, ["15:00", "23:30"]);
   assert.ok(observations.every((observation) => observation.confidence === 100));
+});
+
+test("recovers IVU's uniquely truncated 03:00 extension marker", () => {
+  const observations = parseIvuPlanTextItems(
+    augustFixture(new Map([
+      [14, ["L EX", "15:00 L3P …", "03:0 … L3P …"]],
+      [15, ["L EX", "15:00 L3P …", "04:0 … L3P …"]],
+    ])),
+    2026,
+    7,
+  );
+
+  assert.equal(observations[13].rawCode, "L EX");
+  assert.deepEqual(observations[13].times, ["15:00", "03:00"]);
+  assert.deepEqual(observations[14].times, ["15:00"], "does not guess other incomplete times");
 });
 
 test("rejects an incomplete IVU.plan calendar grid", () => {
