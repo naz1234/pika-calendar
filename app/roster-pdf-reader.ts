@@ -10,6 +10,23 @@ import {
 const MAX_PDF_BYTES = 15 * 1024 * 1024;
 const MAX_PDF_PAGES = 12;
 
+function readPdfBuffer(file: File): Promise<ArrayBuffer> {
+  if (typeof file.arrayBuffer === "function") return file.arrayBuffer();
+
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(reader.error ?? new Error("The PDF could not be opened on this device."));
+    reader.onload = () => {
+      if (reader.result instanceof ArrayBuffer) {
+        resolve(reader.result);
+      } else {
+        reject(new Error("The PDF could not be opened on this device."));
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  });
+}
+
 function validatePdf(file: File) {
   const isPdf = file.type.toLowerCase() === "application/pdf" || /\.pdf$/iu.test(file.name);
   if (!isPdf) throw new Error("Choose an IVU.plan PDF or a PNG, JPG, or WebP roster screenshot.");
@@ -24,7 +41,7 @@ export async function readRosterPdf(
   validatePdf(file);
   onProgress({ label: "Opening IVU.plan PDF", percent: 5 });
   const loadingTask = getDocument({
-    data: new Uint8Array(await file.arrayBuffer()),
+    data: new Uint8Array(await readPdfBuffer(file)),
     useWorkerFetch: false,
   });
 
