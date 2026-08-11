@@ -98,7 +98,9 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   assert.match(source, /event-run-continues-previous/);
   assert.match(source, /event-run-continues-next/);
   assert.doesNotMatch(source, /chip-dot/);
-  assert.match(pdfReaderSource, /pdfjs-dist/);
+  assert.match(pdfReaderSource, /pdfjs-dist\/legacy\/build\/pdf\.mjs/);
+  assert.match(pdfReaderSource, /pdfjs-dist\/legacy\/build\/pdf\.worker\.min\.mjs\?url/);
+  assert.doesNotMatch(pdfReaderSource, /from "pdfjs-dist"|pdfjs-dist\/build\/pdf\.worker/);
   assert.match(pdfReaderSource, /readRosterPdf/);
   assert.match(pdfDomainSource, /parseIvuPlanTextItems/);
   assert.match(syncSource, /AES-GCM/);
