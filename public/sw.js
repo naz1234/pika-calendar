@@ -3,6 +3,9 @@ const APP_SHELL = [
   "/manifest.webmanifest",
   "/icons/calendar-192.png",
   "/icons/calendar-512.png",
+  "/icons/calendar-maskable-192.png",
+  "/icons/calendar-maskable-512.png",
+  "/icons/calendar-apple-180.png",
   "/og.png"
 ];
 

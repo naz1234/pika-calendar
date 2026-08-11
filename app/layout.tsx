@@ -16,7 +16,7 @@ export const metadata: Metadata = {
       { url: "/icons/calendar-192.png", type: "image/png", sizes: "192x192" },
       { url: "/icons/calendar-512.png", type: "image/png", sizes: "512x512" },
     ],
-    apple: "/icons/calendar-192.png",
+    apple: { url: "/icons/calendar-apple-180.png", sizes: "180x180", type: "image/png" },
   },
   openGraph: {
     title: "My Calendar",
