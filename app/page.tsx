@@ -4,7 +4,6 @@
 import {
   FormEvent,
   KeyboardEvent,
-  MouseEvent,
   PointerEvent,
   useCallback,
   useEffect,
@@ -12,7 +11,6 @@ import {
   useRef,
   useState,
 } from "react";
-import { flushSync } from "react-dom";
 import {
   SHARED_SYNC_SECRET,
   SyncConflictError,
@@ -51,13 +49,7 @@ import {
 type Theme = "dark" | "light";
 type CalendarEvent = CalendarEventRecord;
 type SyncStatus = "connecting" | "synced" | "offline";
-type SwipeGesture = {
-  pointerId: number;
-  startX: number;
-  startY: number;
-  offset: number;
-  axis: "pending" | "horizontal" | "vertical";
-};
+type MonthMotion = { direction: "previous" | "next" | null; sequence: number };
 
 type EventDraft = Omit<CalendarEvent, "id" | "createdAt" | "updatedAt" | "source">;
 
@@ -294,6 +286,7 @@ export default function Home() {
   const [selectedDate, setSelectedDate] = useState(todayKey);
   const [activeCalendar, setActiveCalendar] = useState<CalendarKind>("work");
   const [theme, setTheme] = useState<Theme>("dark");
+  const [monthMotion, setMonthMotion] = useState<MonthMotion>({ direction: null, sequence: 0 });
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [hydrated, setHydrated] = useState(false);
   const [syncStatus, setSyncStatus] = useState<SyncStatus>("connecting");
@@ -309,11 +302,7 @@ export default function Home() {
   const [toast, setToast] = useState("");
   const [announcement, setAnnouncement] = useState("");
   const [rosterDialog, setRosterDialog] = useState<RosterDialogState | null>(null);
-  const pointerStart = useRef<SwipeGesture | null>(null);
-  const monthSwipeTrack = useRef<HTMLDivElement>(null);
-  const monthSwipeViewport = useRef<HTMLDivElement>(null);
-  const monthSwipeTimer = useRef<number | null>(null);
-  const suppressSwipeClick = useRef(false);
+  const pointerStart = useRef<number | null>(null);
   const importInput = useRef<HTMLInputElement>(null);
   const rosterInput = useRef<HTMLInputElement>(null);
   const menuTrigger = useRef<HTMLButtonElement>(null);
@@ -394,16 +383,7 @@ export default function Home() {
     }
   }, []);
 
-  const swipeMonths = useMemo(() => [-1, 0, 1].map((offset) => {
-    const date = new Date(view.year, view.month + offset, 1);
-    return {
-      offset,
-      year: date.getFullYear(),
-      month: date.getMonth(),
-      days: monthDays(date.getFullYear(), date.getMonth()),
-      label: new Intl.DateTimeFormat("en", { month: "long", year: "numeric" }).format(date),
-    };
-  }), [view]);
+  const days = useMemo(() => monthDays(view.year, view.month), [view]);
   const visibleEvents = useMemo(
     () => events.filter((event) => event.calendar === activeCalendar),
     [events, activeCalendar],
@@ -680,12 +660,6 @@ export default function Home() {
     return () => window.clearTimeout(timeout);
   }, [toast]);
 
-  useEffect(() => () => {
-    if (monthSwipeTimer.current !== null) {
-      window.clearTimeout(monthSwipeTimer.current);
-    }
-  }, []);
-
   useEffect(() => {
     const onKeyDown = (event: globalThis.KeyboardEvent) => {
       if (event.key !== "Escape") return;
@@ -751,6 +725,10 @@ export default function Home() {
   }
 
   function changeMonth(amount: number) {
+    setMonthMotion((current) => ({
+      direction: amount > 0 ? "next" : "previous",
+      sequence: current.sequence + 1,
+    }));
     const next = new Date(view.year, view.month + amount, 1);
     const preferredDay = parseDateKey(selectedDate).getDate();
     const lastDay = new Date(next.getFullYear(), next.getMonth() + 1, 0).getDate();
@@ -1079,97 +1057,16 @@ export default function Home() {
     showToast("Calendar cleared");
   }
 
-  function positionMonthTrack(offset: number, animate: boolean) {
-    const track = monthSwipeTrack.current;
-    if (!track) return;
-    track.style.transition = animate ? "transform 220ms cubic-bezier(0.22, 0.72, 0.24, 1)" : "none";
-    track.style.transform = `translate3d(calc(-33.333333% + ${offset}px), 0, 0)`;
-  }
-
-  function resetMonthTrack(animate: boolean) {
-    positionMonthTrack(0, animate);
-  }
-
   function handlePointerDown(event: PointerEvent<HTMLDivElement>) {
-    if (!event.isPrimary || event.button !== 0 || monthSwipeTimer.current !== null) return;
-    pointerStart.current = {
-      pointerId: event.pointerId,
-      startX: event.clientX,
-      startY: event.clientY,
-      offset: 0,
-      axis: "pending",
-    };
-    positionMonthTrack(0, false);
-  }
-
-  function handlePointerMove(event: PointerEvent<HTMLDivElement>) {
-    const gesture = pointerStart.current;
-    if (!gesture || gesture.pointerId !== event.pointerId) return;
-    const differenceX = event.clientX - gesture.startX;
-    const differenceY = event.clientY - gesture.startY;
-
-    if (gesture.axis === "pending" && Math.max(Math.abs(differenceX), Math.abs(differenceY)) >= 7) {
-      gesture.axis = Math.abs(differenceX) > Math.abs(differenceY) ? "horizontal" : "vertical";
-      if (gesture.axis === "horizontal") {
-        try {
-          event.currentTarget.setPointerCapture(event.pointerId);
-        } catch {
-          // Older iOS versions can report pointer events without supporting capture.
-        }
-      }
-    }
-    if (gesture.axis !== "horizontal") return;
-
-    event.preventDefault();
-    const width = event.currentTarget.clientWidth || 1;
-    gesture.offset = Math.max(-width, Math.min(width, differenceX));
-    suppressSwipeClick.current = Math.abs(gesture.offset) > 5;
-    positionMonthTrack(gesture.offset, false);
-  }
-
-  function finishMonthSwipe(event: PointerEvent<HTMLDivElement>, cancelled = false) {
-    const gesture = pointerStart.current;
-    if (!gesture || gesture.pointerId !== event.pointerId) return;
-    pointerStart.current = null;
-    try {
-      if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-        event.currentTarget.releasePointerCapture(event.pointerId);
-      }
-    } catch {
-      // Pointer capture is optional on older iOS versions.
-    }
-
-    if (gesture.axis !== "horizontal") return;
-    const width = monthSwipeViewport.current?.clientWidth || event.currentTarget.clientWidth || 1;
-    const shouldChange = !cancelled && Math.abs(gesture.offset) >= Math.min(72, width * 0.2);
-    if (!shouldChange) {
-      resetMonthTrack(true);
-      window.setTimeout(() => { suppressSwipeClick.current = false; }, 0);
-      return;
-    }
-
-    const amount = gesture.offset < 0 ? 1 : -1;
-    positionMonthTrack(amount > 0 ? -width : width, true);
-    monthSwipeTimer.current = window.setTimeout(() => {
-      flushSync(() => changeMonth(amount));
-      resetMonthTrack(false);
-      monthSwipeTimer.current = null;
-      suppressSwipeClick.current = false;
-    }, 220);
+    pointerStart.current = event.clientX;
   }
 
   function handlePointerUp(event: PointerEvent<HTMLDivElement>) {
-    finishMonthSwipe(event);
-  }
-
-  function handlePointerCancel(event: PointerEvent<HTMLDivElement>) {
-    finishMonthSwipe(event, true);
-  }
-
-  function suppressClickAfterSwipe(event: MouseEvent<HTMLDivElement>) {
-    if (!suppressSwipeClick.current) return;
-    event.preventDefault();
-    event.stopPropagation();
+    if (pointerStart.current === null) return;
+    const difference = event.clientX - pointerStart.current;
+    pointerStart.current = null;
+    if (Math.abs(difference) < 55) return;
+    changeMonth(difference > 0 ? -1 : 1);
   }
 
   function trapDialogFocus(event: KeyboardEvent<HTMLElement>) {
@@ -1261,136 +1158,124 @@ export default function Home() {
 
       <div className="main-content">
         <div
-          ref={monthSwipeViewport}
-          className="month-swipe-viewport"
-          onPointerDown={handlePointerDown}
-          onPointerMove={handlePointerMove}
-          onPointerUp={handlePointerUp}
-          onPointerCancel={handlePointerCancel}
-          onClickCapture={suppressClickAfterSwipe}
+          key={monthMotion.sequence}
+          className={`month-card${monthMotion.direction ? ` month-slide-${monthMotion.direction}` : ""}`}
+          role="grid"
+          aria-label={`${monthLabel} calendar`}
         >
-          <div ref={monthSwipeTrack} className="month-swipe-track">
-            {swipeMonths.map((panel) => (
-              <div
-                className="month-card"
-                role="grid"
-                aria-label={`${panel.label} calendar`}
-                aria-hidden={panel.offset !== 0}
-                key={`${panel.year}-${panel.month}`}
-              >
-                <div className="weekday-strip" role="row">
-                  <div className="week-gutter-title" role="columnheader"><span>WK</span></div>
-                  {WEEKDAYS.map((day, index) => (
-                    <div className="weekday" role="columnheader" key={day} aria-label={day}>
-                      <span className="weekday-full">{day.slice(0, 3)}</span>
-                      <span className="weekday-short">{SHORT_WEEKDAYS[index]}</span>
-                    </div>
-                  ))}
-                </div>
+          <div className="weekday-strip" role="row">
+            <div className="week-gutter-title" role="columnheader"><span>WK</span></div>
+            {WEEKDAYS.map((day, index) => (
+              <div className="weekday" role="columnheader" key={day} aria-label={day}>
+                <span className="weekday-full">{day.slice(0, 3)}</span>
+                <span className="weekday-short">{SHORT_WEEKDAYS[index]}</span>
+              </div>
+            ))}
+          </div>
 
-                <div className="month-grid">
-                  {Array.from({ length: 6 }, (_, weekIndex) => {
-                    const week = panel.days.slice(weekIndex * 7, weekIndex * 7 + 7);
+          <div
+            className="month-grid"
+            onPointerDown={handlePointerDown}
+            onPointerUp={handlePointerUp}
+          >
+            {Array.from({ length: 6 }, (_, weekIndex) => {
+              const week = days.slice(weekIndex * 7, weekIndex * 7 + 7);
+              return (
+                <div className="week-row" role="row" key={dateKey(week[0])}>
+                  <div className="week-number" role="rowheader" aria-label={`Week ${isoWeekNumber(addDays(week[0], 1))}`}>
+                    {isoWeekNumber(addDays(week[0], 1))}
+                  </div>
+                  {week.map((day, dayIndex) => {
+                    const key = dateKey(day);
+                    const dayEvents = eventsByDate.get(key) ?? [];
+                    const previousDayEvents = eventsByDate.get(dateKey(addDays(day, -1))) ?? [];
+                    const nextDayEvents = eventsByDate.get(dateKey(addDays(day, 1))) ?? [];
+                    const isToday = key === todayKey;
+                    const isSelected = key === selectedDate;
+                    const isOutside = day.getMonth() !== view.month;
+                    const spokenDate = new Intl.DateTimeFormat("en", {
+                      weekday: "long",
+                      month: "long",
+                      day: "numeric",
+                      year: "numeric",
+                    }).format(day);
                     return (
-                      <div className="week-row" role="row" key={dateKey(week[0])}>
-                        <div className="week-number" role="rowheader" aria-label={`Week ${isoWeekNumber(addDays(week[0], 1))}`}>
-                          {isoWeekNumber(addDays(week[0], 1))}
-                        </div>
-                        {week.map((day, dayIndex) => {
-                          const key = dateKey(day);
-                          const dayEvents = eventsByDate.get(key) ?? [];
-                          const previousDayEvents = eventsByDate.get(dateKey(addDays(day, -1))) ?? [];
-                          const nextDayEvents = eventsByDate.get(dateKey(addDays(day, 1))) ?? [];
-                          const isToday = key === todayKey;
-                          const isSelected = key === selectedDate;
-                          const isOutside = day.getMonth() !== panel.month;
-                          const spokenDate = new Intl.DateTimeFormat("en", {
-                            weekday: "long",
-                            month: "long",
-                            day: "numeric",
-                            year: "numeric",
-                          }).format(day);
-                          return (
-                            <div
-                              className={`day-cell${isOutside ? " outside" : ""}${isToday ? " today" : ""}${isSelected ? " selected" : ""}`}
-                              role="gridcell"
-                              aria-selected={isSelected}
-                              key={key}
-                            >
+                      <div
+                        className={`day-cell${isOutside ? " outside" : ""}${isToday ? " today" : ""}${isSelected ? " selected" : ""}`}
+                        role="gridcell"
+                        aria-selected={isSelected}
+                        key={key}
+                      >
+                        <button
+                          className="day-hit"
+                          data-date={key}
+                          onClick={() => chooseDay(day)}
+                          onDoubleClick={() => openCreate(key)}
+                          onKeyDown={(event) => handleDayKey(event, day)}
+                          tabIndex={isSelected ? 0 : -1}
+                          aria-label={`${spokenDate}, ${dayEvents.length} event${dayEvents.length === 1 ? "" : "s"}`}
+                        >
+                          <span className="day-number">{day.getDate()}</span>
+                        </button>
+                        <div className="cell-events">
+                          {dayEvents.slice(0, 3).map((calendarEvent, eventIndex) => {
+                            const remark = eventDisplayRemark(calendarEvent);
+                            const shiftClass = eventShiftClass(calendarEvent);
+                            const isShift = Boolean(shiftClass);
+                            const run = rosterShiftRunPosition(
+                              calendarEvent,
+                              previousDayEvents[eventIndex],
+                              nextDayEvents[eventIndex],
+                              dayIndex,
+                            );
+                            const runClass = isShift
+                              ? `${run.continuesPrevious ? " event-run-continues-previous" : " event-run-start"}${run.continuesNext ? " event-run-continues-next" : " event-run-end"}`
+                              : "";
+                            const showShiftLabel = !isShift || !run.continuesPrevious;
+                            const shiftModifier = isShift ? rosterShiftModifier(calendarEvent.title) : "";
+                            const eventCode = isShift ? mobileEventCode(calendarEvent.title) : "";
+                            const baseShiftCode = shiftModifier ? `${eventCode.charAt(0)}S` : eventCode;
+                            const modifierCode = shiftModifier === "extension" ? "EX" : shiftModifier === "rdot" ? "OT" : "";
+                            return (
                               <button
-                                className="day-hit"
-                                data-date={key}
-                                onClick={() => chooseDay(day)}
-                                onDoubleClick={() => openCreate(key)}
-                                onKeyDown={(event) => handleDayKey(event, day)}
-                                tabIndex={panel.offset === 0 && isSelected ? 0 : -1}
-                                aria-label={`${spokenDate}, ${dayEvents.length} event${dayEvents.length === 1 ? "" : "s"}`}
+                                key={calendarEvent.id}
+                                className={`event-chip${shiftClass}${runClass}`}
+                                onClick={() => openEdit(calendarEvent)}
+                                aria-label={`${calendarEvent.title}, ${eventTimeLabel(calendarEvent)}${remark ? `, Remark: ${remark}` : ""}`}
                               >
-                                <span className="day-number">{day.getDate()}</span>
+                                <span className={`mobile-event-summary${remark ? " has-remark" : ""}`} aria-hidden="true">
+                                  <span className="mobile-event-code">{showShiftLabel ? baseShiftCode : ""}</span>
+                                  {showShiftLabel && modifierCode && (
+                                    <span className={`shift-modifier-badge modifier-${shiftModifier}`}>{modifierCode}</span>
+                                  )}
+                                  {remark && <span className="mobile-remark-indicator">!</span>}
+                                </span>
+                                <span className="event-title">
+                                  {isShift ? (showShiftLabel ? baseShiftCode : "") : calendarEvent.title}
+                                  {showShiftLabel && modifierCode && (
+                                    <span className={`shift-modifier-badge modifier-${shiftModifier}`}>{modifierCode}</span>
+                                  )}
+                                </span>
                               </button>
-                              <div className="cell-events">
-                                {dayEvents.slice(0, 3).map((calendarEvent, eventIndex) => {
-                                  const remark = eventDisplayRemark(calendarEvent);
-                                  const shiftClass = eventShiftClass(calendarEvent);
-                                  const isShift = Boolean(shiftClass);
-                                  const run = rosterShiftRunPosition(
-                                    calendarEvent,
-                                    previousDayEvents[eventIndex],
-                                    nextDayEvents[eventIndex],
-                                    dayIndex,
-                                  );
-                                  const runClass = isShift
-                                    ? `${run.continuesPrevious ? " event-run-continues-previous" : " event-run-start"}${run.continuesNext ? " event-run-continues-next" : " event-run-end"}`
-                                    : "";
-                                  const showShiftLabel = !isShift || !run.continuesPrevious;
-                                  const shiftModifier = isShift ? rosterShiftModifier(calendarEvent.title) : "";
-                                  const eventCode = isShift ? mobileEventCode(calendarEvent.title) : "";
-                                  const baseShiftCode = shiftModifier ? `${eventCode.charAt(0)}S` : eventCode;
-                                  const modifierCode = shiftModifier === "extension" ? "EX" : shiftModifier === "rdot" ? "OT" : "";
-                                  return (
-                                    <button
-                                      key={calendarEvent.id}
-                                      className={`event-chip${shiftClass}${runClass}`}
-                                      onClick={() => openEdit(calendarEvent)}
-                                      tabIndex={panel.offset === 0 ? 0 : -1}
-                                      aria-label={`${calendarEvent.title}, ${eventTimeLabel(calendarEvent)}${remark ? `, Remark: ${remark}` : ""}`}
-                                    >
-                                      <span className={`mobile-event-summary${remark ? " has-remark" : ""}`} aria-hidden="true">
-                                        <span className="mobile-event-code">{showShiftLabel ? baseShiftCode : ""}</span>
-                                        {showShiftLabel && modifierCode && (
-                                          <span className={`shift-modifier-badge modifier-${shiftModifier}`}>{modifierCode}</span>
-                                        )}
-                                        {remark && <span className="mobile-remark-indicator">!</span>}
-                                      </span>
-                                      <span className="event-title">
-                                        {isShift ? (showShiftLabel ? baseShiftCode : "") : calendarEvent.title}
-                                        {showShiftLabel && modifierCode && (
-                                          <span className={`shift-modifier-badge modifier-${shiftModifier}`}>{modifierCode}</span>
-                                        )}
-                                      </span>
-                                    </button>
-                                  );
-                                })}
-                                {dayEvents.length > 1 && (
-                                  <button className="mobile-more-events" tabIndex={panel.offset === 0 ? 0 : -1} onClick={() => chooseDay(day)} aria-label={`Show ${dayEvents.length} events`}>
-                                    +{dayEvents.length - 1}
-                                  </button>
-                                )}
-                                {dayEvents.length > 3 && (
-                                  <button className="more-events" tabIndex={panel.offset === 0 ? 0 : -1} onClick={() => chooseDay(day)}>
-                                    +{dayEvents.length - 3} more
-                                  </button>
-                                )}
-                              </div>
-                            </div>
-                          );
-                        })}
+                            );
+                          })}
+                          {dayEvents.length > 1 && (
+                            <button className="mobile-more-events" onClick={() => chooseDay(day)} aria-label={`Show ${dayEvents.length} events`}>
+                              +{dayEvents.length - 1}
+                            </button>
+                          )}
+                          {dayEvents.length > 3 && (
+                            <button className="more-events" onClick={() => chooseDay(day)}>
+                              +{dayEvents.length - 3} more
+                            </button>
+                          )}
+                        </div>
                       </div>
                     );
                   })}
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
