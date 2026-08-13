@@ -1068,6 +1068,21 @@ textarea:focus-visible {
   color: var(--event-ink);
 }
 
+.event-chip.shift-event.shift-extension {
+  border-style: dashed;
+  box-shadow: inset 0 2px color-mix(in srgb, var(--shift-early-ink) 72%, transparent);
+}
+
+.event-chip.shift-event.shift-rdot {
+  border-width: 2px;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--shift-rest-ink) 42%, transparent);
+}
+
+.event-chip.shift-event.shift-extension .mobile-event-code,
+.event-chip.shift-event.shift-rdot .mobile-event-code {
+  letter-spacing: -0.01em;
+}
+
 .event-chip.shift-event:has(.mobile-event-summary.has-remark) {
   outline: 2px solid var(--event-ink);
   outline-offset: -2px;
@@ -2341,6 +2356,14 @@ textarea:focus-visible {
     background: var(--event-fill);
     color: var(--event-ink);
     box-shadow: inset 3px 0 var(--event-ink);
+  }
+
+  .event-chip.shift-event.shift-extension {
+    box-shadow: inset 3px 0 var(--shift-early-ink), inset 0 2px color-mix(in srgb, var(--shift-early-ink) 72%, transparent);
+  }
+
+  .event-chip.shift-event.shift-rdot {
+    box-shadow: inset 3px 0 var(--shift-rest-ink), inset 0 0 0 1px color-mix(in srgb, var(--shift-rest-ink) 42%, transparent);
   }
 
   .event-chip.shift-event.event-run-continues-previous {

@@ -27,6 +27,7 @@ import {
   makeMonthKey,
   mobileEventCode,
   normalizeRosterCode,
+  rosterShiftModifier,
   rosterShiftRunPosition,
   rosterShiftTone,
   type RosterChoice,
@@ -134,7 +135,9 @@ function shiftToneClass(title: string) {
 }
 
 function eventShiftClass(event: CalendarEvent) {
-  return event.calendar === "work" ? shiftToneClass(event.title) : "";
+  if (event.calendar !== "work") return "";
+  const modifier = rosterShiftModifier(event.title);
+  return `${shiftToneClass(event.title)}${modifier ? ` shift-${modifier}` : ""}`;
 }
 
 function formatSar(value: number) {

@@ -208,13 +208,22 @@ export function rosterShiftTone(title: string): RosterShiftTone | "" {
   return (shift?.[1] as RosterShiftTone | undefined) ?? "";
 }
 
+/** Identifies overtime roster entries so the month view can distinguish them from regular shifts. */
+export function rosterShiftModifier(title: string): "extension" | "rdot" | "" {
+  const normalized = String(title ?? "").trim().toLowerCase().replace(/\s+/gu, " ");
+  if (/^(?:early|late|night) \(ex\)$/u.test(normalized)) return "extension";
+  if (/^(?:early|late|night) rdot$/u.test(normalized)) return "rdot";
+  return "";
+}
+
 /** Returns a compact, readable label for an event in narrow month cells. */
 export function mobileEventCode(title: string): string {
   const tone = rosterShiftTone(title);
+  const modifier = rosterShiftModifier(title);
   if (tone === "rest") return "RD";
-  if (tone === "early") return "ES";
-  if (tone === "late") return "LS";
-  if (tone === "night") return "NS";
+  if (tone === "early") return modifier === "extension" ? "E EX" : modifier === "rdot" ? "E OT" : "ES";
+  if (tone === "late") return modifier === "extension" ? "L EX" : modifier === "rdot" ? "L OT" : "LS";
+  if (tone === "night") return modifier === "extension" ? "N EX" : modifier === "rdot" ? "N OT" : "NS";
 
   const normalized = String(title ?? "").normalize("NFKC").trim();
   if (/^(?:annual leave|al)$/iu.test(normalized)) return "AL";
