@@ -93,7 +93,13 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   assert.match(shiftSummarySource, /calculateMonthlyExpectedSalary/);
   assert.match(source, /Expected salary/);
   assert.match(source, /salaryMonthLabel/);
+  assert.match(source, /salary-breakdown-icon/);
+  assert.match(source, /All amounts are estimates based on current data\./);
   assert.match(styles, /\.monthly-salary-card/);
+  assert.match(styles, /\.summary-mobile\.monthly-shift-summary\s*\{[^}]*border-radius:\s*0;[^}]*box-shadow:\s*none;/s);
+  assert.match(styles, /\.summary-mobile \.monthly-summary-stat\s*\{[^}]*border-right:\s*1px solid var\(--grid-soft\);[^}]*background:\s*transparent;/s);
+  assert.match(styles, /\.summary-mobile \.monthly-salary-breakdown\s*\{[^}]*border-radius:\s*14px;[^}]*background:/s);
+  assert.match(styles, /\.summary-mobile \.salary-estimate-note\s*\{[^}]*display:\s*flex;/s);
   assert.match(source, /mobileEventCode/);
   assert.match(source, /mobile-event-code/);
   assert.match(source, /rosterShiftRunPosition/);
