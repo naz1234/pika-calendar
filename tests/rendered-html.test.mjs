@@ -185,6 +185,8 @@ test("uses the centered swipe-first calendar header", async () => {
   assert.match(source, /changeMonth\(difference > 0 \? -1 : 1\)/);
   assert.match(styles, /\.topbar-main\s*\{[^}]*display:\s*grid;[^}]*grid-template-columns:\s*44px minmax\(0, 1fr\) 44px;/s);
   assert.match(styles, /\.calendar-app\s*\{[^}]*overflow-y:\s*auto;[^}]*overscroll-behavior-y:\s*contain;/s);
+  assert.match(styles, /@media \(max-width: 899px\)[\s\S]*?\.calendar-app\s*\{[^}]*scrollbar-width:\s*none;[^}]*-ms-overflow-style:\s*none;/s);
+  assert.match(styles, /\.calendar-app::-webkit-scrollbar\s*\{[^}]*display:\s*none;[^}]*width:\s*0;[^}]*height:\s*0;/s);
   assert.match(styles, /\.topbar\s*\{[^}]*padding:\s*max\(10px, env\(safe-area-inset-top\)\)[^}]*8px/s);
   assert.match(styles, /\.calendar-toolbar\s*\{[^}]*margin-top:\s*4px;/s);
   assert.match(styles, /@media \(min-width: 900px\)[\s\S]*?\.calendar-app\s*\{[^}]*overflow:\s*hidden;/s);
