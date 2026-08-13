@@ -95,6 +95,10 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   assert.match(source, /salaryMonthLabel/);
   assert.match(source, /salary-breakdown-icon/);
   assert.match(source, /All amounts are estimates based on current data\./);
+  assert.match(source, /className="shift-code-legend" aria-label="Shift code legend"/);
+  assert.match(source, /\{ code: "ES", label: "Early"/);
+  assert.match(source, /\{ code: "OT", label: "RDOT"/);
+  assert.doesNotMatch(source, />3 categories</);
   assert.match(styles, /\.monthly-salary-card/);
   assert.match(styles, /\.summary-mobile\.monthly-shift-summary\s*\{[^}]*border-radius:\s*0;[^}]*box-shadow:\s*none;/s);
   assert.match(styles, /\.summary-mobile \.monthly-summary-stat\s*\{[^}]*border-right:\s*1px solid var\(--grid-soft\);[^}]*background:\s*transparent;/s);
@@ -103,8 +107,14 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   assert.match(source, /mobileEventCode/);
   assert.match(source, /mobile-event-code/);
   assert.match(source, /rosterShiftModifier/);
-  assert.match(styles, /\.event-chip\.shift-event\.shift-extension\s*\{[^}]*border-style:\s*dashed;/s);
-  assert.match(styles, /\.event-chip\.shift-event\.shift-rdot\s*\{[^}]*border-width:\s*2px;/s);
+  assert.match(source, /className=\{`shift-modifier-badge modifier-\$\{shiftModifier\}`\}/);
+  assert.match(source, /const baseShiftCode = shiftModifier \? `\$\{eventCode\.charAt\(0\)\}S` : eventCode/);
+  assert.match(styles, /\.shift-modifier-badge\s*\{[^}]*border-radius:\s*999px;/s);
+  assert.match(styles, /\.modifier-extension\s*\{[^}]*color:\s*var\(--shift-early-ink\);/s);
+  assert.match(styles, /\.modifier-rdot\s*\{[^}]*color:\s*var\(--shift-rest-ink\);/s);
+  assert.doesNotMatch(styles, /\.event-chip\.shift-event\.shift-extension\s*\{[^}]*border-style:\s*dashed;/s);
+  assert.doesNotMatch(styles, /\.event-chip\.shift-event\.shift-rdot\s*\{[^}]*border-width:\s*2px;/s);
+  assert.match(styles, /\.summary-mobile \.monthly-summary-stat\s*\{[^}]*min-height:\s*82px;/s);
   assert.match(source, /rosterShiftRunPosition/);
   assert.match(source, /event-run-continues-previous/);
   assert.match(source, /event-run-continues-next/);
