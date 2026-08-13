@@ -183,6 +183,9 @@ test("uses the centered swipe-first calendar header", async () => {
   assert.match(source, /onPointerDown=\{handlePointerDown\}/);
   assert.match(source, /onPointerUp=\{handlePointerUp\}/);
   assert.match(source, /changeMonth\(difference > 0 \? -1 : 1\)/);
+  assert.match(source, /direction: amount > 0 \? "next" : "previous"/);
+  assert.match(source, /key=\{monthMotion\.sequence\}/);
+  assert.match(source, /month-slide-\$\{monthMotion\.direction\}/);
   assert.match(styles, /\.topbar-main\s*\{[^}]*display:\s*grid;[^}]*grid-template-columns:\s*44px minmax\(0, 1fr\) 44px;/s);
   assert.match(styles, /\.calendar-app\s*\{[^}]*overflow-y:\s*auto;[^}]*overscroll-behavior-y:\s*contain;/s);
   assert.match(styles, /@media \(max-width: 899px\)[\s\S]*?\.calendar-app\s*\{[^}]*scrollbar-width:\s*none;[^}]*-ms-overflow-style:\s*none;/s);
@@ -193,6 +196,10 @@ test("uses the centered swipe-first calendar header", async () => {
   assert.match(styles, /\.month-title-input\s*\{[^}]*position:\s*absolute;[^}]*inset:\s*0;[^}]*opacity:\s*0;/s);
   assert.doesNotMatch(styles, /\.month-dialog/);
   assert.match(styles, /\.month-grid\s*\{[^}]*touch-action:\s*pan-y;/s);
+  assert.match(styles, /\.month-card\.month-slide-next\s*\{[^}]*animation:\s*month-slide-from-right 240ms/s);
+  assert.match(styles, /\.month-card\.month-slide-previous\s*\{[^}]*animation:\s*month-slide-from-left 240ms/s);
+  assert.match(styles, /@keyframes month-slide-from-right[\s\S]*?transform:\s*translateX\(14%\)[\s\S]*?transform:\s*translateX\(0\)/s);
+  assert.match(styles, /@keyframes month-slide-from-left[\s\S]*?transform:\s*translateX\(-14%\)[\s\S]*?transform:\s*translateX\(0\)/s);
   assert.match(styles, /\.calendar-switcher button\.active\s*\{[^}]*background:\s*var\(--header-accent\);/s);
 });
 

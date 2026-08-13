@@ -48,6 +48,7 @@ import {
 type Theme = "dark" | "light";
 type CalendarEvent = CalendarEventRecord;
 type SyncStatus = "connecting" | "synced" | "offline";
+type MonthMotion = { direction: "previous" | "next" | null; sequence: number };
 
 type EventDraft = Omit<CalendarEvent, "id" | "createdAt" | "updatedAt" | "source">;
 
@@ -272,6 +273,7 @@ export default function Home() {
   const [selectedDate, setSelectedDate] = useState(todayKey);
   const [activeCalendar, setActiveCalendar] = useState<CalendarKind>("work");
   const [theme, setTheme] = useState<Theme>("dark");
+  const [monthMotion, setMonthMotion] = useState<MonthMotion>({ direction: null, sequence: 0 });
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [hydrated, setHydrated] = useState(false);
   const [syncStatus, setSyncStatus] = useState<SyncStatus>("connecting");
@@ -710,6 +712,10 @@ export default function Home() {
   }
 
   function changeMonth(amount: number) {
+    setMonthMotion((current) => ({
+      direction: amount > 0 ? "next" : "previous",
+      sequence: current.sequence + 1,
+    }));
     const next = new Date(view.year, view.month + amount, 1);
     const preferredDay = parseDateKey(selectedDate).getDate();
     const lastDay = new Date(next.getFullYear(), next.getMonth() + 1, 0).getDate();
@@ -1138,7 +1144,12 @@ export default function Home() {
       />
 
       <div className="main-content">
-        <div className="month-card" role="grid" aria-label={`${monthLabel} calendar`}>
+        <div
+          key={monthMotion.sequence}
+          className={`month-card${monthMotion.direction ? ` month-slide-${monthMotion.direction}` : ""}`}
+          role="grid"
+          aria-label={`${monthLabel} calendar`}
+        >
           <div className="weekday-strip" role="row">
             <div className="week-gutter-title" role="columnheader"><span>WK</span></div>
             {WEEKDAYS.map((day, index) => (
