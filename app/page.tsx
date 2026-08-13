@@ -196,11 +196,21 @@ function MonthlyShiftSummary({
         </div>
         <strong className="monthly-salary-amount">SAR {formatSar(salaryForecast.expectedSalary)}</strong>
         <div className="monthly-salary-breakdown" aria-label="Expected salary breakdown">
-          <span>Salary + laundry<strong>SAR {formatSar(salaryForecast.salaryWithLaundry)}</strong></span>
-          <span>Night allowance<strong>SAR {formatSar(salaryForecast.nightAllowance)}</strong></span>
-          <span>{salaryForecast.overtimeHours.toFixed(1)} overtime hours<strong>SAR {formatSar(salaryForecast.expectedOvertime)}</strong></span>
+          <span>
+            <span className="salary-breakdown-icon" aria-hidden="true">S</span>
+            <span className="salary-breakdown-copy">Salary + laundry<strong>SAR {formatSar(salaryForecast.salaryWithLaundry)}</strong></span>
+          </span>
+          <span>
+            <span className="salary-breakdown-icon" aria-hidden="true">N</span>
+            <span className="salary-breakdown-copy">Night allowance<strong>SAR {formatSar(salaryForecast.nightAllowance)}</strong></span>
+          </span>
+          <span>
+            <span className="salary-breakdown-icon" aria-hidden="true">OT</span>
+            <span className="salary-breakdown-copy">{salaryForecast.overtimeHours.toFixed(1)} overtime hours<strong>SAR {formatSar(salaryForecast.expectedOvertime)}</strong></span>
+          </span>
         </div>
       </div>
+      <p className="salary-estimate-note"><span aria-hidden="true">i</span>All amounts are estimates based on current data.</p>
     </section>
   );
 }
