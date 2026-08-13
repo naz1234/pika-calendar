@@ -52,7 +52,7 @@ const expectedEvents = {
   "early-ex-finish": ["Early (EX)", false, "07:00", "19:00", false],
   "late-ex-start": ["Late (EX)", false, "11:00", "23:30", false],
   "late-ex-finish": ["Late (EX)", false, "15:00", "03:00", true],
-  "night-ex-start": ["Night (EX)", false, "19:00", "07:30", true],
+  "night-ex-start": ["Night (EX)", false, "19:00", "07:00", true],
   "night-ex-finish": ["Night (EX)", false, "23:00", "11:00", true],
   "early-rdot": ["Early RDOT", false, "07:00", "15:30", false],
   "late-rdot": ["Late RDOT", false, "15:00", "23:30", false],
@@ -75,7 +75,7 @@ test("maps every choice to its exact canonical label, times, and overnight flag"
     );
   }
 
-  assert.equal(choiceToEvent("night-ex-start").endTime, "07:30");
+  assert.equal(choiceToEvent("night-ex-start").endTime, "07:00");
 });
 
 test("returns a new event detail object so callers cannot mutate the canonical mapping", () => {
@@ -190,7 +190,7 @@ test("infers both variants of every extension from its distinguishing time", () 
     ["E EX", ["07:00", "19:00"], "early-ex-finish"],
     ["L EX", ["11:00", "23:30"], "late-ex-start"],
     ["L EX", ["15:00", "03:00"], "late-ex-finish"],
-    ["N EX", ["19:00", "07:30"], "night-ex-start"],
+    ["N EX", ["19:00", "07:00"], "night-ex-start"],
     ["N EX", ["23:00", "11:00"], "night-ex-finish"],
   ];
 
@@ -206,6 +206,11 @@ test("infers both variants of every extension from its distinguishing time", () 
     inferRosterChoice({ rawCode: "N EX", times: ["15:00", "07:00"] }).choice,
     "night-ex-start",
     "uses the complete pair when OCR confuses the 9 in 19:00",
+  );
+  assert.equal(
+    inferRosterChoice({ rawCode: "N EX", times: ["19:00", "07:30"] }).choice,
+    "night-ex-start",
+    "continues to recognize calendars generated before the timing correction",
   );
 });
 

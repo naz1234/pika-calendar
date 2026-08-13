@@ -85,6 +85,37 @@ test("forecasts salary with the Railog overtime formula", () => {
   });
 });
 
+test("matches the Railog July forecast and corrects the legacy imported Night extension", () => {
+  const importedSource = { type: "roster-image" };
+  const events = [
+    ...Array.from({ length: 13 }, (_, index) => ({
+      ...event("Night", `2026-07-${String(index + 1).padStart(2, "0")}`),
+      startTime: "23:00",
+      endTime: "07:30",
+      endsNextDay: true,
+      source: importedSource,
+    })),
+    {
+      ...event("Night (EX)", "2026-07-17"),
+      startTime: "19:00",
+      endTime: "07:30",
+      endsNextDay: true,
+      source: importedSource,
+    },
+    { ...event("Late (EX)", "2026-07-25"), startTime: "15:00", endTime: "03:00", endsNextDay: true },
+    { ...event("Late (EX)", "2026-07-26"), startTime: "15:00", endTime: "03:00", endsNextDay: true },
+    { ...event("Night RDOT", "2026-07-23"), startTime: "23:00", endTime: "07:30", endsNextDay: true },
+  ];
+
+  assert.deepEqual(calculateMonthlyExpectedSalary(events, "2026-07"), {
+    salaryWithLaundry: 15100,
+    overtimeHours: 19,
+    nightAllowance: 585,
+    expectedOvertime: 2226.56,
+    expectedSalary: 17911.56,
+  });
+});
+
 test("salary forecasting ignores Personal and out-of-month overtime", () => {
   const events = [
     { ...event("Early RDOT", "2026-07-01", "personal"), startTime: "07:00", endTime: "15:30" },

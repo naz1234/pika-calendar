@@ -5,6 +5,7 @@ export type ShiftSummaryEvent = {
   startTime?: string;
   endTime?: string;
   endsNextDay?: boolean;
+  source?: { type?: string };
 };
 
 export type MonthlyShiftSummary = {
@@ -106,7 +107,19 @@ export function calculateMonthlyExpectedSalary(
     events.forEach((event) => {
       if (!belongsToWorkMonth(event, monthKey)) return;
       const title = normalizedTitle(event.title);
-      const durationHours = eventDurationHours(event);
+      let durationHours = eventDurationHours(event);
+
+      // Older roster imports mapped the 19:00 Night extension to 07:30 even
+      // though IVU.plan and Railog use 07:00. Keep saved calendars accurate
+      // before the user has a chance to re-import that month.
+      if (
+        title === "night (ex)" &&
+        event.source?.type === "roster-image" &&
+        event.startTime === "19:00" &&
+        event.endTime === "07:30"
+      ) {
+        durationHours = Math.max(0, durationHours - 0.5);
+      }
 
       if (EXTENSION_TITLE.test(title)) {
         overtimeHours += Math.max(0, durationHours - NORMAL_SHIFT_HOURS);

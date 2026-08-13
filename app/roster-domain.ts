@@ -130,7 +130,7 @@ const CHOICE_DETAILS: Readonly<Record<RosterChoice, RosterEventDetails>> = {
     title: "Night (EX)",
     allDay: false,
     startTime: "19:00",
-    endTime: "07:30",
+    endTime: "07:00",
     endsNextDay: true,
   },
   "night-ex-finish": {
@@ -316,7 +316,7 @@ function inferExtension(
         finish: [["15:00", "03:00"]],
       },
       night: {
-        start: [["19:00", "07:30"], ["19:00", "07:00"]],
+        start: [["19:00", "07:00"], ["19:00", "07:30"]],
         finish: [["23:00", "11:00"]],
       },
     } as const;
