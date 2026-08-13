@@ -155,15 +155,6 @@ function formatSar(value: number) {
   }).format(value);
 }
 
-const SHIFT_CODE_LEGEND = [
-  { code: "ES", label: "Early", className: "legend-early" },
-  { code: "LS", label: "Late", className: "legend-late" },
-  { code: "NS", label: "Night", className: "legend-night" },
-  { code: "RD", label: "Rest", className: "legend-rest" },
-  { code: "EX", label: "Extension", className: "legend-extension" },
-  { code: "OT", label: "RDOT", className: "legend-rdot" },
-] as const;
-
 function MonthlyShiftSummary({
   className,
   monthLabel,
@@ -184,15 +175,8 @@ function MonthlyShiftSummary({
           <p className="eyebrow">Monthly Work summary</p>
           <h2>{monthLabel}</h2>
         </div>
+        <span>3 categories</span>
       </div>
-      <ul className="shift-code-legend" aria-label="Shift code legend">
-        {SHIFT_CODE_LEGEND.map((item) => (
-          <li key={item.code}>
-            <strong className={item.className}>{item.code}</strong>
-            <span>{item.label}</span>
-          </li>
-        ))}
-      </ul>
       <dl className="monthly-summary-counts">
         <div className="monthly-summary-stat summary-night">
           <dt>
@@ -224,15 +208,15 @@ function MonthlyShiftSummary({
         <strong className="monthly-salary-amount">SAR {formatSar(salaryForecast.expectedSalary)}</strong>
         <div className="monthly-salary-breakdown" aria-label="Expected salary breakdown">
           <span>
-            <span className="salary-breakdown-icon" aria-hidden="true">S</span>
+            <span className="salary-breakdown-icon salary-icon-wallet" aria-hidden="true"><i /></span>
             <span className="salary-breakdown-copy">Salary + laundry<strong>SAR {formatSar(salaryForecast.salaryWithLaundry)}</strong></span>
           </span>
           <span>
-            <span className="salary-breakdown-icon" aria-hidden="true">N</span>
+            <span className="salary-breakdown-icon salary-icon-night" aria-hidden="true"><i /></span>
             <span className="salary-breakdown-copy">Night allowance<strong>SAR {formatSar(salaryForecast.nightAllowance)}</strong></span>
           </span>
           <span>
-            <span className="salary-breakdown-icon" aria-hidden="true">OT</span>
+            <span className="salary-breakdown-icon salary-icon-overtime" aria-hidden="true"><i /></span>
             <span className="salary-breakdown-copy">{salaryForecast.overtimeHours.toFixed(1)} overtime hours<strong>SAR {formatSar(salaryForecast.expectedOvertime)}</strong></span>
           </span>
         </div>
