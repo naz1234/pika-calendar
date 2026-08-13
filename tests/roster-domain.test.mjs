@@ -40,6 +40,7 @@ const {
   parseMonthKey,
   rosterShiftRunKey,
   rosterShiftRunPosition,
+  rosterShiftModifier,
   rosterShiftTone,
 } = loadedModule.exports;
 
@@ -108,14 +109,19 @@ test("groups only canonical Work roster titles into shift colors", () => {
   assert.equal(rosterShiftTone("RD"), "rest");
   assert.equal(rosterShiftTone("Late appointment"), "");
   assert.equal(rosterShiftTone("Personal night out"), "");
+  assert.equal(rosterShiftModifier("Early (EX)"), "extension");
+  assert.equal(rosterShiftModifier("Late RDOT"), "rdot");
+  assert.equal(rosterShiftModifier("Night"), "");
 });
 
-test("creates readable two-character event labels for mobile month cells", () => {
+test("creates compact labels that distinguish regular shifts, extensions, and RDOT", () => {
   assert.equal(mobileEventCode("RD"), "RD");
   assert.equal(mobileEventCode("Early"), "ES");
-  assert.equal(mobileEventCode("Early (EX)"), "ES");
-  assert.equal(mobileEventCode("Late RDOT"), "LS");
+  assert.equal(mobileEventCode("Early (EX)"), "E EX");
+  assert.equal(mobileEventCode("Late RDOT"), "L OT");
   assert.equal(mobileEventCode("Night"), "NS");
+  assert.equal(mobileEventCode("Night (EX)"), "N EX");
+  assert.equal(mobileEventCode("Night RDOT"), "N OT");
   assert.equal(mobileEventCode("Annual Leave"), "AL");
   assert.equal(mobileEventCode("AL"), "AL");
   assert.equal(mobileEventCode("Sick Leave"), "SL");

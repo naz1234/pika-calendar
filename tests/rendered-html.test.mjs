@@ -102,6 +102,9 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   assert.match(styles, /\.summary-mobile \.salary-estimate-note\s*\{[^}]*display:\s*flex;/s);
   assert.match(source, /mobileEventCode/);
   assert.match(source, /mobile-event-code/);
+  assert.match(source, /rosterShiftModifier/);
+  assert.match(styles, /\.event-chip\.shift-event\.shift-extension\s*\{[^}]*border-style:\s*dashed;/s);
+  assert.match(styles, /\.event-chip\.shift-event\.shift-rdot\s*\{[^}]*border-width:\s*2px;/s);
   assert.match(source, /rosterShiftRunPosition/);
   assert.match(source, /event-run-continues-previous/);
   assert.match(source, /event-run-continues-next/);
