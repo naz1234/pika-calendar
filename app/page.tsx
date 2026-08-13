@@ -155,6 +155,15 @@ function formatSar(value: number) {
   }).format(value);
 }
 
+const SHIFT_CODE_LEGEND = [
+  { code: "ES", label: "Early", className: "legend-early" },
+  { code: "LS", label: "Late", className: "legend-late" },
+  { code: "NS", label: "Night", className: "legend-night" },
+  { code: "RD", label: "Rest", className: "legend-rest" },
+  { code: "EX", label: "Extension", className: "legend-extension" },
+  { code: "OT", label: "RDOT", className: "legend-rdot" },
+] as const;
+
 function MonthlyShiftSummary({
   className,
   monthLabel,
@@ -175,8 +184,15 @@ function MonthlyShiftSummary({
           <p className="eyebrow">Monthly Work summary</p>
           <h2>{monthLabel}</h2>
         </div>
-        <span>3 categories</span>
       </div>
+      <ul className="shift-code-legend" aria-label="Shift code legend">
+        {SHIFT_CODE_LEGEND.map((item) => (
+          <li key={item.code}>
+            <strong className={item.className}>{item.code}</strong>
+            <span>{item.label}</span>
+          </li>
+        ))}
+      </ul>
       <dl className="monthly-summary-counts">
         <div className="monthly-summary-stat summary-night">
           <dt>
@@ -1343,6 +1359,10 @@ export default function Home() {
                                     ? `${run.continuesPrevious ? " event-run-continues-previous" : " event-run-start"}${run.continuesNext ? " event-run-continues-next" : " event-run-end"}`
                                     : "";
                                   const showShiftLabel = !isShift || !run.continuesPrevious;
+                                  const shiftModifier = isShift ? rosterShiftModifier(calendarEvent.title) : "";
+                                  const eventCode = isShift ? mobileEventCode(calendarEvent.title) : "";
+                                  const baseShiftCode = shiftModifier ? `${eventCode.charAt(0)}S` : eventCode;
+                                  const modifierCode = shiftModifier === "extension" ? "EX" : shiftModifier === "rdot" ? "OT" : "";
                                   return (
                                     <button
                                       key={calendarEvent.id}
@@ -1352,10 +1372,18 @@ export default function Home() {
                                       aria-label={`${calendarEvent.title}, ${eventTimeLabel(calendarEvent)}${remark ? `, Remark: ${remark}` : ""}`}
                                     >
                                       <span className={`mobile-event-summary${remark ? " has-remark" : ""}`} aria-hidden="true">
-                                        <span className="mobile-event-code">{showShiftLabel ? mobileEventCode(calendarEvent.title) : ""}</span>
+                                        <span className="mobile-event-code">{showShiftLabel ? baseShiftCode : ""}</span>
+                                        {showShiftLabel && modifierCode && (
+                                          <span className={`shift-modifier-badge modifier-${shiftModifier}`}>{modifierCode}</span>
+                                        )}
                                         {remark && <span className="mobile-remark-indicator">!</span>}
                                       </span>
-                                      <span className="event-title">{isShift ? (showShiftLabel ? mobileEventCode(calendarEvent.title) : "") : calendarEvent.title}</span>
+                                      <span className="event-title">
+                                        {isShift ? (showShiftLabel ? baseShiftCode : "") : calendarEvent.title}
+                                        {showShiftLabel && modifierCode && (
+                                          <span className={`shift-modifier-badge modifier-${shiftModifier}`}>{modifierCode}</span>
+                                        )}
+                                      </span>
                                     </button>
                                   );
                                 })}
