@@ -82,6 +82,7 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   assert.match(source, /className=\{`day-cell\$\{primaryShiftClass\}/);
   assert.match(styles, /\.day-cell\s*\{[^}]*margin:\s*2px;[^}]*border-radius:\s*9px;[^}]*background:\s*transparent;/s);
   assert.match(styles, /\.day-cell\.shift-event\s*\{[^}]*background: var\(--event-fill\)/s);
+  assert.doesNotMatch(styles, /\.week-row:last-child \.day-cell\s*\{[^}]*border-bottom:\s*0;/s);
   assert.match(source, /className="shift-legend" aria-label="Shift legend"/);
   assert.match(source, /LS Late[\s\S]*NS Night[\s\S]*RD Rest[\s\S]*Remark/);
   assert.match(styles, /@media \(max-width: 899px\)[\s\S]*?\.month-swipe-viewport\s*\{[^}]*width:\s*100%;[^}]*margin:\s*10px 0 0;/s);
