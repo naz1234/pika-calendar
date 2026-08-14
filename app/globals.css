@@ -2386,6 +2386,47 @@ textarea:focus-visible {
   border: 0 !important;
 }
 
+@media (max-width: 899px) {
+  .month-swipe-viewport,
+  .month-swipe-track,
+  .month-swipe-track > .month-card {
+    height: auto;
+    min-height: 0;
+  }
+
+  .month-swipe-track {
+    align-items: flex-start;
+  }
+
+  .month-card {
+    grid-template-rows: 36px auto;
+  }
+
+  .month-grid {
+    grid-template-rows: repeat(6, clamp(52px, 13.4vw, 60px));
+  }
+
+  .day-number {
+    top: 4px;
+    left: 6px;
+    width: 21px;
+    height: 21px;
+  }
+
+  .day-remark-dot {
+    top: 6px;
+    right: 5px;
+  }
+
+  .cell-events {
+    top: 28px;
+  }
+
+  .event-chip {
+    height: 16px;
+  }
+}
+
 @media (min-width: 540px) {
   .topbar {
     padding-right: 22px;
