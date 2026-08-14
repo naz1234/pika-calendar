@@ -811,8 +811,7 @@ textarea:focus-visible {
   font-variant-numeric: tabular-nums;
 }
 
-.week-row:last-child .week-number,
-.week-row:last-child .day-cell {
+.week-row:last-child .week-number {
   border-bottom: 0;
 }
 
