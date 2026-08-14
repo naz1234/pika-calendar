@@ -636,7 +636,9 @@ textarea:focus-visible {
 }
 
 .summary-mobile .monthly-summary-stat {
-  min-height: 104px;
+  grid-template-rows: auto auto;
+  align-content: start;
+  min-height: 82px;
   padding: 0 10px;
   border: 0;
   border-right: 1px solid var(--grid-soft);
@@ -669,7 +671,8 @@ textarea:focus-visible {
 }
 
 .summary-mobile .monthly-summary-stat dd {
-  margin-top: 12px;
+  align-self: start;
+  margin-top: 8px;
   font-size: 1.8rem;
 }
 
@@ -988,31 +991,11 @@ textarea:focus-visible {
   font-weight: 850;
   line-height: 1;
   letter-spacing: 0.02em;
+  white-space: nowrap;
 }
 
-.shift-modifier-badge {
-  display: inline-grid;
-  place-items: center;
-  min-width: 18px;
-  height: 13px;
-  margin-left: 4px;
-  padding: 0 3px;
-  border: 1px solid currentColor;
-  border-radius: 999px;
-  font-size: 0.43rem;
-  font-weight: 900;
-  line-height: 1;
-  letter-spacing: 0;
-}
-
-.modifier-extension {
-  background: color-mix(in srgb, var(--shift-early-ink) 22%, var(--surface));
-  color: var(--shift-early-ink);
-}
-
-.modifier-rdot {
-  background: color-mix(in srgb, var(--shift-rest-ink) 22%, var(--surface));
-  color: var(--shift-rest-ink);
+.mobile-event-code-modified {
+  letter-spacing: -0.025em;
 }
 
 .event-title {
@@ -2720,12 +2703,8 @@ textarea:focus-visible {
     font-size: 0.52rem;
   }
 
-  .shift-modifier-badge {
-    min-width: 15px;
-    height: 11px;
-    margin-left: 2px;
-    padding: 0 2px;
-    font-size: 0.38rem;
+  .mobile-event-code-modified {
+    font-size: 0.44rem;
   }
 
   .shift-legend {
