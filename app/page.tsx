@@ -30,7 +30,6 @@ import {
   mobileEventCode,
   normalizeRosterCode,
   rosterShiftModifier,
-  rosterShiftRunPosition,
   rosterShiftTone,
   type RosterChoice,
 } from "./roster-domain";
@@ -1296,11 +1295,11 @@ export default function Home() {
                         <div className="week-number" role="rowheader" aria-label={`Week ${isoWeekNumber(addDays(week[0], 1))}`}>
                           {isoWeekNumber(addDays(week[0], 1))}
                         </div>
-                        {week.map((day, dayIndex) => {
+                        {week.map((day) => {
                           const key = dateKey(day);
                           const dayEvents = eventsByDate.get(key) ?? [];
-                          const previousDayEvents = eventsByDate.get(dateKey(addDays(day, -1))) ?? [];
-                          const nextDayEvents = eventsByDate.get(dateKey(addDays(day, 1))) ?? [];
+                          const primaryShiftClass = dayEvents[0] ? eventShiftClass(dayEvents[0]) : "";
+                          const dayHasRemark = dayEvents.some((calendarEvent) => Boolean(eventDisplayRemark(calendarEvent)));
                           const isToday = key === todayKey;
                           const isSelected = key === selectedDate;
                           const isOutside = day.getMonth() !== panel.month;
@@ -1312,7 +1311,7 @@ export default function Home() {
                           }).format(day);
                           return (
                             <div
-                              className={`day-cell${isOutside ? " outside" : ""}${isToday ? " today" : ""}${isSelected ? " selected" : ""}`}
+                              className={`day-cell${primaryShiftClass}${dayHasRemark ? " has-remark" : ""}${isOutside ? " outside" : ""}${isToday ? " today" : ""}${isSelected ? " selected" : ""}`}
                               role="gridcell"
                               aria-selected={isSelected}
                               key={key}
@@ -1327,22 +1326,13 @@ export default function Home() {
                                 aria-label={`${spokenDate}, ${dayEvents.length} event${dayEvents.length === 1 ? "" : "s"}`}
                               >
                                 <span className="day-number">{day.getDate()}</span>
+                                {dayHasRemark && <span className="day-remark-dot" aria-hidden="true" />}
                               </button>
                               <div className="cell-events">
-                                {dayEvents.slice(0, 3).map((calendarEvent, eventIndex) => {
+                                {dayEvents.slice(0, 3).map((calendarEvent) => {
                                   const remark = eventDisplayRemark(calendarEvent);
                                   const shiftClass = eventShiftClass(calendarEvent);
                                   const isShift = Boolean(shiftClass);
-                                  const run = rosterShiftRunPosition(
-                                    calendarEvent,
-                                    previousDayEvents[eventIndex],
-                                    nextDayEvents[eventIndex],
-                                    dayIndex,
-                                  );
-                                  const runClass = isShift
-                                    ? `${run.continuesPrevious ? " event-run-continues-previous" : " event-run-start"}${run.continuesNext ? " event-run-continues-next" : " event-run-end"}`
-                                    : "";
-                                  const showShiftLabel = !isShift || !run.continuesPrevious;
                                   const shiftModifier = isShift ? rosterShiftModifier(calendarEvent.title) : "";
                                   const eventCode = isShift ? mobileEventCode(calendarEvent.title) : "";
                                   const baseShiftCode = shiftModifier ? `${eventCode.charAt(0)}S` : eventCode;
@@ -1350,21 +1340,20 @@ export default function Home() {
                                   return (
                                     <button
                                       key={calendarEvent.id}
-                                      className={`event-chip${shiftClass}${runClass}`}
+                                      className={`event-chip${shiftClass}`}
                                       onClick={() => openEdit(calendarEvent)}
                                       tabIndex={panel.offset === 0 ? 0 : -1}
                                       aria-label={`${calendarEvent.title}, ${eventTimeLabel(calendarEvent)}${remark ? `, Remark: ${remark}` : ""}`}
                                     >
-                                      <span className={`mobile-event-summary${remark ? " has-remark" : ""}`} aria-hidden="true">
-                                        <span className="mobile-event-code">{showShiftLabel ? baseShiftCode : ""}</span>
-                                        {showShiftLabel && modifierCode && (
+                                      <span className="mobile-event-summary" aria-hidden="true">
+                                        <span className="mobile-event-code">{baseShiftCode}</span>
+                                        {modifierCode && (
                                           <span className={`shift-modifier-badge modifier-${shiftModifier}`}>{modifierCode}</span>
                                         )}
-                                        {remark && <span className="mobile-remark-indicator">!</span>}
                                       </span>
                                       <span className="event-title">
-                                        {isShift ? (showShiftLabel ? baseShiftCode : "") : calendarEvent.title}
-                                        {showShiftLabel && modifierCode && (
+                                        {isShift ? baseShiftCode : calendarEvent.title}
+                                        {modifierCode && (
                                           <span className={`shift-modifier-badge modifier-${shiftModifier}`}>{modifierCode}</span>
                                         )}
                                       </span>
