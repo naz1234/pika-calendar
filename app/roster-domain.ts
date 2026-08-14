@@ -1,5 +1,7 @@
 export type RosterChoice =
   | "rd"
+  | "al"
+  | "sl"
   | "early"
   | "late"
   | "night"
@@ -59,6 +61,8 @@ export type RosterShiftRunPosition = {
 
 export const ROSTER_CHOICE_OPTIONS: readonly RosterChoiceOption[] = [
   { value: "rd", label: "RD" },
+  { value: "al", label: "AL" },
+  { value: "sl", label: "SL" },
   { value: "early", label: "Early" },
   { value: "early-ex-start", label: "Early (EX) - starts 03:00" },
   { value: "early-ex-finish", label: "Early (EX) - ends 19:00" },
@@ -91,6 +95,20 @@ export const WORK_EDITOR_MODIFIER_OPTIONS: readonly { value: WorkEditorModifier;
 const CHOICE_DETAILS: Readonly<Record<RosterChoice, RosterEventDetails>> = {
   rd: {
     title: "RD",
+    allDay: true,
+    startTime: "",
+    endTime: "",
+    endsNextDay: false,
+  },
+  al: {
+    title: "AL",
+    allDay: true,
+    startTime: "",
+    endTime: "",
+    endsNextDay: false,
+  },
+  sl: {
+    title: "SL",
     allDay: true,
     startTime: "",
     endTime: "",
@@ -438,6 +456,8 @@ export function inferRosterChoice({
 
   const code = normalizeRosterCode(rawCode);
   if (code === "WR" || code === "RD") return { choice: "rd", warning: "" };
+  if (code === "AL") return { choice: "al", warning: "" };
+  if (code === "SL") return { choice: "sl", warning: "" };
   if (code === "E3-DC") return { choice: "early", warning: "" };
   if (code === "L3-DC") return { choice: "late", warning: "" };
   if (code === "N3-DC") return { choice: "night", warning: "" };

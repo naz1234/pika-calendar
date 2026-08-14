@@ -52,6 +52,8 @@ const {
 
 const expectedEvents = {
   rd: ["RD", true, "", "", false],
+  al: ["AL", true, "", "", false],
+  sl: ["SL", true, "", "", false],
   early: ["Early", false, "07:00", "15:30", false],
   late: ["Late", false, "15:00", "23:30", false],
   night: ["Night", false, "23:00", "07:30", true],
@@ -123,6 +125,8 @@ test("normalizes checkmarks, OCR separators, whitespace, and noisy standard code
   assert.equal(normalizeRosterCode("√ n   e-x"), "N EX");
   assert.equal(normalizeRosterCode("e / r_d"), "E RD");
   assert.equal(normalizeRosterCode("  W-R  "), "WR");
+  assert.equal(normalizeRosterCode("AL"), "AL");
+  assert.equal(normalizeRosterCode("SL"), "SL");
   assert.equal(normalizeRosterCode("something else"), "SOMETHINGELSE");
 });
 
@@ -202,6 +206,8 @@ test("extracts canonical times despite O/0 confusion and OCR punctuation", () =>
 
 test("infers rest days and normal early, late, and night shifts", () => {
   assert.deepEqual(inferRosterChoice({ rawCode: "WR" }), { choice: "rd", warning: "" });
+  assert.deepEqual(inferRosterChoice({ rawCode: "AL" }), { choice: "al", warning: "" });
+  assert.deepEqual(inferRosterChoice({ rawCode: "SL" }), { choice: "sl", warning: "" });
   assert.deepEqual(inferRosterChoice({ rawCode: "unreadable", barKind: "GREEN bar" }), { choice: "rd", warning: "" });
   assert.deepEqual(inferRosterChoice({ rawCode: "E3 DC" }), { choice: "early", warning: "" });
   assert.deepEqual(inferRosterChoice({ rawCode: "L3-DC" }), { choice: "late", warning: "" });
