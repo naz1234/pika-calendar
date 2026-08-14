@@ -122,6 +122,21 @@ test("recovers IVU's uniquely truncated 03:00 extension marker", () => {
   assert.deepEqual(observations[14].times, ["15:00"], "does not guess other incomplete times");
 });
 
+test("reads leave codes and prefers leave over a secondary planned duty", () => {
+  const observations = parseIvuPlanTextItems(
+    augustFixture(new Map([
+      [13, ["AL", "WR"]],
+      [14, ["SL"]],
+    ])),
+    2026,
+    7,
+  );
+
+  assert.equal(observations[12].rawCode, "AL");
+  assert.equal(observations[12].rawText, "AL WR");
+  assert.equal(observations[13].rawCode, "SL");
+});
+
 test("rejects an incomplete IVU.plan calendar grid", () => {
   const incomplete = augustFixture().filter((item) => item.str !== "31");
   assert.throws(

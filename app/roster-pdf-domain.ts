@@ -32,7 +32,7 @@ function normalizedCode(value: string) {
     .replace(/[^A-Z0-9/ -]/g, " ")
     .replace(/\s+/g, " ")
     .trim();
-  const match = normalized.match(/(?:^|\s)(WR|[ELN]3\s*[-/]?\s*D[C0]|[ELN]\s*[-/]?\s*(?:EX|RD))(?:$|\s)/);
+  const match = normalized.match(/(?:^|\s)(AL|SL|WR|[ELN]3\s*[-/]?\s*D[C0]|[ELN]\s*[-/]?\s*(?:EX|RD))(?:$|\s)/);
   return match?.[1].trim().replace(/\s+/g, " ") ?? "";
 }
 
