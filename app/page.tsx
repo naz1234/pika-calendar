@@ -23,6 +23,8 @@ import {
 } from "./calendar-sync";
 import {
   ROSTER_CHOICE_OPTIONS,
+  WORK_EDITOR_MODIFIER_OPTIONS,
+  WORK_EDITOR_SHIFT_OPTIONS,
   choiceToEvent,
   inferRosterChoice,
   makeDateKey as makeRosterDateKey,
@@ -31,7 +33,13 @@ import {
   normalizeRosterCode,
   rosterShiftModifier,
   rosterShiftTone,
+  workEditorExtensionSide,
+  workEditorModifier,
+  workEditorShift,
+  workEditorShiftDetails,
   type RosterChoice,
+  type WorkEditorModifier,
+  type WorkEditorShift,
 } from "./roster-domain";
 import {
   eventDisplayRemark,
@@ -302,6 +310,10 @@ export default function Home() {
   const [toast, setToast] = useState("");
   const [announcement, setAnnouncement] = useState("");
   const [rosterDialog, setRosterDialog] = useState<RosterDialogState | null>(null);
+  const editorIsWorkEdit = Boolean(editor?.id && editor.draft.calendar === "work");
+  const editorWorkShift = editorIsWorkEdit && editor ? workEditorShift(editor.draft.title) : "";
+  const editorWorkModifier = editorIsWorkEdit && editor ? workEditorModifier(editor.draft.title) : "regular";
+  const editorWorkSupportsModifier = ["early", "late", "night"].includes(editorWorkShift);
   const pointerStart = useRef<SwipeGesture | null>(null);
   const monthSwipeTrack = useRef<HTMLDivElement>(null);
   const monthSwipeViewport = useRef<HTMLDivElement>(null);
@@ -320,6 +332,7 @@ export default function Home() {
   const sharedMigrationPending = useRef(false);
   const searchInput = useRef<HTMLInputElement>(null);
   const editorTitleInput = useRef<HTMLInputElement>(null);
+  const workEditorTitleSelect = useRef<HTMLSelectElement>(null);
   const menuCloseButton = useRef<HTMLButtonElement>(null);
   const editorIsOpen = editor !== null;
 
@@ -740,9 +753,12 @@ export default function Home() {
 
   useEffect(() => {
     if (!editorIsOpen) return;
-    const frame = requestAnimationFrame(() => editorTitleInput.current?.focus());
+    const frame = requestAnimationFrame(() => {
+      if (editorIsWorkEdit) workEditorTitleSelect.current?.focus();
+      else editorTitleInput.current?.focus();
+    });
     return () => cancelAnimationFrame(frame);
-  }, [editorIsOpen]);
+  }, [editorIsOpen, editorIsWorkEdit]);
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -869,6 +885,21 @@ export default function Home() {
         notes: event.notes,
       },
     });
+  }
+
+  function updateWorkEditorShift(nextShift: WorkEditorShift, nextModifier: WorkEditorModifier) {
+    if (!editor || !editorIsWorkEdit) return;
+    const modifier = ["early", "late", "night"].includes(nextShift) ? nextModifier : "regular";
+    const details = workEditorShiftDetails(
+      nextShift,
+      modifier,
+      workEditorExtensionSide(editor.draft),
+    );
+    setEditor({
+      ...editor,
+      draft: { ...editor.draft, ...details },
+    });
+    setEditorError("");
   }
 
   function saveEvent(submitEvent: FormEvent) {
@@ -1761,19 +1792,52 @@ export default function Home() {
               <div><p className="eyebrow">{editor.id ? "Edit details" : "New event"}</p><h2 id="editor-title">{editor.id ? editor.draft.title || "Untitled event" : "Add to your calendar"}</h2></div>
               <button type="button" className="close-button" onClick={() => setEditor(null)} aria-label="Close event editor">×</button>
             </div>
-            <label className="field title-field"><span>Title</span><input ref={editorTitleInput} value={editor.draft.title} onChange={(event) => setEditor({ ...editor, draft: { ...editor.draft, title: event.target.value } })} placeholder="What is happening?" maxLength={80} required /></label>
-            <div className="field-row">
-              <label className="field"><span>Date</span><input type="date" value={editor.draft.date} onChange={(event) => setEditor({ ...editor, draft: { ...editor.draft, date: event.target.value } })} required /></label>
-              <label className="field"><span>Calendar</span><select value={editor.draft.calendar} onChange={(event) => setEditor({ ...editor, draft: { ...editor.draft, calendar: event.target.value as CalendarKind } })}><option value="work">Work</option><option value="personal">Personal</option></select></label>
-            </div>
-            <label className="all-day-toggle"><input type="checkbox" checked={editor.draft.allDay} onChange={(event) => setEditor({ ...editor, draft: { ...editor.draft, allDay: event.target.checked, endsNextDay: event.target.checked ? false : editor.draft.endsNextDay } })} /><span>All-day event</span></label>
-            {!editor.draft.allDay && (
+            {editorIsWorkEdit ? (
+              <div className="field-row work-editor-shift-fields">
+                <label className="field title-field">
+                  <span>Title</span>
+                  <select
+                    ref={workEditorTitleSelect}
+                    value={editorWorkShift}
+                    onChange={(event) => updateWorkEditorShift(event.target.value as WorkEditorShift, editorWorkModifier)}
+                    required
+                  >
+                    <option value="" disabled>Choose shift</option>
+                    {WORK_EDITOR_SHIFT_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
+                  </select>
+                </label>
+                <label className="field">
+                  <span>Shift type</span>
+                  <select
+                    value={editorWorkSupportsModifier ? editorWorkModifier : "regular"}
+                    onChange={(event) => updateWorkEditorShift(editorWorkShift as WorkEditorShift, event.target.value as WorkEditorModifier)}
+                    disabled={!editorWorkSupportsModifier}
+                  >
+                    {WORK_EDITOR_MODIFIER_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+            ) : (
               <>
+                <label className="field title-field"><span>Title</span><input ref={editorTitleInput} value={editor.draft.title} onChange={(event) => setEditor({ ...editor, draft: { ...editor.draft, title: event.target.value } })} placeholder="What is happening?" maxLength={80} required /></label>
                 <div className="field-row">
-                  <label className="field"><span>Starts</span><input type="time" value={editor.draft.startTime} onChange={(event) => setEditor({ ...editor, draft: { ...editor.draft, startTime: event.target.value } })} required /></label>
-                  <label className="field"><span>Ends</span><input type="time" value={editor.draft.endTime} onChange={(event) => setEditor({ ...editor, draft: { ...editor.draft, endTime: event.target.value } })} required /></label>
+                  <label className="field"><span>Date</span><input type="date" value={editor.draft.date} onChange={(event) => setEditor({ ...editor, draft: { ...editor.draft, date: event.target.value } })} required /></label>
+                  <label className="field"><span>Calendar</span><select value={editor.draft.calendar} onChange={(event) => setEditor({ ...editor, draft: { ...editor.draft, calendar: event.target.value as CalendarKind } })}><option value="work">Work</option><option value="personal">Personal</option></select></label>
                 </div>
-                <label className="all-day-toggle next-day-toggle"><input type="checkbox" checked={editor.draft.endsNextDay ?? false} onChange={(event) => setEditor({ ...editor, draft: { ...editor.draft, endsNextDay: event.target.checked } })} /><span>Ends the next day</span></label>
+                <label className="all-day-toggle"><input type="checkbox" checked={editor.draft.allDay} onChange={(event) => setEditor({ ...editor, draft: { ...editor.draft, allDay: event.target.checked, endsNextDay: event.target.checked ? false : editor.draft.endsNextDay } })} /><span>All-day event</span></label>
+                {!editor.draft.allDay && (
+                  <>
+                    <div className="field-row">
+                      <label className="field"><span>Starts</span><input type="time" value={editor.draft.startTime} onChange={(event) => setEditor({ ...editor, draft: { ...editor.draft, startTime: event.target.value } })} required /></label>
+                      <label className="field"><span>Ends</span><input type="time" value={editor.draft.endTime} onChange={(event) => setEditor({ ...editor, draft: { ...editor.draft, endTime: event.target.value } })} required /></label>
+                    </div>
+                    <label className="all-day-toggle next-day-toggle"><input type="checkbox" checked={editor.draft.endsNextDay ?? false} onChange={(event) => setEditor({ ...editor, draft: { ...editor.draft, endsNextDay: event.target.checked } })} /><span>Ends the next day</span></label>
+                  </>
+                )}
               </>
             )}
             <label className="field"><span>Notes <em>optional</em></span><textarea value={editor.draft.notes} onChange={(event) => setEditor({ ...editor, draft: { ...editor.draft, notes: event.target.value } })} placeholder="Add a location, reminder, or detail" rows={3} maxLength={500} /></label>

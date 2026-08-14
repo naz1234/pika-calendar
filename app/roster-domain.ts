@@ -39,6 +39,10 @@ export type RosterInferenceInput = {
 
 export type RosterShiftTone = "early" | "late" | "night" | "rest";
 
+export type WorkEditorShift = "early" | "late" | "night" | "rd" | "al" | "sl";
+export type WorkEditorModifier = "regular" | "extension" | "rdot";
+export type WorkEditorExtensionSide = "start" | "finish";
+
 export type RosterShiftRunEvent = {
   calendar: string;
   title: string;
@@ -67,6 +71,21 @@ export const ROSTER_CHOICE_OPTIONS: readonly RosterChoiceOption[] = [
   { value: "night-ex-start", label: "Night (EX) - starts 19:00" },
   { value: "night-ex-finish", label: "Night (EX) - ends 11:00 next day" },
   { value: "night-rdot", label: "Night RDOT" },
+] as const;
+
+export const WORK_EDITOR_SHIFT_OPTIONS: readonly { value: WorkEditorShift; label: string }[] = [
+  { value: "early", label: "Early" },
+  { value: "late", label: "Late" },
+  { value: "night", label: "Night" },
+  { value: "rd", label: "RD" },
+  { value: "al", label: "AL" },
+  { value: "sl", label: "SL" },
+] as const;
+
+export const WORK_EDITOR_MODIFIER_OPTIONS: readonly { value: WorkEditorModifier; label: string }[] = [
+  { value: "regular", label: "Regular" },
+  { value: "extension", label: "Extension" },
+  { value: "rdot", label: "RDOT" },
 ] as const;
 
 const CHOICE_DETAILS: Readonly<Record<RosterChoice, RosterEventDetails>> = {
@@ -214,6 +233,57 @@ export function rosterShiftModifier(title: string): "extension" | "rdot" | "" {
   if (/^(?:early|late|night) \(ex\)$/u.test(normalized)) return "extension";
   if (/^(?:early|late|night) rdot$/u.test(normalized)) return "rdot";
   return "";
+}
+
+/** Maps an existing Work title to the compact editor's base-shift dropdown. */
+export function workEditorShift(title: string): WorkEditorShift | "" {
+  const normalized = String(title ?? "").trim().toLowerCase().replace(/\s+/gu, " ");
+  if (/^early(?: \(ex\)| rdot)?$/u.test(normalized)) return "early";
+  if (/^late(?: \(ex\)| rdot)?$/u.test(normalized)) return "late";
+  if (/^night(?: \(ex\)| rdot)?$/u.test(normalized)) return "night";
+  if (normalized === "rd") return "rd";
+  if (normalized === "al" || normalized === "annual leave") return "al";
+  if (normalized === "sl" || normalized === "sick leave") return "sl";
+  return "";
+}
+
+export function workEditorModifier(title: string): WorkEditorModifier {
+  return rosterShiftModifier(title) || "regular";
+}
+
+export function workEditorExtensionSide(
+  event: Pick<RosterShiftRunEvent, "title" | "startTime">,
+): WorkEditorExtensionSide {
+  const shift = workEditorShift(event.title);
+  if (workEditorModifier(event.title) !== "extension" || !["early", "late", "night"].includes(shift)) {
+    return "finish";
+  }
+  return event.startTime === choiceToEvent(shift as RosterChoice).startTime ? "finish" : "start";
+}
+
+/** Converts the compact Work editor choices into canonical title and automatic hours. */
+export function workEditorShiftDetails(
+  shift: WorkEditorShift,
+  modifier: WorkEditorModifier,
+  extensionSide: WorkEditorExtensionSide = "finish",
+): RosterEventDetails {
+  if (shift === "al" || shift === "sl") {
+    return {
+      title: shift.toUpperCase(),
+      allDay: true,
+      startTime: "",
+      endTime: "",
+      endsNextDay: false,
+    };
+  }
+  if (shift === "rd") return choiceToEvent("rd");
+
+  const choice = modifier === "extension"
+    ? `${shift}-ex-${extensionSide}`
+    : modifier === "rdot"
+      ? `${shift}-rdot`
+      : shift;
+  return choiceToEvent(choice as RosterChoice);
 }
 
 /** Returns a compact, readable label for an event in narrow month cells. */

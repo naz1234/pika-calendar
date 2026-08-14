@@ -26,6 +26,8 @@ Function("module", "exports", compiled.outputText)(loadedModule, loadedModule.ex
 
 const {
   ROSTER_CHOICE_OPTIONS,
+  WORK_EDITOR_MODIFIER_OPTIONS,
+  WORK_EDITOR_SHIFT_OPTIONS,
   choiceToEvent,
   dateKey,
   dateKeyFromMonthKey,
@@ -42,6 +44,10 @@ const {
   rosterShiftRunPosition,
   rosterShiftModifier,
   rosterShiftTone,
+  workEditorExtensionSide,
+  workEditorModifier,
+  workEditorShift,
+  workEditorShiftDetails,
 } = loadedModule.exports;
 
 const expectedEvents = {
@@ -83,6 +89,27 @@ test("returns a new event detail object so callers cannot mutate the canonical m
   const first = choiceToEvent("early");
   first.title = "Changed";
   assert.equal(choiceToEvent("early").title, "Early");
+});
+
+test("builds compact Work editor choices with automatic canonical hours", () => {
+  assert.deepEqual(WORK_EDITOR_SHIFT_OPTIONS.map(({ value }) => value), ["early", "late", "night", "rd", "al", "sl"]);
+  assert.deepEqual(WORK_EDITOR_MODIFIER_OPTIONS.map(({ value }) => value), ["regular", "extension", "rdot"]);
+  assert.equal(workEditorShift("Night (EX)"), "night");
+  assert.equal(workEditorShift("Annual Leave"), "al");
+  assert.equal(workEditorShift("Sick Leave"), "sl");
+  assert.equal(workEditorModifier("Late RDOT"), "rdot");
+  assert.deepEqual(workEditorShiftDetails("night", "regular"), choiceToEvent("night"));
+  assert.deepEqual(workEditorShiftDetails("late", "rdot"), choiceToEvent("late-rdot"));
+  assert.deepEqual(workEditorShiftDetails("early", "extension"), choiceToEvent("early-ex-finish"));
+  assert.deepEqual(workEditorShiftDetails("al", "rdot"), {
+    title: "AL",
+    allDay: true,
+    startTime: "",
+    endTime: "",
+    endsNextDay: false,
+  });
+  assert.equal(workEditorExtensionSide({ title: "Night (EX)", startTime: "19:00" }), "start");
+  assert.equal(workEditorExtensionSide({ title: "Night (EX)", startTime: "23:00" }), "finish");
 });
 
 test("normalizes checkmarks, OCR separators, whitespace, and noisy standard codes", () => {
