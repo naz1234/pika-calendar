@@ -130,3 +130,13 @@ test("salary forecasting ignores Personal and out-of-month overtime", () => {
     expectedSalary: 15100,
   });
 });
+
+test("uses a custom salary plus laundry amount in the forecast", () => {
+  assert.deepEqual(calculateMonthlyExpectedSalary([], "2026-07", { salaryWithLaundry: 16850.75 }), {
+    salaryWithLaundry: 16850.75,
+    overtimeHours: 0,
+    nightAllowance: 0,
+    expectedOvertime: 0,
+    expectedSalary: 16850.75,
+  });
+});

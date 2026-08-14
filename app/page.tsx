@@ -41,6 +41,7 @@ import {
 } from "./roster-merge";
 import type { RosterBarKind, RosterProgress } from "./roster-reader";
 import {
+  DEFAULT_SALARY_WITH_LAUNDRY,
   calculateMonthlyExpectedSalary,
   countMonthlyWorkShifts,
   type MonthlySalaryForecast,
@@ -174,7 +175,6 @@ function MonthlyShiftSummary({
           <p className="eyebrow">Monthly Work summary</p>
           <h2>{monthLabel}</h2>
         </div>
-        <span>3 categories</span>
       </div>
       <dl className="monthly-summary-counts">
         <div className="monthly-summary-stat summary-night">
@@ -213,7 +213,6 @@ function MonthlyShiftSummary({
           </span>
         </div>
       </div>
-      <p className="salary-estimate-note"><span aria-hidden="true">i</span>All amounts are estimates based on current data.</p>
     </section>
   );
 }
@@ -286,6 +285,8 @@ export default function Home() {
   const [selectedDate, setSelectedDate] = useState(todayKey);
   const [activeCalendar, setActiveCalendar] = useState<CalendarKind>("work");
   const [theme, setTheme] = useState<Theme>("dark");
+  const [salaryWithLaundry, setSalaryWithLaundry] = useState(DEFAULT_SALARY_WITH_LAUNDRY);
+  const [salaryWithLaundryInput, setSalaryWithLaundryInput] = useState(String(DEFAULT_SALARY_WITH_LAUNDRY));
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [hydrated, setHydrated] = useState(false);
   const [syncStatus, setSyncStatus] = useState<SyncStatus>("connecting");
@@ -401,13 +402,13 @@ export default function Home() {
     return {
       ...panel,
       summary: countMonthlyWorkShifts(events, monthKey),
-      salaryForecast: calculateMonthlyExpectedSalary(events, monthKey),
+      salaryForecast: calculateMonthlyExpectedSalary(events, monthKey, { salaryWithLaundry }),
       salaryMonthLabel: new Intl.DateTimeFormat("en", {
         month: "long",
         year: "numeric",
       }).format(new Date(panel.year, panel.month + 1, 1)),
     };
-  }), [events, swipeMonths]);
+  }), [events, salaryWithLaundry, swipeMonths]);
   const visibleEvents = useMemo(
     () => events.filter((event) => event.calendar === activeCalendar),
     [events, activeCalendar],
@@ -436,8 +437,8 @@ export default function Home() {
     [events, view.month, view.year],
   );
   const monthlySalaryForecast = useMemo(
-    () => calculateMonthlyExpectedSalary(events, `${view.year}-${pad(view.month + 1)}`),
-    [events, view.month, view.year],
+    () => calculateMonthlyExpectedSalary(events, `${view.year}-${pad(view.month + 1)}`, { salaryWithLaundry }),
+    [events, salaryWithLaundry, view.month, view.year],
   );
   const salaryMonthLabel = new Intl.DateTimeFormat("en", {
     month: "long",
@@ -516,6 +517,11 @@ export default function Home() {
         }
         if (storedSettings.theme === "dark" || storedSettings.theme === "light") {
           setTheme(storedSettings.theme);
+        }
+        if (Number.isFinite(storedSettings.salaryWithLaundry) && storedSettings.salaryWithLaundry >= 0) {
+          const storedSalary = Math.round(Number(storedSettings.salaryWithLaundry) * 100) / 100;
+          setSalaryWithLaundry(storedSalary);
+          setSalaryWithLaundryInput(String(storedSalary));
         }
       } catch {
         // Ignore malformed device storage and start with a clean calendar.
@@ -668,7 +674,11 @@ export default function Home() {
   useEffect(() => {
     if (!hydrated) return;
     try {
-      localStorage.setItem(SETTINGS_KEY, JSON.stringify({ calendar: activeCalendar, theme }));
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify({
+        calendar: activeCalendar,
+        salaryWithLaundry,
+        theme,
+      }));
     } catch {
       queueMicrotask(() => {
         setToast("Preferences could not be saved");
@@ -676,7 +686,26 @@ export default function Home() {
       });
     }
     document.documentElement.dataset.theme = theme;
-  }, [activeCalendar, hydrated, theme]);
+  }, [activeCalendar, hydrated, salaryWithLaundry, theme]);
+
+  function updateSalaryWithLaundryInput(value: string) {
+    setSalaryWithLaundryInput(value);
+    if (!value.trim()) return;
+    const nextSalary = Number(value);
+    if (!Number.isFinite(nextSalary) || nextSalary < 0) return;
+    setSalaryWithLaundry(Math.round(nextSalary * 100) / 100);
+  }
+
+  function normalizeSalaryWithLaundryInput() {
+    const nextSalary = Number(salaryWithLaundryInput);
+    if (!salaryWithLaundryInput.trim() || !Number.isFinite(nextSalary) || nextSalary < 0) {
+      setSalaryWithLaundryInput(String(salaryWithLaundry));
+      return;
+    }
+    const roundedSalary = Math.round(nextSalary * 100) / 100;
+    setSalaryWithLaundry(roundedSalary);
+    setSalaryWithLaundryInput(String(roundedSalary));
+  }
 
   useEffect(() => {
     if (!toast) return;
@@ -1490,7 +1519,7 @@ export default function Home() {
                 aria-expanded={settingsOpen}
                 aria-controls="calendar-settings-panel"
               >
-                <span><strong>Settings</strong><small>Appearance, sync, backups, and data</small></span>
+                <span><strong>Settings</strong><small>Appearance, salary, sync, backups, and data</small></span>
                 <span className="settings-chevron" aria-hidden="true">›</span>
               </button>
               {settingsOpen && (
@@ -1501,6 +1530,28 @@ export default function Home() {
                       <button className={theme === "dark" ? "active" : ""} onClick={() => setTheme("dark")}>Dark</button>
                       <button className={theme === "light" ? "active" : ""} onClick={() => setTheme("light")}>Light</button>
                     </div>
+                  </div>
+                  <div className="settings-group">
+                    <p className="menu-label">Salary forecast</p>
+                    <label className="salary-setting">
+                      <span className="salary-setting-copy">
+                        <strong>Salary + laundry</strong>
+                        <small>Used for forecasts on this device</small>
+                      </span>
+                      <span className="salary-setting-control">
+                        <span aria-hidden="true">SAR</span>
+                        <input
+                          aria-label="Salary plus laundry"
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          inputMode="decimal"
+                          value={salaryWithLaundryInput}
+                          onChange={(event) => updateSalaryWithLaundryInput(event.target.value)}
+                          onBlur={normalizeSalaryWithLaundryInput}
+                        />
+                      </span>
+                    </label>
                   </div>
                   <div className="settings-group">
                     <p className="menu-label">Your data</p>
