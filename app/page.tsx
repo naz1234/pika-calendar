@@ -1339,8 +1339,6 @@ export default function Home() {
                                     const isShift = Boolean(shiftClass);
                                     const shiftModifier = isShift ? rosterShiftModifier(calendarEvent.title) : "";
                                     const eventCode = isShift ? mobileEventCode(calendarEvent.title) : "";
-                                    const baseShiftCode = shiftModifier ? `${eventCode.charAt(0)}S` : eventCode;
-                                    const modifierCode = shiftModifier === "extension" ? "EX" : shiftModifier === "rdot" ? "OT" : "";
                                     return (
                                       <button
                                         key={calendarEvent.id}
@@ -1350,16 +1348,10 @@ export default function Home() {
                                         aria-label={`${calendarEvent.title}, ${eventTimeLabel(calendarEvent)}${remark ? `, Remark: ${remark}` : ""}`}
                                       >
                                         <span className="mobile-event-summary" aria-hidden="true">
-                                          <span className="mobile-event-code">{baseShiftCode}</span>
-                                          {modifierCode && (
-                                            <span className={`shift-modifier-badge modifier-${shiftModifier}`}>{modifierCode}</span>
-                                          )}
+                                          <span className={`mobile-event-code${shiftModifier ? " mobile-event-code-modified" : ""}`}>{eventCode}</span>
                                         </span>
                                         <span className="event-title">
-                                          {isShift ? baseShiftCode : calendarEvent.title}
-                                          {modifierCode && (
-                                            <span className={`shift-modifier-badge modifier-${shiftModifier}`}>{modifierCode}</span>
-                                          )}
+                                          {isShift ? eventCode : calendarEvent.title}
                                         </span>
                                       </button>
                                     );

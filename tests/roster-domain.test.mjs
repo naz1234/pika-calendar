@@ -117,11 +117,13 @@ test("groups only canonical Work roster titles into shift colors", () => {
 test("creates compact labels that distinguish regular shifts, extensions, and RDOT", () => {
   assert.equal(mobileEventCode("RD"), "RD");
   assert.equal(mobileEventCode("Early"), "ES");
-  assert.equal(mobileEventCode("Early (EX)"), "E EX");
-  assert.equal(mobileEventCode("Late RDOT"), "L OT");
+  assert.equal(mobileEventCode("Early (EX)"), "E–EXT");
+  assert.equal(mobileEventCode("Early RDOT"), "E–RDOT");
+  assert.equal(mobileEventCode("Late (EX)"), "L–EXT");
+  assert.equal(mobileEventCode("Late RDOT"), "L–RDOT");
   assert.equal(mobileEventCode("Night"), "NS");
-  assert.equal(mobileEventCode("Night (EX)"), "N EX");
-  assert.equal(mobileEventCode("Night RDOT"), "N OT");
+  assert.equal(mobileEventCode("Night (EX)"), "N–EXT");
+  assert.equal(mobileEventCode("Night RDOT"), "N–RDOT");
   assert.equal(mobileEventCode("Annual Leave"), "AL");
   assert.equal(mobileEventCode("AL"), "AL");
   assert.equal(mobileEventCode("Sick Leave"), "SL");

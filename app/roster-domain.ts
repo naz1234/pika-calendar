@@ -221,9 +221,9 @@ export function mobileEventCode(title: string): string {
   const tone = rosterShiftTone(title);
   const modifier = rosterShiftModifier(title);
   if (tone === "rest") return "RD";
-  if (tone === "early") return modifier === "extension" ? "E EX" : modifier === "rdot" ? "E OT" : "ES";
-  if (tone === "late") return modifier === "extension" ? "L EX" : modifier === "rdot" ? "L OT" : "LS";
-  if (tone === "night") return modifier === "extension" ? "N EX" : modifier === "rdot" ? "N OT" : "NS";
+  if (tone === "early") return modifier === "extension" ? "E–EXT" : modifier === "rdot" ? "E–RDOT" : "ES";
+  if (tone === "late") return modifier === "extension" ? "L–EXT" : modifier === "rdot" ? "L–RDOT" : "LS";
+  if (tone === "night") return modifier === "extension" ? "N–EXT" : modifier === "rdot" ? "N–RDOT" : "NS";
 
   const normalized = String(title ?? "").normalize("NFKC").trim();
   if (/^(?:annual leave|al)$/iu.test(normalized)) return "AL";
