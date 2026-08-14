@@ -374,6 +374,8 @@ textarea:focus-visible {
 
 .main-content {
   display: block;
+  width: 100%;
+  min-width: 0;
   min-height: 0;
   overflow: visible;
 }
@@ -408,11 +410,16 @@ textarea:focus-visible {
   will-change: transform;
 }
 
-.month-swipe-track > .month-card {
+.month-swipe-panel {
   flex: 0 0 33.333333%;
   width: 33.333333%;
+  min-width: 0;
   height: 100%;
   min-height: 100%;
+}
+
+.month-swipe-panel > .month-card {
+  height: 100%;
 }
 
 .monthly-shift-summary {
@@ -826,8 +833,8 @@ textarea:focus-visible {
 }
 
 .day-cell.selected {
-  border-color: var(--accent);
-  box-shadow: inset 0 0 0 1px var(--accent), 0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 76%, var(--grid));
+  box-shadow: none;
 }
 
 .day-cell.selected:not(.shift-event) {
@@ -846,8 +853,8 @@ textarea:focus-visible {
 }
 
 .day-cell.shift-event.selected {
-  border-color: var(--accent);
-  box-shadow: inset 0 0 0 2px var(--accent), 0 6px 18px color-mix(in srgb, var(--event-ink) 16%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 76%, var(--grid));
+  box-shadow: none;
 }
 
 .day-hit {
@@ -868,8 +875,8 @@ textarea:focus-visible {
   place-items: center;
   width: 23px;
   height: 23px;
-  border: 1px solid transparent;
-  border-radius: 50%;
+  border: 0;
+  border-radius: 0;
   color: var(--muted-strong);
   font-size: 0.68rem;
   font-variant-numeric: tabular-nums;
@@ -879,15 +886,25 @@ textarea:focus-visible {
   color: color-mix(in srgb, var(--muted) 50%, transparent);
 }
 
-.today .day-number {
-  background: var(--accent);
-  color: #07101e;
-  font-weight: 800;
+.day-cell.today .day-number {
+  background: transparent;
+  color: var(--accent);
+  font-weight: 850;
 }
 
-.selected:not(.today) .day-number {
-  border-color: var(--accent);
-  color: var(--accent);
+.day-cell.today .day-number::after {
+  position: absolute;
+  right: 2px;
+  bottom: 0;
+  left: 2px;
+  height: 2px;
+  border-radius: 999px;
+  background: var(--accent);
+  content: "";
+}
+
+.day-cell.selected:not(.today) .day-number {
+  color: var(--text);
 }
 
 .day-cell.shift-event .day-number {
@@ -2596,19 +2613,14 @@ textarea:focus-visible {
 
 @media (max-width: 899px) {
   .month-swipe-viewport {
-    width: calc(100% - 24px);
-    max-width: 440px;
+    width: 100%;
     height: auto;
     min-height: 0;
-    margin: 10px auto 14px;
-    border: 1px solid var(--grid);
-    border-radius: 16px;
-    background: var(--surface);
-    box-shadow: 0 12px 32px color-mix(in srgb, var(--text) 8%, transparent);
+    margin: 10px 0 0;
   }
 
   .month-swipe-track,
-  .month-swipe-track > .month-card {
+  .month-swipe-panel {
     height: auto;
     min-height: 0;
   }
@@ -2617,11 +2629,28 @@ textarea:focus-visible {
     align-items: flex-start;
   }
 
-  .month-card {
+  .month-swipe-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 0 12px;
+  }
+
+  .month-swipe-panel > .month-card {
     grid-template-rows: 32px auto auto;
+    height: auto;
     gap: 6px;
     padding: 8px 8px 10px;
-    background: transparent;
+    border: 1px solid var(--grid);
+    border-radius: 16px;
+    background: var(--surface);
+    box-shadow: 0 12px 32px color-mix(in srgb, var(--text) 8%, transparent);
+  }
+
+  .month-swipe-panel > .summary-mobile {
+    width: 100%;
+    max-width: none;
+    margin: 0 0 calc(24px + env(safe-area-inset-bottom));
   }
 
   .weekday-strip,

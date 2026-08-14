@@ -396,6 +396,18 @@ export default function Home() {
       label: new Intl.DateTimeFormat("en", { month: "long", year: "numeric" }).format(date),
     };
   }), [view]);
+  const swipePanels = useMemo(() => swipeMonths.map((panel) => {
+    const monthKey = `${panel.year}-${pad(panel.month + 1)}`;
+    return {
+      ...panel,
+      summary: countMonthlyWorkShifts(events, monthKey),
+      salaryForecast: calculateMonthlyExpectedSalary(events, monthKey),
+      salaryMonthLabel: new Intl.DateTimeFormat("en", {
+        month: "long",
+        year: "numeric",
+      }).format(new Date(panel.year, panel.month + 1, 1)),
+    };
+  }), [events, swipeMonths]);
   const visibleEvents = useMemo(
     () => events.filter((event) => event.calendar === activeCalendar),
     [events, activeCalendar],
@@ -1262,138 +1274,138 @@ export default function Home() {
           onClickCapture={suppressClickAfterSwipe}
         >
           <div ref={monthSwipeTrack} className="month-swipe-track">
-            {swipeMonths.map((panel) => (
+            {swipePanels.map((panel) => (
               <div
-                className="month-card"
-                role="grid"
-                aria-label={`${panel.label} calendar`}
+                className="month-swipe-panel"
                 aria-hidden={panel.offset !== 0}
                 key={`${panel.year}-${panel.month}`}
               >
-                <div className="weekday-strip" role="row">
-                  <div className="week-gutter-title" role="columnheader"><span>WK</span></div>
-                  {WEEKDAYS.map((day, index) => (
-                    <div className="weekday" role="columnheader" key={day} aria-label={day}>
-                      <span className="weekday-full">{day.slice(0, 3)}</span>
-                      <span className="weekday-short">{SHORT_WEEKDAYS[index]}</span>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="month-grid">
-                  {Array.from({ length: 6 }, (_, weekIndex) => {
-                    const week = panel.days.slice(weekIndex * 7, weekIndex * 7 + 7);
-                    return (
-                      <div className="week-row" role="row" key={dateKey(week[0])}>
-                        <div className="week-number" role="rowheader" aria-label={`Week ${isoWeekNumber(addDays(week[0], 1))}`}>
-                          {isoWeekNumber(addDays(week[0], 1))}
-                        </div>
-                        {week.map((day) => {
-                          const key = dateKey(day);
-                          const dayEvents = eventsByDate.get(key) ?? [];
-                          const primaryShiftClass = dayEvents[0] ? eventShiftClass(dayEvents[0]) : "";
-                          const dayHasRemark = dayEvents.some((calendarEvent) => Boolean(eventDisplayRemark(calendarEvent)));
-                          const isToday = key === todayKey;
-                          const isSelected = key === selectedDate;
-                          const isOutside = day.getMonth() !== panel.month;
-                          const spokenDate = new Intl.DateTimeFormat("en", {
-                            weekday: "long",
-                            month: "long",
-                            day: "numeric",
-                            year: "numeric",
-                          }).format(day);
-                          return (
-                            <div
-                              className={`day-cell${primaryShiftClass}${dayHasRemark ? " has-remark" : ""}${isOutside ? " outside" : ""}${isToday ? " today" : ""}${isSelected ? " selected" : ""}`}
-                              role="gridcell"
-                              aria-selected={isSelected}
-                              key={key}
-                            >
-                              <button
-                                className="day-hit"
-                                data-date={key}
-                                onClick={() => chooseDay(day)}
-                                onDoubleClick={() => openCreate(key)}
-                                onKeyDown={(event) => handleDayKey(event, day)}
-                                tabIndex={panel.offset === 0 && isSelected ? 0 : -1}
-                                aria-label={`${spokenDate}, ${dayEvents.length} event${dayEvents.length === 1 ? "" : "s"}`}
-                              >
-                                <span className="day-number">{day.getDate()}</span>
-                                {dayHasRemark && <span className="day-remark-dot" aria-hidden="true" />}
-                              </button>
-                              <div className="cell-events">
-                                {dayEvents.slice(0, 3).map((calendarEvent) => {
-                                  const remark = eventDisplayRemark(calendarEvent);
-                                  const shiftClass = eventShiftClass(calendarEvent);
-                                  const isShift = Boolean(shiftClass);
-                                  const shiftModifier = isShift ? rosterShiftModifier(calendarEvent.title) : "";
-                                  const eventCode = isShift ? mobileEventCode(calendarEvent.title) : "";
-                                  const baseShiftCode = shiftModifier ? `${eventCode.charAt(0)}S` : eventCode;
-                                  const modifierCode = shiftModifier === "extension" ? "EX" : shiftModifier === "rdot" ? "OT" : "";
-                                  return (
-                                    <button
-                                      key={calendarEvent.id}
-                                      className={`event-chip${shiftClass}`}
-                                      onClick={() => openEdit(calendarEvent)}
-                                      tabIndex={panel.offset === 0 ? 0 : -1}
-                                      aria-label={`${calendarEvent.title}, ${eventTimeLabel(calendarEvent)}${remark ? `, Remark: ${remark}` : ""}`}
-                                    >
-                                      <span className="mobile-event-summary" aria-hidden="true">
-                                        <span className="mobile-event-code">{baseShiftCode}</span>
-                                        {modifierCode && (
-                                          <span className={`shift-modifier-badge modifier-${shiftModifier}`}>{modifierCode}</span>
-                                        )}
-                                      </span>
-                                      <span className="event-title">
-                                        {isShift ? baseShiftCode : calendarEvent.title}
-                                        {modifierCode && (
-                                          <span className={`shift-modifier-badge modifier-${shiftModifier}`}>{modifierCode}</span>
-                                        )}
-                                      </span>
-                                    </button>
-                                  );
-                                })}
-                                {dayEvents.length > 1 && (
-                                  <button className="mobile-more-events" tabIndex={panel.offset === 0 ? 0 : -1} onClick={() => chooseDay(day)} aria-label={`Show ${dayEvents.length} events`}>
-                                    +{dayEvents.length - 1}
-                                  </button>
-                                )}
-                                {dayEvents.length > 3 && (
-                                  <button className="more-events" tabIndex={panel.offset === 0 ? 0 : -1} onClick={() => chooseDay(day)}>
-                                    +{dayEvents.length - 3} more
-                                  </button>
-                                )}
-                              </div>
-                            </div>
-                          );
-                        })}
+                <div className="month-card" role="grid" aria-label={`${panel.label} calendar`}>
+                  <div className="weekday-strip" role="row">
+                    <div className="week-gutter-title" role="columnheader"><span>WK</span></div>
+                    {WEEKDAYS.map((day, index) => (
+                      <div className="weekday" role="columnheader" key={day} aria-label={day}>
+                        <span className="weekday-full">{day.slice(0, 3)}</span>
+                        <span className="weekday-short">{SHORT_WEEKDAYS[index]}</span>
                       </div>
-                    );
-                  })}
+                    ))}
+                  </div>
+
+                  <div className="month-grid">
+                    {Array.from({ length: 6 }, (_, weekIndex) => {
+                      const week = panel.days.slice(weekIndex * 7, weekIndex * 7 + 7);
+                      return (
+                        <div className="week-row" role="row" key={dateKey(week[0])}>
+                          <div className="week-number" role="rowheader" aria-label={`Week ${isoWeekNumber(addDays(week[0], 1))}`}>
+                            {isoWeekNumber(addDays(week[0], 1))}
+                          </div>
+                          {week.map((day) => {
+                            const key = dateKey(day);
+                            const dayEvents = eventsByDate.get(key) ?? [];
+                            const primaryShiftClass = dayEvents[0] ? eventShiftClass(dayEvents[0]) : "";
+                            const dayHasRemark = dayEvents.some((calendarEvent) => Boolean(eventDisplayRemark(calendarEvent)));
+                            const isToday = key === todayKey;
+                            const isSelected = key === selectedDate;
+                            const isOutside = day.getMonth() !== panel.month;
+                            const spokenDate = new Intl.DateTimeFormat("en", {
+                              weekday: "long",
+                              month: "long",
+                              day: "numeric",
+                              year: "numeric",
+                            }).format(day);
+                            return (
+                              <div
+                                className={`day-cell${primaryShiftClass}${dayHasRemark ? " has-remark" : ""}${isOutside ? " outside" : ""}${isToday ? " today" : ""}${isSelected ? " selected" : ""}`}
+                                role="gridcell"
+                                aria-selected={isSelected}
+                                key={key}
+                              >
+                                <button
+                                  className="day-hit"
+                                  data-date={key}
+                                  onClick={() => chooseDay(day)}
+                                  onDoubleClick={() => openCreate(key)}
+                                  onKeyDown={(event) => handleDayKey(event, day)}
+                                  tabIndex={panel.offset === 0 && isSelected ? 0 : -1}
+                                  aria-label={`${spokenDate}, ${dayEvents.length} event${dayEvents.length === 1 ? "" : "s"}`}
+                                >
+                                  <span className="day-number">{day.getDate()}</span>
+                                  {dayHasRemark && <span className="day-remark-dot" aria-hidden="true" />}
+                                </button>
+                                <div className="cell-events">
+                                  {dayEvents.slice(0, 3).map((calendarEvent) => {
+                                    const remark = eventDisplayRemark(calendarEvent);
+                                    const shiftClass = eventShiftClass(calendarEvent);
+                                    const isShift = Boolean(shiftClass);
+                                    const shiftModifier = isShift ? rosterShiftModifier(calendarEvent.title) : "";
+                                    const eventCode = isShift ? mobileEventCode(calendarEvent.title) : "";
+                                    const baseShiftCode = shiftModifier ? `${eventCode.charAt(0)}S` : eventCode;
+                                    const modifierCode = shiftModifier === "extension" ? "EX" : shiftModifier === "rdot" ? "OT" : "";
+                                    return (
+                                      <button
+                                        key={calendarEvent.id}
+                                        className={`event-chip${shiftClass}`}
+                                        onClick={() => openEdit(calendarEvent)}
+                                        tabIndex={panel.offset === 0 ? 0 : -1}
+                                        aria-label={`${calendarEvent.title}, ${eventTimeLabel(calendarEvent)}${remark ? `, Remark: ${remark}` : ""}`}
+                                      >
+                                        <span className="mobile-event-summary" aria-hidden="true">
+                                          <span className="mobile-event-code">{baseShiftCode}</span>
+                                          {modifierCode && (
+                                            <span className={`shift-modifier-badge modifier-${shiftModifier}`}>{modifierCode}</span>
+                                          )}
+                                        </span>
+                                        <span className="event-title">
+                                          {isShift ? baseShiftCode : calendarEvent.title}
+                                          {modifierCode && (
+                                            <span className={`shift-modifier-badge modifier-${shiftModifier}`}>{modifierCode}</span>
+                                          )}
+                                        </span>
+                                      </button>
+                                    );
+                                  })}
+                                  {dayEvents.length > 1 && (
+                                    <button className="mobile-more-events" tabIndex={panel.offset === 0 ? 0 : -1} onClick={() => chooseDay(day)} aria-label={`Show ${dayEvents.length} events`}>
+                                      +{dayEvents.length - 1}
+                                    </button>
+                                  )}
+                                  {dayEvents.length > 3 && (
+                                    <button className="more-events" tabIndex={panel.offset === 0 ? 0 : -1} onClick={() => chooseDay(day)}>
+                                      +{dayEvents.length - 3} more
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {activeCalendar === "work" && (
+                    <div className="shift-legend" aria-label="Shift legend">
+                      <span><i className="shift-legend-dot legend-late" aria-hidden="true" />LS Late</span>
+                      <span><i className="shift-legend-dot legend-night" aria-hidden="true" />NS Night</span>
+                      <span><i className="shift-legend-dot legend-rest" aria-hidden="true" />RD Rest</span>
+                      <span><i className="shift-legend-dot legend-remark" aria-hidden="true" />Remark</span>
+                    </div>
+                  )}
                 </div>
 
                 {activeCalendar === "work" && (
-                  <div className="shift-legend" aria-label="Shift legend">
-                    <span><i className="shift-legend-dot legend-late" aria-hidden="true" />LS Late</span>
-                    <span><i className="shift-legend-dot legend-night" aria-hidden="true" />NS Night</span>
-                    <span><i className="shift-legend-dot legend-rest" aria-hidden="true" />RD Rest</span>
-                    <span><i className="shift-legend-dot legend-remark" aria-hidden="true" />Remark</span>
-                  </div>
+                  <MonthlyShiftSummary
+                    className="summary-mobile"
+                    monthLabel={panel.label}
+                    salaryMonthLabel={panel.salaryMonthLabel}
+                    summary={panel.summary}
+                    salaryForecast={panel.salaryForecast}
+                  />
                 )}
               </div>
             ))}
           </div>
         </div>
-
-        {activeCalendar === "work" && (
-          <MonthlyShiftSummary
-            className="summary-mobile"
-            monthLabel={monthLabel}
-            salaryMonthLabel={salaryMonthLabel}
-            summary={monthlyShiftSummary}
-            salaryForecast={monthlySalaryForecast}
-          />
-        )}
 
         <aside className={`agenda-panel${agendaOpen ? " open" : ""}`} aria-label={`Agenda for ${selectedLabel}`}>
           <div className="sheet-handle" aria-hidden="true" />
