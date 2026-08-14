@@ -425,7 +425,9 @@ textarea:focus-visible {
 }
 
 .summary-mobile {
-  margin: 0 0 calc(24px + env(safe-area-inset-bottom));
+  width: calc(100% - 24px);
+  max-width: 440px;
+  margin: 0 auto calc(24px + env(safe-area-inset-bottom));
 }
 
 .summary-desktop {
@@ -480,18 +482,6 @@ textarea:focus-visible {
   gap: 6px;
   font-size: 0.65rem;
   font-weight: 800;
-}
-
-.summary-stat-icon {
-  display: grid;
-  place-items: center;
-  width: 25px;
-  height: 25px;
-  border: 1px solid color-mix(in srgb, var(--summary-ink) 48%, transparent);
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--summary-ink) 10%, transparent);
-  font-size: 0.58rem;
-  letter-spacing: -0.02em;
 }
 
 .summary-stat-label {
@@ -563,20 +553,6 @@ textarea:focus-visible {
   font-weight: 650;
 }
 
-.monthly-salary-icon {
-  display: grid;
-  place-items: center;
-  width: 31px;
-  height: 31px;
-  flex: 0 0 auto;
-  border: 1px solid color-mix(in srgb, var(--work) 54%, transparent);
-  border-radius: 9px;
-  background: color-mix(in srgb, var(--work) 13%, transparent);
-  color: var(--work);
-  font-size: 0.52rem;
-  letter-spacing: 0.02em;
-}
-
 .monthly-salary-amount {
   align-self: center;
   color: var(--text);
@@ -617,25 +593,23 @@ textarea:focus-visible {
   min-width: 0;
 }
 
-.salary-breakdown-icon,
 .salary-estimate-note {
   display: none;
 }
 
 .summary-mobile.monthly-shift-summary {
-  padding: 24px 20px 8px;
-  border: 0;
-  border-top: 1px solid var(--grid-soft);
-  border-radius: 0;
+  padding: 18px;
+  border: 1px solid var(--grid);
+  border-radius: 16px;
   background:
     radial-gradient(circle at 92% 8%, color-mix(in srgb, var(--work) 8%, transparent), transparent 32%),
     var(--surface);
-  box-shadow: none;
+  box-shadow: 0 12px 32px color-mix(in srgb, var(--text) 8%, transparent);
 }
 
 .summary-mobile .monthly-summary-heading {
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .summary-mobile .monthly-summary-heading h2 {
@@ -655,8 +629,8 @@ textarea:focus-visible {
 }
 
 .summary-mobile .monthly-summary-stat {
-  min-height: 148px;
-  padding: 0 13px;
+  min-height: 104px;
+  padding: 0 10px;
   border: 0;
   border-right: 1px solid var(--grid-soft);
   border-radius: 0;
@@ -673,15 +647,8 @@ textarea:focus-visible {
 }
 
 .summary-mobile .monthly-summary-stat dt {
-  gap: 9px;
-  font-size: 0.76rem;
-}
-
-.summary-mobile .summary-stat-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  font-size: 0.7rem;
+  gap: 4px;
+  font-size: 0.72rem;
 }
 
 .summary-mobile .summary-stat-label {
@@ -690,19 +657,19 @@ textarea:focus-visible {
 
 .summary-mobile .monthly-summary-stat small {
   margin-top: 0;
-  font-size: 0.64rem;
+  font-size: 0.58rem;
   font-weight: 550;
 }
 
 .summary-mobile .monthly-summary-stat dd {
-  margin-top: 16px;
-  font-size: 2rem;
+  margin-top: 12px;
+  font-size: 1.8rem;
 }
 
 .summary-mobile .monthly-salary-card {
   gap: 13px 14px;
-  margin-top: 20px;
-  padding: 20px 0 0;
+  margin-top: 16px;
+  padding: 16px 0 0;
   border: 0;
   border-top: 1px solid var(--grid-soft);
   border-radius: 0;
@@ -710,20 +677,13 @@ textarea:focus-visible {
 }
 
 .summary-mobile .monthly-salary-title {
-  gap: 12px;
-  font-size: 0.9rem;
+  gap: 0;
+  font-size: 0.86rem;
 }
 
 .summary-mobile .monthly-salary-title small {
   margin-top: 2px;
   font-size: 0.68rem;
-}
-
-.summary-mobile .monthly-salary-icon {
-  width: 42px;
-  height: 42px;
-  border-radius: 11px;
-  font-size: 0.62rem;
 }
 
 .summary-mobile .monthly-salary-amount {
@@ -740,9 +700,8 @@ textarea:focus-visible {
 }
 
 .summary-mobile .monthly-salary-breakdown > span {
-  grid-template-columns: 28px minmax(0, 1fr);
-  align-items: center;
-  gap: 7px;
+  align-items: start;
+  gap: 4px;
   padding: 0 8px;
   border-top: 0;
   border-right: 1px solid var(--grid-soft);
@@ -751,126 +710,6 @@ textarea:focus-visible {
 
 .summary-mobile .monthly-salary-breakdown > span:last-child {
   border-right: 0;
-}
-
-.summary-mobile .salary-breakdown-icon {
-  display: block;
-  position: relative;
-  width: 27px;
-  height: 27px;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  color: var(--work);
-}
-
-.summary-mobile .monthly-salary-breakdown > span:nth-child(2) .salary-breakdown-icon {
-  color: var(--shift-night-ink);
-}
-
-.summary-mobile .monthly-salary-breakdown > span:nth-child(3) .salary-breakdown-icon {
-  color: var(--shift-rest-ink);
-}
-
-.salary-icon-wallet::before {
-  content: "";
-  position: absolute;
-  top: 6px;
-  left: 2px;
-  width: 21px;
-  height: 15px;
-  border: 2px solid currentColor;
-  border-radius: 4px;
-}
-
-.salary-icon-wallet::after {
-  content: "";
-  position: absolute;
-  top: 10px;
-  right: 0;
-  width: 9px;
-  height: 8px;
-  border: 2px solid currentColor;
-  border-radius: 3px;
-  background: var(--surface-soft);
-}
-
-.salary-icon-wallet i {
-  position: absolute;
-  z-index: 1;
-  top: 13px;
-  right: 4px;
-  width: 2px;
-  height: 2px;
-  border-radius: 50%;
-  background: currentColor;
-}
-
-.salary-icon-night::before {
-  content: "";
-  position: absolute;
-  top: 8px;
-  left: 2px;
-  width: 23px;
-  height: 13px;
-  border-right: 2px solid currentColor;
-  border-bottom: 2px solid currentColor;
-  border-left: 2px solid currentColor;
-  border-radius: 0 0 3px 3px;
-}
-
-.salary-icon-night::after {
-  content: "";
-  position: absolute;
-  top: 7px;
-  left: 5px;
-  width: 7px;
-  height: 6px;
-  border: 2px solid currentColor;
-  border-radius: 3px 3px 0 0;
-}
-
-.salary-icon-night i {
-  position: absolute;
-  top: 10px;
-  left: 12px;
-  width: 11px;
-  height: 2px;
-  background: currentColor;
-}
-
-.salary-icon-overtime::before {
-  content: "";
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  width: 23px;
-  height: 23px;
-  border: 2px solid currentColor;
-  border-radius: 50%;
-}
-
-.salary-icon-overtime::after {
-  content: "";
-  position: absolute;
-  top: 7px;
-  left: 12px;
-  width: 2px;
-  height: 7px;
-  border-radius: 2px;
-  background: currentColor;
-}
-
-.salary-icon-overtime i {
-  position: absolute;
-  top: 13px;
-  left: 13px;
-  width: 7px;
-  height: 2px;
-  border-radius: 2px;
-  background: currentColor;
-  transform: rotate(-24deg);
-  transform-origin: left center;
 }
 
 .summary-mobile .monthly-salary-breakdown strong {
@@ -2598,13 +2437,6 @@ textarea:focus-visible {
     font-size: 0.58rem;
   }
 
-  .summary-desktop .summary-stat-icon {
-    width: 21px;
-    height: 21px;
-    border-radius: 6px;
-    font-size: 0.5rem;
-  }
-
   .summary-desktop .monthly-summary-stat dd {
     margin-top: 5px;
     font-size: 1.25rem;
@@ -2615,13 +2447,6 @@ textarea:focus-visible {
     gap: 8px;
     padding: 9px;
     border-radius: 11px;
-  }
-
-  .summary-desktop .monthly-salary-icon {
-    width: 25px;
-    height: 25px;
-    border-radius: 7px;
-    font-size: 0.44rem;
   }
 
   .summary-desktop .monthly-salary-title {
