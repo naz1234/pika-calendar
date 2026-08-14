@@ -75,11 +75,14 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   assert.match(source, />Remark</);
   assert.match(styles, /\.agenda-note-text/);
   assert.match(source, /eventDisplayRemark/);
-  assert.match(source, /mobile-remark-indicator/);
-  assert.match(styles, /\.mobile-event-summary\.has-remark/);
+  assert.match(source, /dayHasRemark/);
+  assert.match(source, /day-remark-dot/);
+  assert.match(styles, /\.day-remark-dot\s*\{[^}]*background: var\(--remark-dot\)/s);
   assert.match(styles, /\.mobile-event-summary\s*\{[^}]*border:/s);
-  assert.match(styles, /\.event-chip\.shift-event\s*\{[^}]*background: var\(--event-fill\)/s);
-  assert.match(styles, /\.event-chip\.shift-event\.event-run-continues-previous/);
+  assert.match(source, /className=\{`day-cell\$\{primaryShiftClass\}/);
+  assert.match(styles, /\.day-cell\s*\{[^}]*margin:\s*2px;[^}]*border-radius:\s*9px;[^}]*background:\s*transparent;/s);
+  assert.match(styles, /\.day-cell\.shift-event\s*\{[^}]*background: var\(--event-fill\)/s);
+  assert.match(styles, /\.event-chip\.shift-event\s*\{[^}]*background: transparent/s);
   assert.match(styles, /\.event-chip\.shift-event \.mobile-event-code[^}]*text-align: left/s);
   assert.match(styles, /\.agenda-event\.shift-event\s*\{[^}]*background: var\(--event-fill\)/s);
   assert.match(source, /eventShiftClass/);
@@ -120,9 +123,11 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   assert.doesNotMatch(styles, /\.event-chip\.shift-event\.shift-rdot\s*\{[^}]*border-width:\s*2px;/s);
   assert.match(styles, /\.summary-mobile \.monthly-summary-stat\s*\{[^}]*min-height:\s*148px;/s);
   assert.match(styles, /\.summary-mobile \.monthly-summary-stat small\s*\{[^}]*font-size:\s*0\.64rem;/s);
-  assert.match(source, /rosterShiftRunPosition/);
-  assert.match(source, /event-run-continues-previous/);
-  assert.match(source, /event-run-continues-next/);
+  assert.doesNotMatch(source, /rosterShiftRunPosition/);
+  assert.doesNotMatch(source, /event-run-continues-previous/);
+  assert.doesNotMatch(source, /event-run-continues-next/);
+  assert.doesNotMatch(styles, /event-run-continues/);
+  assert.doesNotMatch(source, /mobile-remark-indicator|mobile-event-summary\$\{remark/);
   assert.doesNotMatch(source, /chip-dot/);
   assert.match(pdfReaderSource, /pdfjs-dist\/legacy\/build\/pdf\.mjs/);
   assert.match(pdfReaderSource, /import "pdfjs-dist\/legacy\/build\/pdf\.worker\.min\.mjs"/);
@@ -141,7 +146,10 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   assert.match(schemaSource, /sqliteTable\("calendars"/);
   for (const tone of ["early", "late", "night", "rest"]) {
     assert.match(styles, new RegExp(`--shift-${tone}-ink`));
+    assert.match(styles, new RegExp(`--shift-${tone}-bg`));
   }
+  assert.match(styles, /:root,[\s\S]*?--remark-dot:\s*#ffc247;/);
+  assert.match(styles, /:root\[data-theme="light"\][\s\S]*?--remark-dot:\s*#e6a20d;/);
   assert.match(serviceWorker, /my-calendar-v13/);
   assert.match(serviceWorker, /includeUncontrolled: true/);
   assert.match(serviceWorker, /try[\s\S]*?await client\.navigate\(client\.url\);[\s\S]*?catch/);

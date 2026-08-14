@@ -28,6 +28,7 @@
   --shift-night-bg: #292149;
   --shift-rest-ink: #71e1a2;
   --shift-rest-bg: #17372b;
+  --remark-dot: #ffc247;
   --danger: #ff6b78;
   --shadow: 0 26px 80px rgba(0, 0, 0, 0.42);
   color-scheme: dark;
@@ -60,6 +61,7 @@
   --shift-night-bg: #e9e2ff;
   --shift-rest-ink: #17663a;
   --shift-rest-bg: #dcf4e4;
+  --remark-dot: #e6a20d;
   --danger: #c92e3e;
   --shadow: 0 24px 70px rgba(37, 45, 57, 0.2);
   color-scheme: light;
@@ -968,23 +970,41 @@ textarea:focus-visible {
   position: relative;
   min-width: 0;
   min-height: 0;
-  overflow: visible;
-  border-right: 1px solid var(--grid);
-  border-bottom: 1px solid var(--grid);
-  background: var(--surface);
-  transition: background 140ms ease;
+  margin: 2px;
+  overflow: hidden;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: transparent;
+  transition: background 140ms ease, border-color 140ms ease, box-shadow 140ms ease;
 }
 
 .day-cell:last-child {
-  border-right: 0;
+  margin-right: 3px;
 }
 
 .day-cell.selected {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent), 0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+.day-cell.selected:not(.shift-event) {
   background: var(--accent-soft);
 }
 
 .day-cell.outside {
-  background: color-mix(in srgb, var(--surface) 77%, var(--bg));
+  border-color: transparent;
+  background: transparent;
+  opacity: 0.48;
+}
+
+.day-cell.shift-event {
+  border-color: color-mix(in srgb, var(--event-ink) 34%, transparent);
+  background: var(--event-fill);
+}
+
+.day-cell.shift-event.selected {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 2px var(--accent), 0 6px 18px color-mix(in srgb, var(--event-ink) 16%, transparent);
 }
 
 .day-hit {
@@ -994,13 +1014,13 @@ textarea:focus-visible {
   width: 100%;
   padding: 7px 4px;
   background: transparent;
-  text-align: center;
+  text-align: left;
 }
 
 .day-number {
   position: absolute;
   top: 7px;
-  left: 50%;
+  left: 7px;
   display: grid;
   place-items: center;
   width: 23px;
@@ -1010,7 +1030,6 @@ textarea:focus-visible {
   color: var(--muted-strong);
   font-size: 0.68rem;
   font-variant-numeric: tabular-nums;
-  transform: translateX(-50%);
 }
 
 .outside .day-number {
@@ -1028,8 +1047,25 @@ textarea:focus-visible {
   color: var(--accent);
 }
 
+.day-cell.shift-event .day-number {
+  color: var(--text);
+  font-weight: 750;
+}
+
+.day-remark-dot {
+  position: absolute;
+  top: 8px;
+  right: 7px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--remark-dot);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--remark-dot) 22%, transparent),
+    0 2px 7px color-mix(in srgb, var(--remark-dot) 42%, transparent);
+}
+
 .cell-events {
-  --event-gutter: 3px;
+  --event-gutter: 7px;
   position: absolute;
   z-index: 2;
   top: 35px;
@@ -1087,12 +1123,6 @@ textarea:focus-visible {
   box-shadow: none;
 }
 
-.mobile-event-summary.has-remark {
-  border-width: 2px;
-  box-shadow: 0 0 0 2px color-mix(in srgb, currentColor 20%, transparent),
-    0 3px 9px color-mix(in srgb, currentColor 18%, transparent);
-}
-
 .mobile-event-code {
   color: currentColor;
   font-size: 0.58rem;
@@ -1126,23 +1156,6 @@ textarea:focus-visible {
   color: var(--shift-rest-ink);
 }
 
-.mobile-remark-indicator {
-  display: inline-grid;
-  place-items: center;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: var(--accent);
-  color: var(--surface);
-  font-size: 0.48rem;
-  font-weight: 900;
-  line-height: 1;
-}
-
-.event-chip.shift-event .mobile-remark-indicator {
-  background: var(--event-ink);
-}
-
 .event-title {
   display: none;
 }
@@ -1168,43 +1181,11 @@ textarea:focus-visible {
 }
 
 .event-chip.shift-event {
-  --run-left: 0px;
-  --run-right: 0px;
   justify-content: flex-start;
-  width: calc(100% + var(--run-left) + var(--run-right));
-  margin-right: calc(var(--run-right) * -1);
-  margin-left: calc(var(--run-left) * -1);
-  padding: 0 5px;
-  border: 1px solid color-mix(in srgb, var(--event-ink) 42%, transparent);
-  background: var(--event-fill);
+  padding: 0;
+  border: 0;
+  background: transparent;
   color: var(--event-ink);
-}
-
-.event-chip.shift-event.shift-extension {
-  box-shadow: inset 0 2px color-mix(in srgb, var(--shift-early-ink) 78%, transparent);
-}
-
-.event-chip.shift-event.shift-rdot {
-  box-shadow: inset 0 2px color-mix(in srgb, var(--shift-rest-ink) 78%, transparent);
-}
-
-.event-chip.shift-event:has(.mobile-event-summary.has-remark) {
-  outline: 2px solid var(--event-ink);
-  outline-offset: -2px;
-}
-
-.event-chip.shift-event.event-run-continues-previous {
-  --run-left: calc(var(--event-gutter) + 1px);
-  border-left-color: transparent;
-  border-top-left-radius: 0;
-  border-bottom-left-radius: 0;
-}
-
-.event-chip.shift-event.event-run-continues-next {
-  --run-right: calc(var(--event-gutter) + 1px);
-  border-right-color: transparent;
-  border-top-right-radius: 0;
-  border-bottom-right-radius: 0;
 }
 
 .event-chip.shift-event .mobile-event-code,
@@ -2440,7 +2421,7 @@ textarea:focus-visible {
   }
 
   .cell-events {
-    --event-gutter: 6px;
+    --event-gutter: 8px;
     top: 36px;
     right: var(--event-gutter);
     left: var(--event-gutter);
@@ -2458,29 +2439,11 @@ textarea:focus-visible {
   }
 
   .event-chip.shift-event {
-    background: var(--event-fill);
+    padding: 0;
+    border: 0;
+    background: transparent;
     color: var(--event-ink);
-    box-shadow: inset 3px 0 var(--event-ink);
-  }
-
-  .event-chip.shift-event.shift-extension {
-    box-shadow: inset 3px 0 var(--shift-early-ink), inset 0 2px color-mix(in srgb, var(--shift-early-ink) 72%, transparent);
-  }
-
-  .event-chip.shift-event.shift-rdot {
-    box-shadow: inset 3px 0 var(--shift-rest-ink), inset 0 2px color-mix(in srgb, var(--shift-rest-ink) 72%, transparent);
-  }
-
-  .event-chip.shift-event.event-run-continues-previous {
     box-shadow: none;
-  }
-
-  .event-chip.shift-event.shift-extension.event-run-continues-previous {
-    box-shadow: inset 0 2px color-mix(in srgb, var(--shift-early-ink) 72%, transparent);
-  }
-
-  .event-chip.shift-event.shift-rdot.event-run-continues-previous {
-    box-shadow: inset 0 2px color-mix(in srgb, var(--shift-rest-ink) 72%, transparent);
   }
 
   .mobile-event-summary {
