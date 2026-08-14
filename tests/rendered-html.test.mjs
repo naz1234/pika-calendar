@@ -82,10 +82,14 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   assert.match(source, /className=\{`day-cell\$\{primaryShiftClass\}/);
   assert.match(styles, /\.day-cell\s*\{[^}]*margin:\s*2px;[^}]*border-radius:\s*9px;[^}]*background:\s*transparent;/s);
   assert.match(styles, /\.day-cell\.shift-event\s*\{[^}]*background: var\(--event-fill\)/s);
-  assert.match(styles, /\.month-grid\s*\{[^}]*grid-template-rows:\s*repeat\(6, clamp\(52px, 13\.4vw, 60px\)\);/s);
+  assert.match(source, /className="shift-legend" aria-label="Shift legend"/);
+  assert.match(source, /LS Late[\s\S]*NS Night[\s\S]*RD Rest[\s\S]*Remark/);
+  assert.match(styles, /\.month-swipe-viewport\s*\{[^}]*width:\s*calc\(100% - 24px\);[^}]*max-width:\s*440px;[^}]*border-radius:\s*16px;/s);
+  assert.match(styles, /\.month-grid\s*\{[^}]*grid-template-rows:\s*repeat\(6, clamp\(42px, 11\.2vw, 48px\)\);[^}]*gap:\s*4px;/s);
   assert.match(styles, /\.month-swipe-track > \.month-card\s*\{[^}]*height:\s*auto;[^}]*min-height:\s*0;/s);
-  assert.match(styles, /\.cell-events\s*\{[^}]*top:\s*28px;/s);
-  assert.match(styles, /\.event-chip\s*\{[^}]*height:\s*16px;/s);
+  assert.match(styles, /\.cell-events\s*\{[^}]*top:\s*25px;/s);
+  assert.match(styles, /\.event-chip\s*\{[^}]*height:\s*14px;/s);
+  assert.match(styles, /\.shift-legend\s*\{[^}]*display:\s*flex;[^}]*justify-content:\s*center;/s);
   assert.match(styles, /\.event-chip\.shift-event\s*\{[^}]*background: transparent/s);
   assert.match(styles, /\.event-chip\.shift-event \.mobile-event-code[^}]*text-align: left/s);
   assert.match(styles, /\.agenda-event\.shift-event\s*\{[^}]*background: var\(--event-fill\)/s);

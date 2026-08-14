@@ -1378,6 +1378,15 @@ export default function Home() {
                     );
                   })}
                 </div>
+
+                {activeCalendar === "work" && (
+                  <div className="shift-legend" aria-label="Shift legend">
+                    <span><i className="shift-legend-dot legend-late" aria-hidden="true" />LS Late</span>
+                    <span><i className="shift-legend-dot legend-night" aria-hidden="true" />NS Night</span>
+                    <span><i className="shift-legend-dot legend-rest" aria-hidden="true" />RD Rest</span>
+                    <span><i className="shift-legend-dot legend-remark" aria-hidden="true" />Remark</span>
+                  </div>
+                )}
               </div>
             ))}
           </div>
