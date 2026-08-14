@@ -864,27 +864,25 @@ textarea:focus-visible {
   content: "";
 }
 
-.day-cell.today::after {
-  position: absolute;
-  z-index: 3;
-  inset: 1px;
-  border: 1px solid var(--accent);
-  border-radius: 7px;
-  pointer-events: none;
-  content: "";
-  animation: today-tile-pulse 2.4s ease-out infinite;
+.day-cell.today {
+  animation: today-tile-pulse 1.65s ease-in-out infinite;
+  will-change: box-shadow;
 }
 
 @keyframes today-tile-pulse {
-  0% {
-    opacity: 0.9;
-    transform: scale(0.88);
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--accent) 48%, transparent),
+      0 0 16px color-mix(in srgb, var(--accent) 24%, transparent),
+      inset 0 1px 0 color-mix(in srgb, var(--text) 6%, transparent);
   }
 
-  75%,
-  100% {
-    opacity: 0;
-    transform: scale(1);
+  50% {
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--accent) 78%, transparent),
+      0 0 24px color-mix(in srgb, var(--accent) 52%, transparent),
+      inset 0 1px 0 color-mix(in srgb, var(--text) 9%, transparent);
   }
 }
 
@@ -1537,7 +1535,7 @@ textarea:focus-visible {
   outline: 0;
   background: transparent;
   color: var(--text);
-  font-size: 0.84rem;
+  font-size: 1rem;
   font-weight: 750;
   text-align: right;
 }
@@ -2796,5 +2794,13 @@ textarea:focus-visible {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+
+  .day-cell.today {
+    animation: none !important;
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--accent) 58%, transparent),
+      0 0 18px color-mix(in srgb, var(--accent) 30%, transparent);
+    will-change: auto;
   }
 }
