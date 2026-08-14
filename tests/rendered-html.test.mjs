@@ -84,9 +84,10 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   assert.match(styles, /\.day-cell\.shift-event\s*\{[^}]*background: var\(--event-fill\)/s);
   assert.match(source, /className="shift-legend" aria-label="Shift legend"/);
   assert.match(source, /LS Late[\s\S]*NS Night[\s\S]*RD Rest[\s\S]*Remark/);
-  assert.match(styles, /\.month-swipe-viewport\s*\{[^}]*width:\s*calc\(100% - 24px\);[^}]*max-width:\s*440px;[^}]*border-radius:\s*16px;/s);
+  assert.match(styles, /@media \(max-width: 899px\)[\s\S]*?\.month-swipe-viewport\s*\{[^}]*width:\s*100%;[^}]*margin:\s*10px 0 0;/s);
   assert.match(styles, /\.month-grid\s*\{[^}]*grid-template-rows:\s*repeat\(6, clamp\(42px, 11\.2vw, 48px\)\);[^}]*gap:\s*4px;/s);
-  assert.match(styles, /\.month-swipe-track > \.month-card\s*\{[^}]*height:\s*auto;[^}]*min-height:\s*0;/s);
+  assert.match(styles, /@media \(max-width: 899px\)[\s\S]*?\.month-swipe-panel\s*\{[^}]*display:\s*flex;[^}]*flex-direction:\s*column;[^}]*gap:\s*14px;[^}]*padding:\s*0 12px;/s);
+  assert.match(styles, /\.month-swipe-panel > \.month-card\s*\{[^}]*border:\s*1px solid var\(--grid\);[^}]*border-radius:\s*16px;/s);
   assert.match(styles, /\.cell-events\s*\{[^}]*top:\s*25px;/s);
   assert.match(styles, /\.event-chip\s*\{[^}]*height:\s*14px;/s);
   assert.match(styles, /\.shift-legend\s*\{[^}]*display:\s*flex;[^}]*justify-content:\s*center;/s);
@@ -97,6 +98,8 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   assert.match(source, /Monthly Work summary/);
   assert.match(source, /summary-mobile/);
   assert.match(source, /summary-desktop/);
+  assert.match(source, /swipePanels\.map\(\(panel\) =>[\s\S]*?className="month-swipe-panel"[\s\S]*?className="month-card"[\s\S]*?className="summary-mobile"[\s\S]*?summary=\{panel\.summary\}/s);
+  assert.match(styles, /\.month-swipe-panel > \.summary-mobile\s*\{[^}]*width:\s*100%;[^}]*max-width:\s*none;[^}]*margin:\s*0 0 calc\(24px \+ env\(safe-area-inset-bottom\)\);/s);
   assert.match(styles, /\.monthly-shift-summary/);
   assert.match(styles, /\.main-content\s*\{[^}]*display: block;[^}]*overflow: visible;/s);
   assert.match(styles, /@media \(min-width: 900px\)[\s\S]*?\.main-content\s*\{[^}]*display: grid;/);
@@ -115,6 +118,12 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   assert.match(styles, /\.summary-mobile \.monthly-summary-stat\s*\{[^}]*border-right:\s*1px solid var\(--grid-soft\);[^}]*background:\s*transparent;/s);
   assert.match(styles, /\.summary-mobile \.monthly-salary-breakdown\s*\{[^}]*border-radius:\s*14px;[^}]*background:/s);
   assert.match(styles, /\.summary-mobile \.salary-estimate-note\s*\{[^}]*display:\s*flex;/s);
+  assert.match(styles, /\.day-cell\.selected\s*\{[^}]*border-color:[^;}]+;[^}]*box-shadow:\s*none;/s);
+  assert.match(styles, /\.day-cell\.shift-event\.selected\s*\{[^}]*border-color:[^;}]+;[^}]*box-shadow:\s*none;/s);
+  assert.match(styles, /\.day-number\s*\{[^}]*border:\s*0;[^}]*border-radius:\s*0;/s);
+  assert.match(styles, /\.day-cell\.today \.day-number\s*\{[^}]*background:\s*transparent;/s);
+  assert.match(styles, /\.day-cell\.today \.day-number::after\s*\{[^}]*height:\s*2px;[^}]*background:\s*var\(--accent\);/s);
+  assert.doesNotMatch(styles, /\.today \.day-number\s*\{[^}]*background:\s*var\(--accent\)/s);
   assert.match(source, /mobileEventCode/);
   assert.match(source, /mobile-event-code/);
   assert.match(source, /rosterShiftModifier/);
@@ -220,7 +229,7 @@ test("uses the centered swipe-first calendar header", async () => {
   assert.match(source, /onPointerMove=\{handlePointerMove\}/);
   assert.match(source, /onPointerUp=\{handlePointerUp\}/);
   assert.match(source, /onPointerCancel=\{handlePointerCancel\}/);
-  assert.match(source, /swipeMonths\.map\(\(panel\) =>/);
+  assert.match(source, /swipePanels\.map\(\(panel\) =>/);
   assert.match(source, /positionMonthTrack\(gesture\.offset, false\)/);
   assert.match(source, /translate3d\(calc\(-33\.333333% \+ \$\{offset\}px\), 0, 0\)/);
   assert.match(source, /Math\.abs\(gesture\.offset\) >= Math\.min\(72, width \* 0\.2\)/);
@@ -241,7 +250,7 @@ test("uses the centered swipe-first calendar header", async () => {
   assert.match(styles, /\.month-grid\s*\{[^}]*grid-template-rows:\s*repeat\(6, minmax\(62px, 1fr\)\);/s);
   assert.match(styles, /\.month-swipe-viewport\s*\{[^}]*height:\s*100%;[^}]*min-height:\s*100%;[^}]*overflow:\s*hidden;[^}]*touch-action:\s*pan-y;/s);
   assert.match(styles, /\.month-swipe-track\s*\{[^}]*display:\s*flex;[^}]*width:\s*300%;[^}]*height:\s*100%;[^}]*min-height:\s*100%;[^}]*transform:\s*translate3d\(-33\.333333%, 0, 0\);[^}]*will-change:\s*transform;/s);
-  assert.match(styles, /\.month-swipe-track > \.month-card\s*\{[^}]*flex:\s*0 0 33\.333333%;[^}]*width:\s*33\.333333%;[^}]*height:\s*100%;[^}]*min-height:\s*100%;/s);
+  assert.match(styles, /\.month-swipe-panel\s*\{[^}]*flex:\s*0 0 33\.333333%;[^}]*width:\s*33\.333333%;[^}]*height:\s*100%;[^}]*min-height:\s*100%;/s);
   assert.doesNotMatch(styles, /month-slide-from-|\.month-card\.month-slide-/);
   assert.match(styles, /\.calendar-switcher button\.active\s*\{[^}]*background:\s*var\(--header-accent\);/s);
 });
