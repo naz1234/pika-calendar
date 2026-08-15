@@ -820,6 +820,20 @@ textarea:focus-visible {
   box-shadow: none;
 }
 
+.day-cell.shift-run-continues-previous {
+  margin-left: -2px;
+  border-left-color: transparent;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.day-cell.shift-run-continues-next {
+  margin-right: -2px;
+  border-right-color: transparent;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
 .day-hit {
   position: absolute;
   z-index: 1;
@@ -1493,6 +1507,72 @@ textarea:focus-visible {
 .settings-group {
   padding: 16px 0;
   border-top: 1px solid var(--grid-soft);
+}
+
+.layout-setting {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  min-height: 64px;
+  padding: 0 5px;
+}
+
+.layout-setting-copy {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.layout-setting-copy strong {
+  color: var(--text);
+  font-size: 0.82rem;
+}
+
+.layout-setting-copy small {
+  color: var(--muted);
+  font-size: 0.68rem;
+  line-height: 1.35;
+}
+
+.layout-setting input {
+  position: relative;
+  width: 42px;
+  height: 24px;
+  margin: 0;
+  appearance: none;
+  border: 1px solid var(--grid);
+  border-radius: 999px;
+  outline: 0;
+  background: var(--surface-soft);
+  cursor: pointer;
+  transition: border-color 150ms ease, background 150ms ease;
+}
+
+.layout-setting input::after {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--muted-strong);
+  content: "";
+  transition: transform 150ms ease, background 150ms ease;
+}
+
+.layout-setting input:checked {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
+.layout-setting input:checked::after {
+  background: #fff;
+  transform: translateX(18px);
+}
+
+.layout-setting input:focus-visible {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 28%, transparent);
 }
 
 .salary-setting {
