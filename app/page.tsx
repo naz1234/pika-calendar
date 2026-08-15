@@ -32,6 +32,7 @@ import {
   mobileEventCode,
   normalizeRosterCode,
   rosterShiftModifier,
+  rosterShiftRunPosition,
   rosterShiftTone,
   workEditorExtensionSide,
   workEditorModifier,
@@ -293,6 +294,7 @@ export default function Home() {
   const [selectedDate, setSelectedDate] = useState(todayKey);
   const [activeCalendar, setActiveCalendar] = useState<CalendarKind>("work");
   const [theme, setTheme] = useState<Theme>("dark");
+  const [combineMatchingShifts, setCombineMatchingShifts] = useState(false);
   const [salaryWithLaundry, setSalaryWithLaundry] = useState(DEFAULT_SALARY_WITH_LAUNDRY);
   const [salaryWithLaundryInput, setSalaryWithLaundryInput] = useState(String(DEFAULT_SALARY_WITH_LAUNDRY));
   const [events, setEvents] = useState<CalendarEvent[]>([]);
@@ -531,6 +533,9 @@ export default function Home() {
         if (storedSettings.theme === "dark" || storedSettings.theme === "light") {
           setTheme(storedSettings.theme);
         }
+        if (typeof storedSettings.combineMatchingShifts === "boolean") {
+          setCombineMatchingShifts(storedSettings.combineMatchingShifts);
+        }
         if (Number.isFinite(storedSettings.salaryWithLaundry) && storedSettings.salaryWithLaundry >= 0) {
           const storedSalary = Math.round(Number(storedSettings.salaryWithLaundry) * 100) / 100;
           setSalaryWithLaundry(storedSalary);
@@ -689,6 +694,7 @@ export default function Home() {
     try {
       localStorage.setItem(SETTINGS_KEY, JSON.stringify({
         calendar: activeCalendar,
+        combineMatchingShifts,
         salaryWithLaundry,
         theme,
       }));
@@ -699,7 +705,7 @@ export default function Home() {
       });
     }
     document.documentElement.dataset.theme = theme;
-  }, [activeCalendar, hydrated, salaryWithLaundry, theme]);
+  }, [activeCalendar, combineMatchingShifts, hydrated, salaryWithLaundry, theme]);
 
   function updateSalaryWithLaundryInput(value: string) {
     setSalaryWithLaundryInput(value);
@@ -1359,13 +1365,30 @@ export default function Home() {
                           <div className="week-number" role="rowheader" aria-label={`Week ${isoWeekNumber(addDays(week[0], 1))}`}>
                             {isoWeekNumber(addDays(week[0], 1))}
                           </div>
-                          {week.map((day) => {
+                          {week.map((day, dayIndex) => {
                             const key = dateKey(day);
                             const dayEvents = eventsByDate.get(key) ?? [];
                             const primaryShiftClass = dayEvents[0] ? eventShiftClass(dayEvents[0]) : "";
                             const dayHasRemark = dayEvents.some((calendarEvent) => Boolean(eventDisplayRemark(calendarEvent)));
                             const isToday = key === todayKey;
                             const isSelected = key === selectedDate;
+                            const previousKey = dayIndex > 0 ? dateKey(week[dayIndex - 1]) : "";
+                            const nextKey = dayIndex < 6 ? dateKey(week[dayIndex + 1]) : "";
+                            const previousDayEvents = previousKey ? eventsByDate.get(previousKey) ?? [] : [];
+                            const nextDayEvents = nextKey ? eventsByDate.get(nextKey) ?? [] : [];
+                            const shiftRun = rosterShiftRunPosition(
+                              dayEvents[0],
+                              previousDayEvents[0],
+                              nextDayEvents[0],
+                              dayIndex,
+                            );
+                            const joinsPrevious = combineMatchingShifts && Boolean(primaryShiftClass) &&
+                              shiftRun.continuesPrevious && !isToday && !isSelected &&
+                              previousKey !== todayKey && previousKey !== selectedDate;
+                            const joinsNext = combineMatchingShifts && Boolean(primaryShiftClass) &&
+                              shiftRun.continuesNext && !isToday && !isSelected &&
+                              nextKey !== todayKey && nextKey !== selectedDate;
+                            const shiftRunClass = `${joinsPrevious ? " shift-run-continues-previous" : ""}${joinsNext ? " shift-run-continues-next" : ""}`;
                             const isOutside = day.getMonth() !== panel.month;
                             const spokenDate = new Intl.DateTimeFormat("en", {
                               weekday: "long",
@@ -1375,7 +1398,7 @@ export default function Home() {
                             }).format(day);
                             return (
                               <div
-                                className={`day-cell${primaryShiftClass}${dayHasRemark ? " has-remark" : ""}${isOutside ? " outside" : ""}${isToday ? " today" : ""}${isSelected ? " selected" : ""}`}
+                                className={`day-cell${primaryShiftClass}${shiftRunClass}${dayHasRemark ? " has-remark" : ""}${isOutside ? " outside" : ""}${isToday ? " today" : ""}${isSelected ? " selected" : ""}`}
                                 role="gridcell"
                                 aria-selected={isSelected}
                                 key={key}
@@ -1393,12 +1416,13 @@ export default function Home() {
                                   {dayHasRemark && <span className="day-remark-dot" aria-hidden="true" />}
                                 </button>
                                 <div className="cell-events">
-                                  {dayEvents.slice(0, 3).map((calendarEvent) => {
+                                  {dayEvents.slice(0, 3).map((calendarEvent, eventIndex) => {
                                     const remark = eventDisplayRemark(calendarEvent);
                                     const shiftClass = eventShiftClass(calendarEvent);
                                     const isShift = Boolean(shiftClass);
                                     const shiftModifier = isShift ? rosterShiftModifier(calendarEvent.title) : "";
                                     const eventCode = isShift ? mobileEventCode(calendarEvent.title) : "";
+                                    const showShiftLabel = !isShift || eventIndex > 0 || !joinsPrevious;
                                     return (
                                       <button
                                         key={calendarEvent.id}
@@ -1408,10 +1432,10 @@ export default function Home() {
                                         aria-label={`${calendarEvent.title}, ${eventTimeLabel(calendarEvent)}${remark ? `, Remark: ${remark}` : ""}`}
                                       >
                                         <span className="mobile-event-summary" aria-hidden="true">
-                                          <span className={`mobile-event-code${shiftModifier ? " mobile-event-code-modified" : ""}`}>{eventCode}</span>
+                                          <span className={`mobile-event-code${shiftModifier ? " mobile-event-code-modified" : ""}`}>{showShiftLabel ? eventCode : ""}</span>
                                         </span>
                                         <span className="event-title">
-                                          {isShift ? eventCode : calendarEvent.title}
+                                          {isShift ? (showShiftLabel ? eventCode : "") : calendarEvent.title}
                                         </span>
                                       </button>
                                     );
@@ -1550,7 +1574,7 @@ export default function Home() {
                 aria-expanded={settingsOpen}
                 aria-controls="calendar-settings-panel"
               >
-                <span><strong>Settings</strong><small>Appearance, salary, sync, backups, and data</small></span>
+                <span><strong>Settings</strong><small>Appearance, layout, salary, sync, backups, and data</small></span>
                 <span className="settings-chevron" aria-hidden="true">›</span>
               </button>
               {settingsOpen && (
@@ -1561,6 +1585,21 @@ export default function Home() {
                       <button className={theme === "dark" ? "active" : ""} onClick={() => setTheme("dark")}>Dark</button>
                       <button className={theme === "light" ? "active" : ""} onClick={() => setTheme("light")}>Light</button>
                     </div>
+                  </div>
+                  <div className="settings-group">
+                    <p className="menu-label">Calendar layout</p>
+                    <label className="layout-setting">
+                      <span className="layout-setting-copy">
+                        <strong>Combine matching shifts</strong>
+                        <small>Connect consecutive identical Work shifts within each week</small>
+                      </span>
+                      <input
+                        aria-label="Combine matching shifts"
+                        type="checkbox"
+                        checked={combineMatchingShifts}
+                        onChange={(event) => setCombineMatchingShifts(event.target.checked)}
+                      />
+                    </label>
                   </div>
                   <div className="settings-group">
                     <p className="menu-label">Salary forecast</p>

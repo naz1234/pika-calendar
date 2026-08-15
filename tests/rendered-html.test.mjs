@@ -159,10 +159,16 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   assert.match(styles, /\.summary-mobile \.monthly-summary-stat\s*\{[^}]*grid-template-rows:\s*auto auto;[^}]*align-content:\s*start;[^}]*min-height:\s*82px;/s);
   assert.match(styles, /\.summary-mobile \.monthly-summary-stat dd\s*\{[^}]*align-self:\s*start;[^}]*margin-top:\s*8px;/s);
   assert.match(styles, /\.summary-mobile \.monthly-summary-stat small\s*\{[^}]*font-size:\s*0\.58rem;/s);
-  assert.doesNotMatch(source, /rosterShiftRunPosition/);
-  assert.doesNotMatch(source, /event-run-continues-previous/);
-  assert.doesNotMatch(source, /event-run-continues-next/);
-  assert.doesNotMatch(styles, /event-run-continues/);
+  assert.match(source, /rosterShiftRunPosition/);
+  assert.match(source, />Combine matching shifts</);
+  assert.match(source, /checked=\{combineMatchingShifts\}/);
+  assert.match(source, /typeof storedSettings\.combineMatchingShifts === "boolean"/);
+  assert.match(source, /JSON\.stringify\(\{[\s\S]*?combineMatchingShifts,/s);
+  assert.match(source, /shift-run-continues-previous/);
+  assert.match(source, /shift-run-continues-next/);
+  assert.match(styles, /\.day-cell\.shift-run-continues-previous\s*\{[^}]*margin-left:\s*-2px;[^}]*border-left-color:\s*transparent;/s);
+  assert.match(styles, /\.day-cell\.shift-run-continues-next\s*\{[^}]*margin-right:\s*-2px;[^}]*border-right-color:\s*transparent;/s);
+  assert.match(styles, /\.layout-setting input:checked\s*\{[^}]*background:\s*var\(--accent\);/s);
   assert.doesNotMatch(source, /mobile-remark-indicator|mobile-event-summary\$\{remark/);
   assert.doesNotMatch(source, /chip-dot/);
   assert.match(pdfReaderSource, /pdfjs-dist\/legacy\/build\/pdf\.mjs/);
@@ -186,7 +192,7 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   }
   assert.match(styles, /:root,[\s\S]*?--remark-dot:\s*#ffc247;/);
   assert.match(styles, /:root\[data-theme="light"\][\s\S]*?--remark-dot:\s*#e6a20d;/);
-  assert.match(serviceWorker, /my-calendar-v13/);
+  assert.match(serviceWorker, /my-calendar-v14/);
   assert.match(serviceWorker, /includeUncontrolled: true/);
   assert.match(serviceWorker, /try[\s\S]*?await client\.navigate\(client\.url\);[\s\S]*?catch/);
   assert.match(serviceWorker, /client\.navigate\(client\.url\)/);
