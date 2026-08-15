@@ -821,17 +821,29 @@ textarea:focus-visible {
 }
 
 .day-cell.shift-run-continues-previous {
-  margin-left: -2px;
   border-left-color: transparent;
   border-top-left-radius: 0;
   border-bottom-left-radius: 0;
 }
 
 .day-cell.shift-run-continues-next {
-  margin-right: -2px;
+  overflow: visible;
   border-right-color: transparent;
   border-top-right-radius: 0;
   border-bottom-right-radius: 0;
+}
+
+.day-cell.shift-run-continues-next::after {
+  position: absolute;
+  top: -1px;
+  right: -4px;
+  bottom: -1px;
+  width: 4px;
+  border-top: 1px solid color-mix(in srgb, var(--event-ink) 34%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--event-ink) 34%, transparent);
+  background: var(--event-fill);
+  content: "";
+  pointer-events: none;
 }
 
 .day-hit {
