@@ -1413,28 +1413,11 @@ textarea:focus-visible {
 }
 
 .brand-mark {
-  position: relative;
-  display: grid;
-  place-items: center;
+  display: block;
   width: 48px;
   height: 48px;
   flex: 0 0 48px;
-  overflow: hidden;
-  border: 1px solid var(--grid);
-  border-radius: 15px;
-  background: var(--surface-soft);
-  color: var(--text);
-  font-weight: 750;
-}
-
-.brand-mark::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  right: 0;
-  left: 0;
-  height: 9px;
-  background: linear-gradient(90deg, var(--work), var(--personal));
+  background: url("/icons/calendar-192.png") center / contain no-repeat;
 }
 
 .menu-header > div:nth-child(2) {
