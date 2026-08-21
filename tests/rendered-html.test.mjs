@@ -183,7 +183,7 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   assert.match(source, /shift-run-continues-next/);
   assert.match(styles, /\.day-cell\.shift-run-continues-previous\s*\{[^}]*border-left-color:\s*var\(--event-fill\);/s);
   assert.match(styles, /\.day-cell\.shift-run-continues-next\s*\{[^}]*overflow:\s*visible;[^}]*border-right-color:\s*transparent;/s);
-  assert.match(styles, /\.day-cell\.shift-run-continues-next::after\s*\{[^}]*right:\s*-4px;[^}]*width:\s*4px;[^}]*background:\s*var\(--event-fill\);/s);
+  assert.match(styles, /\.day-cell\.shift-run-continues-next::after\s*\{[^}]*right:\s*-5px;[^}]*width:\s*5px;[^}]*background:\s*var\(--event-fill\);/s);
   assert.match(styles, /\.layout-setting input:checked\s*\{[^}]*background:\s*var\(--accent\);/s);
   assert.doesNotMatch(source, /mobile-remark-indicator|mobile-event-summary\$\{remark/);
   assert.doesNotMatch(source, /chip-dot/);
