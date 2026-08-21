@@ -164,18 +164,26 @@ function formatSar(value: number) {
   }).format(value);
 }
 
+function visibleSalaryAmount(value: number, visible: boolean) {
+  return visible ? `SAR ${formatSar(value)}` : "••••••";
+}
+
 function MonthlyShiftSummary({
   className,
   monthLabel,
   salaryMonthLabel,
   summary,
   salaryForecast,
+  salaryVisible,
+  onToggleSalaryVisibility,
 }: {
   className: string;
   monthLabel: string;
   salaryMonthLabel: string;
   summary: MonthlyShiftCounts;
   salaryForecast: MonthlySalaryForecast;
+  salaryVisible: boolean;
+  onToggleSalaryVisibility: () => void;
 }) {
   return (
     <section className={`monthly-shift-summary ${className}`} aria-label={`${monthLabel} Work shift summary`}>
@@ -209,16 +217,36 @@ function MonthlyShiftSummary({
         <div className="monthly-salary-title">
           <span>Expected salary<small>{salaryMonthLabel} pay forecast</small></span>
         </div>
-        <strong className="monthly-salary-amount">SAR {formatSar(salaryForecast.expectedSalary)}</strong>
+        <div className="monthly-salary-value">
+          <strong
+            className={`monthly-salary-amount${salaryVisible ? "" : " salary-amount-hidden"}`}
+            aria-label={salaryVisible ? undefined : "Salary amount hidden"}
+          >
+            {visibleSalaryAmount(salaryForecast.expectedSalary, salaryVisible)}
+          </strong>
+          <button
+            type="button"
+            className="salary-visibility-toggle"
+            onClick={onToggleSalaryVisibility}
+            aria-label={salaryVisible ? "Hide salary amounts" : "Show salary amounts"}
+            aria-pressed={salaryVisible}
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z" />
+              <circle cx="12" cy="12" r="2.5" />
+              {!salaryVisible && <path d="m4 4 16 16" />}
+            </svg>
+          </button>
+        </div>
         <div className="monthly-salary-breakdown" aria-label="Expected salary breakdown">
           <span>
-            <span className="salary-breakdown-copy">Salary + laundry<strong>SAR {formatSar(salaryForecast.salaryWithLaundry)}</strong></span>
+            <span className="salary-breakdown-copy">Salary + laundry<strong className={salaryVisible ? "" : "salary-amount-hidden"} aria-label={salaryVisible ? undefined : "Salary amount hidden"}>{visibleSalaryAmount(salaryForecast.salaryWithLaundry, salaryVisible)}</strong></span>
           </span>
           <span>
-            <span className="salary-breakdown-copy">Night allowance<strong>SAR {formatSar(salaryForecast.nightAllowance)}</strong></span>
+            <span className="salary-breakdown-copy">Night allowance<strong className={salaryVisible ? "" : "salary-amount-hidden"} aria-label={salaryVisible ? undefined : "Salary amount hidden"}>{visibleSalaryAmount(salaryForecast.nightAllowance, salaryVisible)}</strong></span>
           </span>
           <span>
-            <span className="salary-breakdown-copy">{salaryForecast.overtimeHours.toFixed(1)} overtime hours<strong>SAR {formatSar(salaryForecast.expectedOvertime)}</strong></span>
+            <span className="salary-breakdown-copy">{salaryForecast.overtimeHours.toFixed(1)} overtime hours<strong className={salaryVisible ? "" : "salary-amount-hidden"} aria-label={salaryVisible ? undefined : "Salary amount hidden"}>{visibleSalaryAmount(salaryForecast.expectedOvertime, salaryVisible)}</strong></span>
           </span>
         </div>
       </div>
@@ -295,6 +323,7 @@ export default function Home() {
   const [activeCalendar, setActiveCalendar] = useState<CalendarKind>("work");
   const [theme, setTheme] = useState<Theme>("dark");
   const [combineMatchingShifts, setCombineMatchingShifts] = useState(false);
+  const [salaryAmountsVisible, setSalaryAmountsVisible] = useState(false);
   const [salaryWithLaundry, setSalaryWithLaundry] = useState(DEFAULT_SALARY_WITH_LAUNDRY);
   const [salaryWithLaundryInput, setSalaryWithLaundryInput] = useState(String(DEFAULT_SALARY_WITH_LAUNDRY));
   const [events, setEvents] = useState<CalendarEvent[]>([]);
@@ -1476,6 +1505,8 @@ export default function Home() {
                     salaryMonthLabel={panel.salaryMonthLabel}
                     summary={panel.summary}
                     salaryForecast={panel.salaryForecast}
+                    salaryVisible={salaryAmountsVisible}
+                    onToggleSalaryVisibility={() => setSalaryAmountsVisible((visible) => !visible)}
                   />
                 )}
               </div>
@@ -1527,6 +1558,8 @@ export default function Home() {
               salaryMonthLabel={salaryMonthLabel}
               summary={monthlyShiftSummary}
               salaryForecast={monthlySalaryForecast}
+              salaryVisible={salaryAmountsVisible}
+              onToggleSalaryVisibility={() => setSalaryAmountsVisible((visible) => !visible)}
             />
           )}
           <button className="agenda-add" onClick={() => openCreate(selectedDate)}>Add event</button>

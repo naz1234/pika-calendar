@@ -560,6 +560,51 @@ textarea:focus-visible {
   white-space: nowrap;
 }
 
+.monthly-salary-value {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  min-width: 0;
+}
+
+.salary-visibility-toggle {
+  display: grid;
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--work) 25%, var(--grid));
+  border-radius: 50%;
+  outline: 0;
+  background: color-mix(in srgb, var(--surface-raised) 76%, transparent);
+  color: var(--muted-strong);
+  place-items: center;
+}
+
+.salary-visibility-toggle:hover {
+  border-color: color-mix(in srgb, var(--work) 52%, var(--grid));
+  color: var(--text);
+}
+
+.salary-visibility-toggle:focus-visible {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--work) 28%, transparent);
+}
+
+.salary-visibility-toggle svg {
+  width: 17px;
+  height: 17px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+.salary-amount-hidden {
+  letter-spacing: 0.1em;
+}
+
 .monthly-salary-breakdown {
   display: grid;
   grid-column: 1 / -1;
@@ -821,7 +866,7 @@ textarea:focus-visible {
 }
 
 .day-cell.shift-run-continues-previous {
-  border-left-color: transparent;
+  border-left-color: var(--event-fill);
   border-top-left-radius: 0;
   border-bottom-left-radius: 0;
 }
@@ -2594,6 +2639,11 @@ textarea:focus-visible {
 
   .summary-desktop .monthly-salary-amount {
     font-size: 1.02rem;
+  }
+
+  .summary-desktop .salary-visibility-toggle {
+    width: 28px;
+    height: 28px;
   }
 
   .summary-desktop .monthly-salary-breakdown {
