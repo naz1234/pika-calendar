@@ -962,6 +962,23 @@ textarea:focus-visible {
   will-change: box-shadow;
 }
 
+.day-cell.shift-event:is(.today, .selected):is(.shift-run-continues-previous, .shift-run-continues-next) {
+  animation: none;
+  box-shadow: none;
+  will-change: auto;
+}
+
+.day-cell.shift-event.selected:not(.today):is(.shift-run-continues-previous, .shift-run-continues-next) .day-number::after {
+  position: absolute;
+  right: 2px;
+  bottom: 0;
+  left: 2px;
+  height: 2px;
+  border-radius: 999px;
+  background: var(--selected-pulse);
+  content: "";
+}
+
 @keyframes date-tile-pulse {
   0%,
   100% {
