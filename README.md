@@ -102,7 +102,7 @@ The generated static site is written to `dist/client`.
 4. Review every detected day. Correct any highlighted item with its shift picker.
 5. Tap **Import days**.
 
-Every uploaded PDF or image is saved both on the device and in the shared roster archive. Use **Menu → Shared across devices** to download, rename, or delete any original from another phone, browser, or installed copy of the app. Existing device-only originals are uploaded to the shared archive when the Work menu is opened.
+Every uploaded PDF or image is saved both on the device and in the shared roster archive. The menu shows the latest three originals; select **View all files** to open the complete archive, grouped by year. Nothing is deleted automatically. From the archive, you can download, rename, or delete any original on another phone, browser, or installed copy of the app. Existing device-only originals are uploaded to the shared archive when the Work menu is opened.
 
 Supported input formats:
 

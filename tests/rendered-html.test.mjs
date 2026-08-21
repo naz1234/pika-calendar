@@ -78,7 +78,13 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   assert.match(source, /Download the original roster PDF/);
   assert.equal(hosting.r2, "BUCKET");
   assert.match(source, />Shared across devices</);
-  assert.match(source, /sharedRosterFiles\.map\(\(file\) =>/);
+  assert.match(source, /const SHARED_ROSTER_PREVIEW_LIMIT = 3/);
+  assert.match(source, /sharedRosterFiles\.slice\(0, SHARED_ROSTER_PREVIEW_LIMIT\)/);
+  assert.match(source, /sharedRosterPreviewFiles\.map\(\(file\) => renderSharedRosterFile\(file\)\)/);
+  assert.match(source, /View all files \(\{sharedRosterFiles\.length\}\)/);
+  assert.match(source, />Roster file archive</);
+  assert.match(source, /Nothing is removed automatically\./);
+  assert.match(source, /sharedRosterFileGroups\.map\(\(group\) =>/);
   assert.match(source, />Only on this device</);
   assert.match(source, /saveRosterFile\(file\)/);
   assert.match(source, /uploadSharedRosterFile\(file\)/);
@@ -244,7 +250,7 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   }
   assert.match(styles, /:root,[\s\S]*?--remark-dot:\s*#ffc247;/);
   assert.match(styles, /:root\[data-theme="light"\][\s\S]*?--remark-dot:\s*#e6a20d;/);
-  assert.match(serviceWorker, /my-calendar-v17/);
+  assert.match(serviceWorker, /my-calendar-v18/);
   assert.match(serviceWorker, /includeUncontrolled: true/);
   assert.match(serviceWorker, /try[\s\S]*?await client\.navigate\(client\.url\);[\s\S]*?catch/);
   assert.match(serviceWorker, /client\.navigate\(client\.url\)/);
