@@ -881,10 +881,10 @@ textarea:focus-visible {
 .day-cell.shift-run-continues-next::after {
   position: absolute;
   top: -1px;
-  /* Absolute offsets start at the padding edge: cover the 1px border plus 4px grid gap. */
+  /* Start after the current tile's 1px border and cover only the 4px grid gap. */
   right: -5px;
   bottom: -1px;
-  width: 5px;
+  width: 4px;
   border-top: 1px solid color-mix(in srgb, var(--event-ink) 34%, transparent);
   border-bottom: 1px solid color-mix(in srgb, var(--event-ink) 34%, transparent);
   background: var(--event-fill);
