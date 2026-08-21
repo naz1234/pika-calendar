@@ -249,9 +249,9 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   assert.match(source, /const joinsNext = combineMatchingShifts && Boolean\(primaryShiftClass\) &&\s*shiftRun\.continuesNext;/s);
   assert.doesNotMatch(source, /previousKey !== selectedDate|nextKey !== selectedDate/);
   assert.match(styles, /\.day-cell\.shift-event:is\(\.today, \.selected\):is\(\.shift-run-continues-previous, \.shift-run-continues-next\)\s*\{[^}]*animation:\s*none;[^}]*box-shadow:\s*none;/s);
-  assert.match(styles, /\.day-cell\.shift-event\.selected:not\(\.today\):is\(\.shift-run-continues-previous, \.shift-run-continues-next\) \.day-number::after\s*\{[^}]*background:\s*var\(--selected-pulse\);/s);
-  assert.match(styles, /\.day-cell\.shift-event:is\(\.today, \.selected\):is\(\.shift-run-continues-previous, \.shift-run-continues-next\) \.day-number::after\s*\{[^}]*animation:\s*date-marker-pulse 1\.65s ease-in-out infinite;/s);
-  assert.match(styles, /@keyframes date-marker-pulse\s*\{[\s\S]*?transform:\s*scaleX\(0\.72\);[\s\S]*?50%\s*\{[\s\S]*?transform:\s*scaleX\(1\);/s);
+  assert.match(styles, /\.day-cell\.shift-event:is\(\.today, \.selected\):is\(\.shift-run-continues-previous, \.shift-run-continues-next\) \.day-number\s*\{[^}]*border:\s*1px solid color-mix\(in srgb, var\(--accent\) 76%, var\(--grid\)\);[^}]*border-radius:\s*7px;[^}]*background:\s*var\(--accent-soft\);[^}]*animation:\s*date-tile-pulse 1\.65s ease-in-out infinite;/s);
+  assert.doesNotMatch(styles, /date-marker-pulse/);
+  assert.match(styles, /@media \(prefers-reduced-motion: reduce\)[\s\S]*?\.day-cell\.shift-event:is\(\.today, \.selected\):is\(\.shift-run-continues-previous, \.shift-run-continues-next\)\s*\{[^}]*box-shadow:\s*none;[^}]*\}[\s\S]*?\.day-cell\.shift-event:is\(\.today, \.selected\):is\(\.shift-run-continues-previous, \.shift-run-continues-next\) \.day-number\s*\{[^}]*animation:\s*none !important;[^}]*0 0 20px/s);
   assert.match(styles, /\.day-cell\.shift-event\s*\{[^}]*border-color:\s*color-mix\(in srgb, var\(--event-ink\) 34%, transparent\);/s);
   assert.match(styles, /\.day-cell\.shift-run-continues-previous,\s*\.day-cell\.shift-run-continues-next\s*\{[^}]*border-color:\s*transparent;/s);
   assert.match(styles, /\.day-cell\.shift-run-continues-next\s*\{[^}]*margin-right:\s*-2px;[^}]*border-right-color:\s*transparent;/s);
@@ -282,7 +282,7 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   }
   assert.match(styles, /:root,[\s\S]*?--remark-dot:\s*#ffc247;/);
   assert.match(styles, /:root\[data-theme="light"\][\s\S]*?--remark-dot:\s*#e6a20d;/);
-  assert.match(serviceWorker, /my-calendar-v23/);
+  assert.match(serviceWorker, /my-calendar-v24/);
   assert.match(serviceWorker, /includeUncontrolled: true/);
   assert.match(serviceWorker, /try[\s\S]*?await client\.navigate\(client\.url\);[\s\S]*?catch/);
   assert.match(serviceWorker, /client\.navigate\(client\.url\)/);

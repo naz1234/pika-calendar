@@ -968,36 +968,12 @@ textarea:focus-visible {
   will-change: auto;
 }
 
-.day-cell.shift-event.selected:not(.today):is(.shift-run-continues-previous, .shift-run-continues-next) .day-number::after {
-  position: absolute;
-  right: 2px;
-  bottom: 0;
-  left: 2px;
-  height: 2px;
-  border-radius: 999px;
-  background: var(--selected-pulse);
-  content: "";
-}
-
-.day-cell.shift-event:is(.today, .selected):is(.shift-run-continues-previous, .shift-run-continues-next) .day-number::after {
-  animation: date-marker-pulse 1.65s ease-in-out infinite;
-  transform-origin: center;
-  will-change: transform, opacity, box-shadow;
-}
-
-@keyframes date-marker-pulse {
-  0%,
-  100% {
-    opacity: 0.68;
-    box-shadow: 0 0 4px color-mix(in srgb, var(--date-pulse-color) 42%, transparent);
-    transform: scaleX(0.72);
-  }
-
-  50% {
-    opacity: 1;
-    box-shadow: 0 0 12px color-mix(in srgb, var(--date-pulse-color) 88%, transparent);
-    transform: scaleX(1);
-  }
+.day-cell.shift-event:is(.today, .selected):is(.shift-run-continues-previous, .shift-run-continues-next) .day-number {
+  border: 1px solid color-mix(in srgb, var(--accent) 76%, var(--grid));
+  border-radius: 7px;
+  background: var(--accent-soft);
+  animation: date-tile-pulse 1.65s ease-in-out infinite;
+  will-change: box-shadow;
 }
 
 @keyframes date-tile-pulse {
@@ -3320,6 +3296,18 @@ textarea:focus-visible {
 
   .day-cell.today,
   .day-cell.selected:not(.today) {
+    animation: none !important;
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--date-pulse-color) 76%, transparent),
+      0 0 20px color-mix(in srgb, var(--date-pulse-color) 48%, transparent);
+    will-change: auto;
+  }
+
+  .day-cell.shift-event:is(.today, .selected):is(.shift-run-continues-previous, .shift-run-continues-next) {
+    box-shadow: none;
+  }
+
+  .day-cell.shift-event:is(.today, .selected):is(.shift-run-continues-previous, .shift-run-continues-next) .day-number {
     animation: none !important;
     box-shadow:
       0 0 0 1px color-mix(in srgb, var(--date-pulse-color) 76%, transparent),
