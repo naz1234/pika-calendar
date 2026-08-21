@@ -50,6 +50,11 @@ import {
 } from "./roster-merge";
 import type { RosterBarKind, RosterProgress } from "./roster-reader";
 import {
+  listSharedRosterFiles,
+  loadSharedRosterFile,
+  uploadSharedRosterFile,
+} from "./roster-cloud-store";
+import {
   listStoredRosterFileMetadata,
   loadStoredRosterFile,
   saveRosterFile,
@@ -183,6 +188,10 @@ function formatStoredRosterFileDetails(metadata: StoredRosterFileMetadata) {
     ? `${(metadata.size / (1024 * 1024)).toFixed(1)} MB`
     : `${Math.max(1, Math.round(metadata.size / 1024))} KB`;
   return `${savedAt} · ${size}`;
+}
+
+function rosterFileSignature(metadata: StoredRosterFileMetadata) {
+  return `${metadata.name}\u0000${metadata.size}\u0000${metadata.lastModified}`;
 }
 
 function MonthlyShiftSummary({
@@ -358,7 +367,9 @@ export default function Home() {
   const [toast, setToast] = useState("");
   const [announcement, setAnnouncement] = useState("");
   const [rosterDialog, setRosterDialog] = useState<RosterDialogState | null>(null);
-  const [savedRosterFiles, setSavedRosterFiles] = useState<StoredRosterFileMetadata[]>([]);
+  const [deviceRosterFiles, setDeviceRosterFiles] = useState<StoredRosterFileMetadata[]>([]);
+  const [sharedRosterFiles, setSharedRosterFiles] = useState<StoredRosterFileMetadata[]>([]);
+  const [sharedRosterStatus, setSharedRosterStatus] = useState<"loading" | "ready" | "unavailable">("loading");
   const editorIsWorkEdit = Boolean(editor?.id && editor.draft.calendar === "work");
   const editorWorkShift = editorIsWorkEdit && editor ? workEditorShift(editor.draft.title) : "";
   const editorWorkModifier = editorIsWorkEdit && editor ? workEditorModifier(editor.draft.title) : "regular";
@@ -374,11 +385,16 @@ export default function Home() {
   const rosterCloseButton = useRef<HTMLButtonElement>(null);
   const rosterRun = useRef(0);
   const rosterReaderBusy = useRef(false);
+  const rosterCloudMigrationBusy = useRef(false);
   const eventsRef = useRef<CalendarEvent[]>([]);
   const syncVersion = useRef(0);
   const lastSyncedEvents = useRef("");
   const syncWriteBusy = useRef(false);
   const sharedMigrationPending = useRef(false);
+  const deviceOnlyRosterFiles = useMemo(() => {
+    const sharedSignatures = new Set(sharedRosterFiles.map(rosterFileSignature));
+    return deviceRosterFiles.filter((metadata) => !sharedSignatures.has(rosterFileSignature(metadata)));
+  }, [deviceRosterFiles, sharedRosterFiles]);
   const searchInput = useRef<HTMLInputElement>(null);
   const editorTitleInput = useRef<HTMLInputElement>(null);
   const workEditorTitleSelect = useRef<HTMLSelectElement>(null);
@@ -628,13 +644,66 @@ export default function Home() {
     let cancelled = false;
     void listStoredRosterFileMetadata()
       .then((metadata) => {
-        if (!cancelled) setSavedRosterFiles(metadata);
+        if (!cancelled) setDeviceRosterFiles(metadata);
       })
       .catch(() => undefined);
     return () => {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    if (!menuOpen || activeCalendar !== "work") return;
+    let cancelled = false;
+    async function refreshSharedRosterFiles() {
+      setSharedRosterStatus("loading");
+      try {
+        let shared = await listSharedRosterFiles();
+        if (cancelled) return;
+        const sharedSignatures = new Set(shared.map(rosterFileSignature));
+        const deviceFilesToShare = deviceRosterFiles.filter(
+          (metadata) => !sharedSignatures.has(rosterFileSignature(metadata)),
+        );
+        const migrated: StoredRosterFileMetadata[] = [];
+        if (deviceFilesToShare.length > 0 && !rosterCloudMigrationBusy.current) {
+          rosterCloudMigrationBusy.current = true;
+          try {
+            for (const metadata of deviceFilesToShare) {
+              if (cancelled) break;
+              try {
+                const stored = await loadStoredRosterFile(metadata.id);
+                if (!stored) continue;
+                const file = new File([stored.blob], metadata.name, {
+                  type: metadata.type,
+                  lastModified: metadata.lastModified,
+                });
+                migrated.push(await uploadSharedRosterFile(file));
+              } catch {
+                // Keep the local copy available and retry sharing next time the menu opens.
+              }
+            }
+          } finally {
+            rosterCloudMigrationBusy.current = false;
+          }
+        }
+        if (cancelled) return;
+        if (migrated.length > 0) {
+          shared = [...migrated, ...shared]
+            .filter((metadata, index, files) => files.findIndex((file) => file.id === metadata.id) === index)
+            .sort((left, right) => Date.parse(right.savedAt) - Date.parse(left.savedAt));
+          setAnnouncement(`${migrated.length} saved roster file${migrated.length === 1 ? " is" : "s are"} now available on your other devices.`);
+        }
+        setSharedRosterFiles(shared);
+        setSharedRosterStatus("ready");
+      } catch {
+        if (!cancelled) setSharedRosterStatus("unavailable");
+      }
+    }
+    void refreshSharedRosterFiles();
+    return () => {
+      cancelled = true;
+    };
+  }, [activeCalendar, deviceRosterFiles, menuOpen]);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -1072,27 +1141,46 @@ export default function Home() {
     rosterInput.current?.click();
   }
 
-  async function downloadSavedRosterFile(metadata: StoredRosterFileMetadata) {
+  function downloadRosterBlob(blob: Blob, name: string) {
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = name;
+    anchor.hidden = true;
+    document.body.append(anchor);
+    anchor.click();
+    anchor.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1_000);
+    setMenuOpen(false);
+  }
+
+  async function downloadDeviceRosterFile(metadata: StoredRosterFileMetadata) {
     try {
       const stored = await loadStoredRosterFile(metadata.id);
       if (!stored) {
-        setSavedRosterFiles((current) => current.filter((file) => file.id !== metadata.id));
+        setDeviceRosterFiles((current) => current.filter((file) => file.id !== metadata.id));
         showToast("No saved roster file was found");
         return;
       }
-      const url = URL.createObjectURL(stored.blob);
-      const anchor = document.createElement("a");
-      anchor.href = url;
-      anchor.download = stored.metadata.name;
-      anchor.hidden = true;
-      document.body.append(anchor);
-      anchor.click();
-      anchor.remove();
-      window.setTimeout(() => URL.revokeObjectURL(url), 1_000);
-      setMenuOpen(false);
+      downloadRosterBlob(stored.blob, stored.metadata.name);
       showToast("Saved roster downloaded");
     } catch {
       showToast("Could not download the saved roster");
+    }
+  }
+
+  async function downloadSharedRosterFile(metadata: StoredRosterFileMetadata) {
+    try {
+      const stored = await loadSharedRosterFile(metadata.id);
+      if (!stored) {
+        setSharedRosterFiles((current) => current.filter((file) => file.id !== metadata.id));
+        showToast("That shared roster file was not found");
+        return;
+      }
+      downloadRosterBlob(stored.blob, metadata.name);
+      showToast("Shared roster downloaded");
+    } catch {
+      showToast("Could not download the shared roster");
     }
   }
 
@@ -1122,13 +1210,24 @@ export default function Home() {
       rows: [],
     });
 
-    void saveRosterFile(file)
-      .then((metadata) => {
-        setSavedRosterFiles((current) => [metadata, ...current.filter((saved) => saved.id !== metadata.id)]);
-        setAnnouncement(`${metadata.name} saved on this device and available to download.`);
-      })
-      .catch(() => {
-        showToast("Roster opened, but the original file could not be saved");
+    void Promise.allSettled([saveRosterFile(file), uploadSharedRosterFile(file)])
+      .then(([deviceResult, sharedResult]) => {
+        if (deviceResult.status === "fulfilled") {
+          const metadata = deviceResult.value;
+          setDeviceRosterFiles((current) => [metadata, ...current.filter((saved) => saved.id !== metadata.id)]);
+        }
+        if (sharedResult.status === "fulfilled") {
+          const metadata = sharedResult.value;
+          setSharedRosterFiles((current) => [metadata, ...current.filter((saved) => saved.id !== metadata.id)]);
+          setSharedRosterStatus("ready");
+          setAnnouncement(`${metadata.name} saved and available to download on your other devices.`);
+          return;
+        }
+        if (deviceResult.status === "fulfilled") {
+          showToast("Roster saved on this device, but the shared copy could not be uploaded");
+        } else {
+          showToast("Roster opened, but the original file could not be saved");
+        }
       });
 
     try {
@@ -1651,13 +1750,22 @@ export default function Home() {
                   <span><strong>Import roster file</strong><small>Use a screenshot or IVU.plan PDF</small></span>
                   <span aria-hidden="true">↑</span>
                 </button>
-                <p className="saved-roster-label">Saved roster files</p>
-                {savedRosterFiles.length > 0 ? savedRosterFiles.map((file) => (
+                <p className="saved-roster-label">Shared across devices</p>
+                {sharedRosterStatus === "loading" && (
+                  <div className="saved-roster-empty">Loading shared roster files…</div>
+                )}
+                {sharedRosterStatus === "unavailable" && (
+                  <div className="saved-roster-empty">Shared roster files are temporarily unavailable</div>
+                )}
+                {sharedRosterStatus === "ready" && sharedRosterFiles.length === 0 && (
+                  <div className="saved-roster-empty">Upload a PDF or image to share it across devices</div>
+                )}
+                {sharedRosterStatus === "ready" && sharedRosterFiles.map((file) => (
                   <button
                     className="menu-row roster-menu-row saved-roster-row"
                     key={file.id}
-                    onClick={() => void downloadSavedRosterFile(file)}
-                    aria-label={`Download ${file.name}`}
+                    onClick={() => void downloadSharedRosterFile(file)}
+                    aria-label={`Download shared file ${file.name}`}
                   >
                     <span>
                       <strong>{file.name}</strong>
@@ -1665,8 +1773,25 @@ export default function Home() {
                     </span>
                     <span aria-hidden="true">↓</span>
                   </button>
-                )) : (
-                  <div className="saved-roster-empty">Upload a PDF or image to save it here</div>
+                ))}
+                {deviceOnlyRosterFiles.length > 0 && (
+                  <>
+                    <p className="saved-roster-label">Only on this device</p>
+                    {deviceOnlyRosterFiles.map((file) => (
+                      <button
+                        className="menu-row roster-menu-row saved-roster-row"
+                        key={file.id}
+                        onClick={() => void downloadDeviceRosterFile(file)}
+                        aria-label={`Download device file ${file.name}`}
+                      >
+                        <span>
+                          <strong>{file.name}</strong>
+                          <small>{formatStoredRosterFileDetails(file)}</small>
+                        </span>
+                        <span aria-hidden="true">↓</span>
+                      </button>
+                    ))}
+                  </>
                 )}
                 <a
                   className="menu-row roster-menu-row menu-link"
