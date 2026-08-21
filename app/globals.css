@@ -1756,8 +1756,50 @@ textarea:focus-visible {
   text-transform: uppercase;
 }
 
-.shared-roster-label {
+.shared-roster-toggle {
+  min-height: 62px;
+  margin-top: 14px;
+  padding: 0 12px;
+  border: 1px solid color-mix(in srgb, var(--menu-file-ink) 38%, var(--grid));
+  border-radius: 12px;
+  background: var(--menu-file-bg);
+  color: var(--text);
+}
+
+.shared-roster-toggle > span:first-child {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.shared-roster-toggle strong,
+.shared-roster-chevron {
   color: var(--menu-file-ink);
+}
+
+.shared-roster-toggle strong {
+  font-size: 0.86rem;
+}
+
+.shared-roster-toggle small {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 0.68rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.shared-roster-chevron {
+  font-size: 1.35rem;
+  transition: transform 160ms ease;
+}
+
+.shared-roster-toggle.open .shared-roster-chevron {
+  transform: rotate(90deg);
+}
+
+.shared-roster-panel {
+  padding-top: 8px;
 }
 
 .device-roster-label {

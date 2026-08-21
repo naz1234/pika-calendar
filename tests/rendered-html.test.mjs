@@ -70,6 +70,14 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   assert.match(source, /aria-expanded=\{settingsOpen\}/);
   assert.match(source, /calendar-settings-panel/);
   assert.match(styles, /\.settings-toggle/);
+  assert.match(source, /const \[sharedRosterOpen, setSharedRosterOpen\] = useState\(false\)/);
+  assert.match(source, /className=\{`menu-row shared-roster-toggle/);
+  assert.match(source, /aria-expanded=\{sharedRosterOpen\}/);
+  assert.match(source, /aria-controls="shared-roster-panel"/);
+  assert.match(source, /id="shared-roster-panel" className="shared-roster-panel"/);
+  assert.match(source, /setSharedRosterOpen\(\(current\) => !current\)/);
+  assert.match(styles, /\.shared-roster-toggle/);
+  assert.match(styles, /\.shared-roster-toggle\.open \.shared-roster-chevron\s*\{[^}]*transform:\s*rotate\(90deg\);/s);
   assert.doesNotMatch(source, /Enable private sync|Copy private sync link/);
   assert.match(source, /Import roster file/);
   assert.match(source, />IVU Website</);
@@ -263,7 +271,7 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   }
   assert.match(styles, /:root,[\s\S]*?--remark-dot:\s*#ffc247;/);
   assert.match(styles, /:root\[data-theme="light"\][\s\S]*?--remark-dot:\s*#e6a20d;/);
-  assert.match(serviceWorker, /my-calendar-v19/);
+  assert.match(serviceWorker, /my-calendar-v20/);
   assert.match(serviceWorker, /includeUncontrolled: true/);
   assert.match(serviceWorker, /try[\s\S]*?await client\.navigate\(client\.url\);[\s\S]*?catch/);
   assert.match(serviceWorker, /client\.navigate\(client\.url\)/);

@@ -365,6 +365,7 @@ export default function Home() {
   const [agendaOpen, setAgendaOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [sharedRosterOpen, setSharedRosterOpen] = useState(false);
   const [rosterArchiveOpen, setRosterArchiveOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [editor, setEditor] = useState<{ id?: string; draft: EventDraft } | null>(null);
@@ -1882,25 +1883,44 @@ export default function Home() {
                   <span><strong>Import roster file</strong><small>Use a screenshot or IVU.plan PDF</small></span>
                   <span aria-hidden="true">↑</span>
                 </button>
-                <p className="saved-roster-label shared-roster-label">Shared across devices</p>
-                {sharedRosterStatus === "loading" && (
-                  <div className="saved-roster-empty">Loading shared roster files…</div>
-                )}
-                {sharedRosterStatus === "unavailable" && (
-                  <div className="saved-roster-empty">Shared roster files are temporarily unavailable</div>
-                )}
-                {sharedRosterStatus === "ready" && sharedRosterFiles.length === 0 && (
-                  <div className="saved-roster-empty">Upload a PDF or image to share it across devices</div>
-                )}
-                {sharedRosterStatus === "ready" && sharedRosterPreviewFiles.map((file) => renderSharedRosterFile(file))}
-                {sharedRosterStatus === "ready" && sharedRosterFiles.length > SHARED_ROSTER_PREVIEW_LIMIT && (
-                  <button className="menu-row roster-menu-row roster-archive-trigger" onClick={openRosterArchive}>
-                    <span>
-                      <strong>View all files ({sharedRosterFiles.length})</strong>
-                      <small>Files are kept until you delete them</small>
-                    </span>
-                    <span aria-hidden="true">›</span>
-                  </button>
+                <button
+                  className={`menu-row shared-roster-toggle${sharedRosterOpen ? " open" : ""}`}
+                  onClick={() => setSharedRosterOpen((current) => !current)}
+                  aria-expanded={sharedRosterOpen}
+                  aria-controls="shared-roster-panel"
+                >
+                  <span>
+                    <strong>Shared across devices</strong>
+                    <small>
+                      {sharedRosterStatus === "loading" && "Loading uploaded files…"}
+                      {sharedRosterStatus === "unavailable" && "Uploaded files unavailable"}
+                      {sharedRosterStatus === "ready" && `${sharedRosterFiles.length} ${sharedRosterFiles.length === 1 ? "file" : "files"} available`}
+                    </small>
+                  </span>
+                  <span className="shared-roster-chevron" aria-hidden="true">›</span>
+                </button>
+                {sharedRosterOpen && (
+                  <div id="shared-roster-panel" className="shared-roster-panel">
+                    {sharedRosterStatus === "loading" && (
+                      <div className="saved-roster-empty">Loading shared roster files…</div>
+                    )}
+                    {sharedRosterStatus === "unavailable" && (
+                      <div className="saved-roster-empty">Shared roster files are temporarily unavailable</div>
+                    )}
+                    {sharedRosterStatus === "ready" && sharedRosterFiles.length === 0 && (
+                      <div className="saved-roster-empty">Upload a PDF or image to share it across devices</div>
+                    )}
+                    {sharedRosterStatus === "ready" && sharedRosterPreviewFiles.map((file) => renderSharedRosterFile(file))}
+                    {sharedRosterStatus === "ready" && sharedRosterFiles.length > SHARED_ROSTER_PREVIEW_LIMIT && (
+                      <button className="menu-row roster-menu-row roster-archive-trigger" onClick={openRosterArchive}>
+                        <span>
+                          <strong>View all files ({sharedRosterFiles.length})</strong>
+                          <small>Files are kept until you delete them</small>
+                        </span>
+                        <span aria-hidden="true">›</span>
+                      </button>
+                    )}
+                  </div>
                 )}
                 {deviceOnlyRosterFiles.length > 0 && (
                   <>
