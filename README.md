@@ -25,7 +25,7 @@ A mobile-first shared calendar with separate **Work** and **Personal** modes. It
 
 Events are cached in the browser so the calendar keeps working offline. With the D1 binding configured, the app automatically loads and saves one shared calendar. Open the normal site URL in any browser, including private/incognito mode, to see the same events—no setup link is required.
 
-Anyone with the site URL can view, add, edit, or delete every Work and Personal event, and can download shared roster originals. There is no login or per-user calendar. Use this mode only when that public access is acceptable.
+Anyone with the site URL can view, add, edit, or delete every Work and Personal event, and can download, rename, or delete shared roster originals. There is no login or per-user calendar. Use this mode only when that public access is acceptable.
 
 Roster screenshots and PDFs are read in your browser to detect shifts. With the R2 binding configured, each original is also saved in the shared roster archive so it can be downloaded from another device. Re-importing the same month replaces only that month’s earlier roster-import events, while manual Work events and all Personal events remain.
 
@@ -102,7 +102,7 @@ The generated static site is written to `dist/client`.
 4. Review every detected day. Correct any highlighted item with its shift picker.
 5. Tap **Import days**.
 
-Every uploaded PDF or image is saved both on the device and in the shared roster archive. Use **Menu → Shared across devices** to download any original from another phone, browser, or installed copy of the app. Existing device-only originals are uploaded to the shared archive when the Work menu is opened.
+Every uploaded PDF or image is saved both on the device and in the shared roster archive. Use **Menu → Shared across devices** to download, rename, or delete any original from another phone, browser, or installed copy of the app. Existing device-only originals are uploaded to the shared archive when the Work menu is opened.
 
 Supported input formats:
 

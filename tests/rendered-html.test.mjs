@@ -84,6 +84,12 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   assert.match(source, /uploadSharedRosterFile\(file\)/);
   assert.match(source, /listStoredRosterFileMetadata\(\)/);
   assert.match(source, /listSharedRosterFiles\(\)/);
+  assert.match(source, /renameSharedRosterFile\(metadata\.id, requestedName\)/);
+  assert.match(source, /deleteSharedRosterFile\(metadata\.id\)/);
+  assert.match(source, /window\.prompt\("Rename shared roster file"/);
+  assert.match(source, /window\.confirm\(`Delete/);
+  assert.match(source, /aria-label=\{`Rename shared file/);
+  assert.match(source, /aria-label=\{`Delete shared file/);
   assert.match(source, /loadStoredRosterFile\(metadata\.id\)/);
   assert.match(source, /loadSharedRosterFile\(metadata\.id\)/);
   assert.match(source, /anchor\.download = name/);
@@ -93,9 +99,14 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   assert.doesNotMatch(rosterFileStoreSource, /LATEST_FILE_KEY/);
   assert.match(rosterCloudStoreSource, /const API_PATH = "\/api\/roster-files"/);
   assert.match(rosterCloudStoreSource, /method: "POST"/);
+  assert.match(rosterCloudStoreSource, /method: "PATCH"/);
+  assert.match(rosterCloudStoreSource, /method: "DELETE"/);
   assert.match(rosterFilesApiSource, /context\.env\.BUCKET/);
   assert.match(rosterFilesApiSource, /storage\.put\(`/);
   assert.match(rosterFilesApiSource, /storage\.get\(`/);
+  assert.match(rosterFilesApiSource, /storage\.delete\(key\)/);
+  assert.match(rosterFilesApiSource, /export async function onRequestPatch/);
+  assert.match(rosterFilesApiSource, /export async function onRequestDelete/);
   assert.match(styles, /\.menu-link[\s\S]*?text-decoration: none;/);
   assert.match(source, /application\/pdf/);
   assert.match(source, /roster-image/);
@@ -233,7 +244,7 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   }
   assert.match(styles, /:root,[\s\S]*?--remark-dot:\s*#ffc247;/);
   assert.match(styles, /:root\[data-theme="light"\][\s\S]*?--remark-dot:\s*#e6a20d;/);
-  assert.match(serviceWorker, /my-calendar-v16/);
+  assert.match(serviceWorker, /my-calendar-v17/);
   assert.match(serviceWorker, /includeUncontrolled: true/);
   assert.match(serviceWorker, /try[\s\S]*?await client\.navigate\(client\.url\);[\s\S]*?catch/);
   assert.match(serviceWorker, /client\.navigate\(client\.url\)/);

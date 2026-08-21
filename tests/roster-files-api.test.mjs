@@ -23,7 +23,7 @@ assert.deepEqual(
 
 const loadedModule = { exports: {} };
 Function("module", "exports", compiled.outputText)(loadedModule, loadedModule.exports);
-const { onRequestGet, onRequestPost } = loadedModule.exports;
+const { onRequestDelete, onRequestGet, onRequestPatch, onRequestPost } = loadedModule.exports;
 
 function memoryBucket() {
   const objects = new Map();
@@ -45,7 +45,11 @@ function memoryBucket() {
         uploaded: object.uploaded,
         customMetadata: object.customMetadata,
         body: new Blob([object.bytes]).stream(),
+        arrayBuffer: async () => object.bytes.slice().buffer,
       };
+    },
+    async delete(key) {
+      objects.delete(key);
     },
     async list() {
       return {
@@ -61,7 +65,7 @@ function memoryBucket() {
   };
 }
 
-test("uploads, lists, and downloads the same roster through shared R2 storage", async () => {
+test("uploads, lists, renames, downloads, and deletes a roster through shared R2 storage", async () => {
   const bucket = memoryBucket();
   const uploadResponse = await onRequestPost({
     request: new Request("https://calendar.example/api/roster-files", {
@@ -86,7 +90,19 @@ test("uploads, lists, and downloads the same roster through shared R2 storage", 
     env: { BUCKET: bucket },
   });
   assert.equal(listResponse.status, 200);
-  assert.deepEqual((await listResponse.json()).files, [uploaded]);
+  assert.deepEqual(await listResponse.json(), { files: [uploaded], deletedSignatures: [] });
+
+  const renameResponse = await onRequestPatch({
+    request: new Request("https://calendar.example/api/roster-files", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: uploaded.id, name: "August roster.pdf" }),
+    }),
+    env: { BUCKET: bucket },
+  });
+  assert.equal(renameResponse.status, 200);
+  const renamed = await renameResponse.json();
+  assert.deepEqual(renamed, { ...uploaded, name: "August roster.pdf" });
 
   const downloadResponse = await onRequestGet({
     request: new Request(`https://calendar.example/api/roster-files?id=${uploaded.id}`),
@@ -94,8 +110,31 @@ test("uploads, lists, and downloads the same roster through shared R2 storage", 
   });
   assert.equal(downloadResponse.status, 200);
   assert.equal(downloadResponse.headers.get("content-type"), "application/pdf");
-  assert.match(downloadResponse.headers.get("content-disposition"), /July%20roster\.pdf/u);
+  assert.match(downloadResponse.headers.get("content-disposition"), /August%20roster\.pdf/u);
   assert.equal(await downloadResponse.text(), "pdf");
+
+  const deleteResponse = await onRequestDelete({
+    request: new Request(`https://calendar.example/api/roster-files?id=${uploaded.id}`, { method: "DELETE" }),
+    env: { BUCKET: bucket },
+  });
+  assert.equal(deleteResponse.status, 204);
+
+  const missingResponse = await onRequestGet({
+    request: new Request(`https://calendar.example/api/roster-files?id=${uploaded.id}`),
+    env: { BUCKET: bucket },
+  });
+  assert.equal(missingResponse.status, 404);
+
+  const finalListResponse = await onRequestGet({
+    request: new Request("https://calendar.example/api/roster-files"),
+    env: { BUCKET: bucket },
+  });
+  const finalList = await finalListResponse.json();
+  assert.deepEqual(finalList.files, []);
+  assert.deepEqual(finalList.deletedSignatures.sort(), [
+    "August roster.pdf\u00003\u00001725000000000",
+    "July roster.pdf\u00003\u00001725000000000",
+  ]);
 });
 
 test("rejects oversized uploads before reading their body", async () => {

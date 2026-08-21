@@ -50,13 +50,17 @@ import {
 } from "./roster-merge";
 import type { RosterBarKind, RosterProgress } from "./roster-reader";
 import {
+  deleteSharedRosterFile,
   listSharedRosterFiles,
   loadSharedRosterFile,
+  renameSharedRosterFile,
   uploadSharedRosterFile,
 } from "./roster-cloud-store";
 import {
+  deleteStoredRosterFile,
   listStoredRosterFileMetadata,
   loadStoredRosterFile,
+  renameStoredRosterFile,
   saveRosterFile,
   type StoredRosterFileMetadata,
 } from "./roster-file-store";
@@ -369,6 +373,7 @@ export default function Home() {
   const [rosterDialog, setRosterDialog] = useState<RosterDialogState | null>(null);
   const [deviceRosterFiles, setDeviceRosterFiles] = useState<StoredRosterFileMetadata[]>([]);
   const [sharedRosterFiles, setSharedRosterFiles] = useState<StoredRosterFileMetadata[]>([]);
+  const [deletedRosterSignatures, setDeletedRosterSignatures] = useState<string[]>([]);
   const [sharedRosterStatus, setSharedRosterStatus] = useState<"loading" | "ready" | "unavailable">("loading");
   const editorIsWorkEdit = Boolean(editor?.id && editor.draft.calendar === "work");
   const editorWorkShift = editorIsWorkEdit && editor ? workEditorShift(editor.draft.title) : "";
@@ -393,8 +398,12 @@ export default function Home() {
   const sharedMigrationPending = useRef(false);
   const deviceOnlyRosterFiles = useMemo(() => {
     const sharedSignatures = new Set(sharedRosterFiles.map(rosterFileSignature));
-    return deviceRosterFiles.filter((metadata) => !sharedSignatures.has(rosterFileSignature(metadata)));
-  }, [deviceRosterFiles, sharedRosterFiles]);
+    const deletedSignatures = new Set(deletedRosterSignatures);
+    return deviceRosterFiles.filter((metadata) => {
+      const signature = rosterFileSignature(metadata);
+      return !sharedSignatures.has(signature) && !deletedSignatures.has(signature);
+    });
+  }, [deletedRosterSignatures, deviceRosterFiles, sharedRosterFiles]);
   const searchInput = useRef<HTMLInputElement>(null);
   const editorTitleInput = useRef<HTMLInputElement>(null);
   const workEditorTitleSelect = useRef<HTMLSelectElement>(null);
@@ -658,11 +667,27 @@ export default function Home() {
     async function refreshSharedRosterFiles() {
       setSharedRosterStatus("loading");
       try {
-        let shared = await listSharedRosterFiles();
+        const listing = await listSharedRosterFiles();
+        let shared = listing.files;
         if (cancelled) return;
+        setDeletedRosterSignatures(listing.deletedSignatures);
         const sharedSignatures = new Set(shared.map(rosterFileSignature));
+        const deletedSignatures = new Set(listing.deletedSignatures);
+        const tombstonedDeviceFiles = deviceRosterFiles.filter((metadata) => (
+          deletedSignatures.has(rosterFileSignature(metadata))
+        ));
+        if (tombstonedDeviceFiles.length > 0) {
+          await Promise.allSettled(tombstonedDeviceFiles.map((metadata) => deleteStoredRosterFile(metadata.id)));
+          if (cancelled) return;
+          setDeviceRosterFiles((current) => current.filter((metadata) => (
+            !deletedSignatures.has(rosterFileSignature(metadata))
+          )));
+        }
         const deviceFilesToShare = deviceRosterFiles.filter(
-          (metadata) => !sharedSignatures.has(rosterFileSignature(metadata)),
+          (metadata) => {
+            const signature = rosterFileSignature(metadata);
+            return !sharedSignatures.has(signature) && !deletedSignatures.has(signature);
+          },
         );
         const migrated: StoredRosterFileMetadata[] = [];
         if (deviceFilesToShare.length > 0 && !rosterCloudMigrationBusy.current) {
@@ -1181,6 +1206,47 @@ export default function Home() {
       showToast("Shared roster downloaded");
     } catch {
       showToast("Could not download the shared roster");
+    }
+  }
+
+  async function renameSharedRoster(metadata: StoredRosterFileMetadata) {
+    const requestedName = window.prompt("Rename shared roster file", metadata.name);
+    if (requestedName === null) return;
+    if (!requestedName.trim()) {
+      showToast("Enter a file name");
+      return;
+    }
+    try {
+      const oldSignature = rosterFileSignature(metadata);
+      const renamed = await renameSharedRosterFile(metadata.id, requestedName);
+      const matchingDeviceFiles = deviceRosterFiles.filter((file) => rosterFileSignature(file) === oldSignature);
+      await Promise.allSettled(matchingDeviceFiles.map((file) => renameStoredRosterFile(file, renamed.name)));
+      setSharedRosterFiles((current) => current.map((file) => file.id === renamed.id ? renamed : file));
+      setDeviceRosterFiles((current) => current.map((file) => (
+        rosterFileSignature(file) === oldSignature ? { ...file, name: renamed.name } : file
+      )));
+      setDeletedRosterSignatures((current) => current.includes(oldSignature) ? current : [...current, oldSignature]);
+      showToast("Shared roster renamed");
+      setAnnouncement(`${metadata.name} renamed to ${renamed.name} across devices.`);
+    } catch {
+      showToast("Could not rename the shared roster");
+    }
+  }
+
+  async function deleteSharedRoster(metadata: StoredRosterFileMetadata) {
+    if (!window.confirm(`Delete “${metadata.name}” from all devices? This cannot be undone.`)) return;
+    try {
+      await deleteSharedRosterFile(metadata.id);
+      const signature = rosterFileSignature(metadata);
+      const matchingDeviceFiles = deviceRosterFiles.filter((file) => rosterFileSignature(file) === signature);
+      await Promise.allSettled(matchingDeviceFiles.map((file) => deleteStoredRosterFile(file.id)));
+      setSharedRosterFiles((current) => current.filter((file) => file.id !== metadata.id));
+      setDeviceRosterFiles((current) => current.filter((file) => rosterFileSignature(file) !== signature));
+      setDeletedRosterSignatures((current) => current.includes(signature) ? current : [...current, signature]);
+      showToast("Shared roster deleted");
+      setAnnouncement(`${metadata.name} deleted from shared roster files.`);
+    } catch {
+      showToast("Could not delete the shared roster");
     }
   }
 
@@ -1761,18 +1827,35 @@ export default function Home() {
                   <div className="saved-roster-empty">Upload a PDF or image to share it across devices</div>
                 )}
                 {sharedRosterStatus === "ready" && sharedRosterFiles.map((file) => (
-                  <button
-                    className="menu-row roster-menu-row saved-roster-row"
-                    key={file.id}
-                    onClick={() => void downloadSharedRosterFile(file)}
-                    aria-label={`Download shared file ${file.name}`}
-                  >
-                    <span>
-                      <strong>{file.name}</strong>
-                      <small>{formatStoredRosterFileDetails(file)}</small>
+                  <div className="menu-row roster-menu-row saved-roster-row" key={file.id}>
+                    <button
+                      className="saved-roster-download"
+                      onClick={() => void downloadSharedRosterFile(file)}
+                      aria-label={`Download shared file ${file.name}`}
+                    >
+                      <span>
+                        <strong>{file.name}</strong>
+                        <small>{formatStoredRosterFileDetails(file)}</small>
+                      </span>
+                      <span aria-hidden="true">↓</span>
+                    </button>
+                    <span className="saved-roster-actions">
+                      <button
+                        className="saved-roster-action"
+                        onClick={() => void renameSharedRoster(file)}
+                        aria-label={`Rename shared file ${file.name}`}
+                      >
+                        <span aria-hidden="true">✎</span>
+                      </button>
+                      <button
+                        className="saved-roster-action delete"
+                        onClick={() => void deleteSharedRoster(file)}
+                        aria-label={`Delete shared file ${file.name}`}
+                      >
+                        <span aria-hidden="true">×</span>
+                      </button>
                     </span>
-                    <span aria-hidden="true">↓</span>
-                  </button>
+                  </div>
                 ))}
                 {deviceOnlyRosterFiles.length > 0 && (
                   <>
