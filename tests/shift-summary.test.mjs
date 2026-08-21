@@ -29,7 +29,7 @@ function event(title, date = "2026-07-01", calendar = "work") {
   return { title, date, calendar };
 }
 
-test("counts regular Night, every extension, and every RDOT separately", () => {
+test("counts all Night types while also counting extensions and RDOT", () => {
   const events = [
     ...Array.from({ length: 13 }, (_, index) => event("Night", `2026-07-${String(index + 1).padStart(2, "0")}`)),
     event("Night (EX)", "2026-07-17"),
@@ -41,7 +41,7 @@ test("counts regular Night, every extension, and every RDOT separately", () => {
   ];
 
   assert.deepEqual(countMonthlyWorkShifts(events, "2026-07"), {
-    night: 13,
+    night: 15,
     extensions: 3,
     rdot: 1,
   });
@@ -79,9 +79,9 @@ test("forecasts salary with the Railog overtime formula", () => {
   assert.deepEqual(calculateMonthlyExpectedSalary(events, "2026-07"), {
     salaryWithLaundry: 15100,
     overtimeHours: 16,
-    nightAllowance: 45,
+    nightAllowance: 90,
     expectedOvertime: 1875,
-    expectedSalary: 17020,
+    expectedSalary: 17065,
   });
 });
 
@@ -110,9 +110,9 @@ test("matches the Railog July forecast and corrects the legacy imported Night ex
   assert.deepEqual(calculateMonthlyExpectedSalary(events, "2026-07"), {
     salaryWithLaundry: 15100,
     overtimeHours: 19,
-    nightAllowance: 585,
+    nightAllowance: 675,
     expectedOvertime: 2226.56,
-    expectedSalary: 17911.56,
+    expectedSalary: 18001.56,
   });
 });
 

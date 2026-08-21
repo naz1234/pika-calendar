@@ -10,7 +10,7 @@ A mobile-first shared calendar with separate **Work** and **Personal** modes. It
 - Automatic Early, Late, Night, RD, extension `(EX)`, and RDOT mapping
 - Distinct Early, Late, Night, and RD colors in the calendar, agenda, and search
 - Consecutive matching shifts join into one continuous ES, LS, NS, or RD bar
-- Scrollable monthly Work summary for regular Night shifts, extensions, and RDOT
+- Scrollable monthly Work summary for all Night shifts, extensions, and RDOT
 - Expected salary forecast using the monthly Night allowance and overtime hours
 - Add, edit, search, and delete events
 - All-day events, overnight shifts, start/end times, and notes
