@@ -856,8 +856,7 @@ textarea:focus-visible {
 }
 
 .day-cell.shift-event {
-  --event-border-color: color-mix(in srgb, var(--event-ink) 34%, var(--event-fill));
-  border-color: var(--event-border-color);
+  border-color: color-mix(in srgb, var(--event-ink) 34%, transparent);
   background: var(--event-fill);
 }
 
@@ -866,8 +865,12 @@ textarea:focus-visible {
   box-shadow: none;
 }
 
+.day-cell.shift-run-continues-previous,
+.day-cell.shift-run-continues-next {
+  border-color: transparent;
+}
+
 .day-cell.shift-run-continues-previous {
-  border-left-color: var(--event-fill);
   border-top-left-radius: 0;
   border-bottom-left-radius: 0;
 }
@@ -882,12 +885,9 @@ textarea:focus-visible {
 .day-cell.shift-run-continues-next::after {
   position: absolute;
   top: -1px;
-  /* The opaque outline can overlap the tile border without a darker double-painted seam. */
   right: -5px;
   bottom: -1px;
   width: 5px;
-  border-top: 1px solid var(--event-border-color);
-  border-bottom: 1px solid var(--event-border-color);
   background: var(--event-fill);
   content: "";
   pointer-events: none;
