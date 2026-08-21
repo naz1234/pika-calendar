@@ -108,6 +108,14 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   assert.match(shiftSummarySource, /calculateMonthlyExpectedSalary/);
   assert.match(source, /Expected salary/);
   assert.match(source, /salaryMonthLabel/);
+  assert.match(source, /const \[salaryAmountsVisible, setSalaryAmountsVisible\] = useState\(false\)/);
+  assert.match(source, /visible \? `SAR \$\{formatSar\(value\)\}` : "••••••"/);
+  assert.match(source, /aria-label=\{salaryVisible \? "Hide salary amounts" : "Show salary amounts"\}/);
+  assert.match(source, /salaryVisible=\{salaryAmountsVisible\}/);
+  const storedSettingsPayload = source.match(/localStorage\.setItem\(SETTINGS_KEY, JSON\.stringify\(\{([\s\S]*?)\}\)\);/)?.[1] ?? "";
+  assert.ok(storedSettingsPayload);
+  assert.doesNotMatch(storedSettingsPayload, /salaryAmountsVisible/);
+  assert.match(styles, /\.salary-visibility-toggle\s*\{[^}]*width:\s*32px;[^}]*height:\s*32px;/s);
   assert.doesNotMatch(source, /summary-stat-icon|monthly-salary-icon|salary-breakdown-icon|salary-icon-wallet|salary-icon-night|salary-icon-overtime/);
   assert.doesNotMatch(styles, /\.summary-stat-icon|\.monthly-salary-icon|\.salary-breakdown-icon|\.salary-icon-wallet|\.salary-icon-night|\.salary-icon-overtime/);
   assert.doesNotMatch(source, /All amounts are estimates based on current data\./);
@@ -166,7 +174,7 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   assert.match(source, /JSON\.stringify\(\{[\s\S]*?combineMatchingShifts,/s);
   assert.match(source, /shift-run-continues-previous/);
   assert.match(source, /shift-run-continues-next/);
-  assert.match(styles, /\.day-cell\.shift-run-continues-previous\s*\{[^}]*border-left-color:\s*transparent;/s);
+  assert.match(styles, /\.day-cell\.shift-run-continues-previous\s*\{[^}]*border-left-color:\s*var\(--event-fill\);/s);
   assert.match(styles, /\.day-cell\.shift-run-continues-next\s*\{[^}]*overflow:\s*visible;[^}]*border-right-color:\s*transparent;/s);
   assert.match(styles, /\.day-cell\.shift-run-continues-next::after\s*\{[^}]*right:\s*-4px;[^}]*width:\s*4px;[^}]*background:\s*var\(--event-fill\);/s);
   assert.match(styles, /\.layout-setting input:checked\s*\{[^}]*background:\s*var\(--accent\);/s);
