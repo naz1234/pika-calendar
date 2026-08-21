@@ -100,6 +100,8 @@ The generated static site is written to `dist/client`.
 4. Review every detected day. Correct any highlighted item with its shift picker.
 5. Tap **Import days**.
 
+The latest uploaded PDF or image is saved on this device. Use **Menu → Download saved roster** to download the original file again after closing or refreshing the app. Uploading another roster replaces the previously saved original.
+
 Supported input formats:
 
 - IVU.plan Portal monthly duty-schedule PDF with selectable text

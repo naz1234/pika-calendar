@@ -1520,6 +1520,11 @@ textarea:focus-visible {
   color: var(--danger);
 }
 
+.menu-row:disabled {
+  opacity: 0.48;
+  cursor: not-allowed;
+}
+
 .settings-section {
   padding: 14px 0;
 }
@@ -1697,6 +1702,8 @@ textarea:focus-visible {
 .roster-menu-row > span:first-child {
   display: grid;
   gap: 4px;
+  min-width: 0;
+  padding-right: 12px;
 }
 
 .roster-menu-row strong {
@@ -1705,8 +1712,11 @@ textarea:focus-visible {
 }
 
 .roster-menu-row small {
+  overflow: hidden;
   color: var(--muted);
   font-size: 0.68rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .sync-menu-row {
