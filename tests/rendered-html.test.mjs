@@ -181,9 +181,10 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   assert.match(source, /JSON\.stringify\(\{[\s\S]*?combineMatchingShifts,/s);
   assert.match(source, /shift-run-continues-previous/);
   assert.match(source, /shift-run-continues-next/);
+  assert.match(styles, /\.day-cell\.shift-event\s*\{[^}]*--event-border-color:\s*color-mix\(in srgb, var\(--event-ink\) 34%, var\(--event-fill\)\);[^}]*border-color:\s*var\(--event-border-color\);/s);
   assert.match(styles, /\.day-cell\.shift-run-continues-previous\s*\{[^}]*border-left-color:\s*var\(--event-fill\);/s);
   assert.match(styles, /\.day-cell\.shift-run-continues-next\s*\{[^}]*overflow:\s*visible;[^}]*border-right-color:\s*transparent;/s);
-  assert.match(styles, /\.day-cell\.shift-run-continues-next::after\s*\{[^}]*right:\s*-5px;[^}]*width:\s*4px;[^}]*background:\s*var\(--event-fill\);/s);
+  assert.match(styles, /\.day-cell\.shift-run-continues-next::after\s*\{[^}]*right:\s*-5px;[^}]*width:\s*5px;[^}]*border-top:\s*1px solid var\(--event-border-color\);[^}]*border-bottom:\s*1px solid var\(--event-border-color\);[^}]*background:\s*var\(--event-fill\);/s);
   assert.doesNotMatch(styles, /\.day-cell,\s*\.day-cell:last-child\s*\{[^}]*border-radius:/s);
   assert.match(styles, /@media \(max-width: 899px\)[\s\S]*?\.day-cell\s*\{[^}]*margin:\s*0;[^}]*border-radius:\s*8px;[^}]*\}[\s\S]*?\.day-cell:last-child\s*\{[^}]*margin-right:\s*0;[^}]*\}/s);
   assert.match(styles, /\.layout-setting input:checked\s*\{[^}]*background:\s*var\(--accent\);/s);
