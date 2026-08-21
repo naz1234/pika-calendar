@@ -1284,7 +1284,7 @@ export default function Home() {
 
   function renderSharedRosterFile(file: StoredRosterFileMetadata) {
     return (
-      <div className="menu-row roster-menu-row saved-roster-row" key={file.id}>
+      <div className="menu-row roster-menu-row saved-roster-row shared-roster-row" key={file.id}>
         <button
           className="saved-roster-download"
           onClick={() => void downloadSharedRosterFile(file)}
@@ -1878,11 +1878,11 @@ export default function Home() {
             {activeCalendar === "work" && (
               <div className="menu-section">
                 <p className="menu-label">Work roster</p>
-                <button className="menu-row roster-menu-row" onClick={chooseRosterFile}>
+                <button className="menu-row roster-menu-row menu-import-row" onClick={chooseRosterFile}>
                   <span><strong>Import roster file</strong><small>Use a screenshot or IVU.plan PDF</small></span>
                   <span aria-hidden="true">↑</span>
                 </button>
-                <p className="saved-roster-label">Shared across devices</p>
+                <p className="saved-roster-label shared-roster-label">Shared across devices</p>
                 {sharedRosterStatus === "loading" && (
                   <div className="saved-roster-empty">Loading shared roster files…</div>
                 )}
@@ -1904,10 +1904,10 @@ export default function Home() {
                 )}
                 {deviceOnlyRosterFiles.length > 0 && (
                   <>
-                    <p className="saved-roster-label">Only on this device</p>
+                    <p className="saved-roster-label device-roster-label">Only on this device</p>
                     {deviceOnlyRosterFiles.map((file) => (
                       <button
-                        className="menu-row roster-menu-row saved-roster-row"
+                        className="menu-row roster-menu-row saved-roster-row device-roster-row"
                         key={file.id}
                         onClick={() => void downloadDeviceRosterFile(file)}
                         aria-label={`Download device file ${file.name}`}
@@ -1922,7 +1922,7 @@ export default function Home() {
                   </>
                 )}
                 <a
-                  className="menu-row roster-menu-row menu-link"
+                  className="menu-row roster-menu-row menu-link menu-ivu-row"
                   href="https://riy.ivu-cloud.com/mbweb/main/matter/desktop/main-menu"
                   target="_blank"
                   rel="noopener noreferrer"

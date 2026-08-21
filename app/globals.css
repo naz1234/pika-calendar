@@ -31,6 +31,16 @@
   --remark-dot: #ffc247;
   --selected-pulse: #a78bfa;
   --danger: #ff6b78;
+  --menu-import-ink: #a78bfa;
+  --menu-import-bg: rgba(167, 139, 250, 0.12);
+  --menu-file-ink: #67d4f2;
+  --menu-file-bg: rgba(103, 212, 242, 0.1);
+  --menu-local-ink: #71e1a2;
+  --menu-local-bg: rgba(113, 225, 162, 0.1);
+  --menu-external-ink: #ffd166;
+  --menu-external-bg: rgba(255, 209, 102, 0.1);
+  --menu-settings-ink: #c4b5fd;
+  --menu-settings-bg: rgba(196, 181, 253, 0.1);
   --shadow: 0 26px 80px rgba(0, 0, 0, 0.42);
   color-scheme: dark;
 }
@@ -65,6 +75,16 @@
   --remark-dot: #e6a20d;
   --selected-pulse: #7c3aed;
   --danger: #c92e3e;
+  --menu-import-ink: #6842b8;
+  --menu-import-bg: rgba(104, 66, 184, 0.1);
+  --menu-file-ink: #087b93;
+  --menu-file-bg: rgba(8, 123, 147, 0.09);
+  --menu-local-ink: #227447;
+  --menu-local-bg: rgba(34, 116, 71, 0.09);
+  --menu-external-ink: #9a5d00;
+  --menu-external-bg: rgba(154, 93, 0, 0.09);
+  --menu-settings-ink: #6842b8;
+  --menu-settings-bg: rgba(104, 66, 184, 0.09);
   --shadow: 0 24px 70px rgba(37, 45, 57, 0.2);
   color-scheme: light;
 }
@@ -1673,6 +1693,40 @@ textarea:focus-visible {
   min-height: 60px;
 }
 
+.menu-import-row,
+.menu-ivu-row {
+  min-height: 64px;
+  padding: 0 12px;
+  border: 1px solid;
+  border-radius: 12px;
+}
+
+.menu-import-row {
+  border-color: color-mix(in srgb, var(--menu-import-ink) 38%, var(--grid));
+  background: var(--menu-import-bg);
+}
+
+.roster-menu-row.menu-import-row strong {
+  color: var(--menu-import-ink);
+}
+
+.menu-import-row > span:last-child,
+.menu-ivu-row > span:last-child {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  place-items: center;
+  border-radius: 9px;
+  font-size: 1rem;
+  font-weight: 750;
+}
+
+.menu-import-row > span:last-child {
+  background: color-mix(in srgb, var(--menu-import-ink) 18%, transparent);
+  color: var(--menu-import-ink);
+}
+
 .roster-menu-row > span:first-child {
   display: grid;
   gap: 4px;
@@ -1702,8 +1756,54 @@ textarea:focus-visible {
   text-transform: uppercase;
 }
 
+.shared-roster-label {
+  color: var(--menu-file-ink);
+}
+
+.device-roster-label {
+  color: var(--menu-local-ink);
+}
+
 .saved-roster-row {
   min-height: 58px;
+}
+
+.shared-roster-row,
+.device-roster-row {
+  margin: 6px 0;
+  padding: 0 6px 0 8px;
+  border: 1px solid;
+  border-left-width: 3px;
+  border-radius: 12px;
+}
+
+.shared-roster-row {
+  border-color: color-mix(in srgb, var(--menu-file-ink) 36%, var(--grid));
+  background: var(--menu-file-bg);
+}
+
+.shared-roster-row .saved-roster-download strong,
+.shared-roster-row .saved-roster-download > span:last-child {
+  color: var(--menu-file-ink);
+}
+
+.shared-roster-row .saved-roster-action {
+  border-color: color-mix(in srgb, var(--menu-file-ink) 30%, var(--grid));
+  background: color-mix(in srgb, var(--menu-file-ink) 10%, var(--surface-soft));
+}
+
+.shared-roster-row .saved-roster-action:not(.delete) {
+  color: var(--menu-file-ink);
+}
+
+.device-roster-row {
+  border-color: color-mix(in srgb, var(--menu-local-ink) 36%, var(--grid));
+  background: var(--menu-local-bg);
+}
+
+.device-roster-row strong,
+.device-roster-row > span:last-child {
+  color: var(--menu-local-ink);
 }
 
 .saved-roster-download {
@@ -1751,14 +1851,43 @@ textarea:focus-visible {
 .roster-archive-trigger {
   margin-top: 8px;
   padding: 0 10px;
-  border: 1px solid var(--grid);
+  border: 1px solid color-mix(in srgb, var(--menu-settings-ink) 36%, var(--grid));
   border-radius: 11px;
-  background: var(--surface-soft);
+  background: var(--menu-settings-bg);
+}
+
+.roster-archive-trigger strong {
+  color: var(--menu-settings-ink);
 }
 
 .roster-archive-trigger > span:last-child {
-  color: var(--accent);
+  color: var(--menu-settings-ink);
   font-size: 1.3rem;
+}
+
+.menu-ivu-row {
+  margin-top: 12px;
+  border-color: color-mix(in srgb, var(--menu-external-ink) 38%, var(--grid));
+  background: var(--menu-external-bg);
+}
+
+.menu-ivu-row strong,
+.menu-ivu-row > span:last-child {
+  color: var(--menu-external-ink);
+}
+
+.menu-ivu-row > span:last-child {
+  background: color-mix(in srgb, var(--menu-external-ink) 17%, transparent);
+}
+
+.settings-toggle {
+  border-color: color-mix(in srgb, var(--menu-settings-ink) 38%, var(--grid));
+  background: var(--menu-settings-bg);
+}
+
+.settings-toggle strong,
+.settings-toggle .settings-chevron {
+  color: var(--menu-settings-ink);
 }
 
 .saved-roster-empty {
@@ -1844,6 +1973,11 @@ textarea:focus-visible {
   border-bottom: 1px solid var(--grid-soft);
 }
 
+.roster-archive-header .eyebrow,
+.roster-archive-year h3 {
+  color: var(--menu-file-ink);
+}
+
 .roster-archive-summary {
   display: flex;
   flex: 0 0 auto;
@@ -1852,7 +1986,7 @@ textarea:focus-visible {
   gap: 12px;
   padding: 12px 18px;
   border-bottom: 1px solid var(--grid-soft);
-  background: var(--surface-soft);
+  background: var(--menu-settings-bg);
 }
 
 .roster-archive-summary strong {
@@ -1884,7 +2018,7 @@ textarea:focus-visible {
   margin: 0;
   padding: 10px 2px 7px;
   background: var(--surface-raised);
-  color: var(--muted);
+  color: var(--menu-file-ink);
   font-size: 0.64rem;
   font-weight: 850;
   letter-spacing: 0.1em;
