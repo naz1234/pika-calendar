@@ -50,6 +50,12 @@ import {
 } from "./roster-merge";
 import type { RosterBarKind, RosterProgress } from "./roster-reader";
 import {
+  loadLatestRosterFile,
+  loadLatestRosterFileMetadata,
+  saveLatestRosterFile,
+  type StoredRosterFileMetadata,
+} from "./roster-file-store";
+import {
   DEFAULT_SALARY_WITH_LAUNDRY,
   calculateMonthlyExpectedSalary,
   countMonthlyWorkShifts,
@@ -341,6 +347,7 @@ export default function Home() {
   const [toast, setToast] = useState("");
   const [announcement, setAnnouncement] = useState("");
   const [rosterDialog, setRosterDialog] = useState<RosterDialogState | null>(null);
+  const [savedRosterFile, setSavedRosterFile] = useState<StoredRosterFileMetadata | null>(null);
   const editorIsWorkEdit = Boolean(editor?.id && editor.draft.calendar === "work");
   const editorWorkShift = editorIsWorkEdit && editor ? workEditorShift(editor.draft.title) : "";
   const editorWorkModifier = editorIsWorkEdit && editor ? workEditorModifier(editor.draft.title) : "regular";
@@ -605,6 +612,18 @@ export default function Home() {
   useEffect(() => {
     eventsRef.current = events;
   }, [events]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void loadLatestRosterFileMetadata()
+      .then((metadata) => {
+        if (!cancelled) setSavedRosterFile(metadata);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -1042,6 +1061,30 @@ export default function Home() {
     rosterInput.current?.click();
   }
 
+  async function downloadSavedRosterFile() {
+    try {
+      const stored = await loadLatestRosterFile();
+      if (!stored) {
+        setSavedRosterFile(null);
+        showToast("No saved roster file was found");
+        return;
+      }
+      const url = URL.createObjectURL(stored.blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = stored.metadata.name;
+      anchor.hidden = true;
+      document.body.append(anchor);
+      anchor.click();
+      anchor.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1_000);
+      setMenuOpen(false);
+      showToast("Saved roster downloaded");
+    } catch {
+      showToast("Could not download the saved roster");
+    }
+  }
+
   async function importRosterFile(file: File) {
     if (rosterReaderBusy.current) {
       showToast("Finishing the previous scan. Try again in a moment.");
@@ -1067,6 +1110,15 @@ export default function Home() {
       error: "",
       rows: [],
     });
+
+    void saveLatestRosterFile(file)
+      .then((metadata) => {
+        setSavedRosterFile(metadata);
+        setAnnouncement(`${metadata.name} saved on this device and available to download.`);
+      })
+      .catch(() => {
+        showToast("Roster opened, but the original file could not be saved");
+      });
 
     try {
       const readRosterFile = fileKind === "pdf"
@@ -1587,6 +1639,17 @@ export default function Home() {
                 <button className="menu-row roster-menu-row" onClick={chooseRosterFile}>
                   <span><strong>Import roster file</strong><small>Use a screenshot or IVU.plan PDF</small></span>
                   <span aria-hidden="true">↑</span>
+                </button>
+                <button
+                  className="menu-row roster-menu-row"
+                  onClick={() => void downloadSavedRosterFile()}
+                  disabled={!savedRosterFile}
+                >
+                  <span>
+                    <strong>Download saved roster</strong>
+                    <small>{savedRosterFile?.name ?? "Upload a PDF or image to save it here"}</small>
+                  </span>
+                  <span aria-hidden="true">↓</span>
                 </button>
                 <a
                   className="menu-row roster-menu-row menu-link"

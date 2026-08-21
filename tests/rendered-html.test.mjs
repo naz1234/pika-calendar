@@ -21,7 +21,7 @@ test("exports a deployable static calendar", async () => {
 });
 
 test("ships automatic shared sync, roster import, and installable app assets", async () => {
-  const [manifestText, packageText, source, styles, mergeSource, shiftSummarySource, pdfReaderSource, pdfDomainSource, syncSource, sharedApiSource, legacyApiSource, schemaSource, serviceWorker] = await Promise.all([
+  const [manifestText, packageText, source, styles, mergeSource, shiftSummarySource, pdfReaderSource, pdfDomainSource, rosterFileStoreSource, syncSource, sharedApiSource, legacyApiSource, schemaSource, serviceWorker] = await Promise.all([
     readFile(path.join(clientRoot, "manifest.webmanifest"), "utf8"),
     readFile(path.join(projectRoot, "package.json"), "utf8"),
     readFile(path.join(projectRoot, "app", "page.tsx"), "utf8"),
@@ -30,6 +30,7 @@ test("ships automatic shared sync, roster import, and installable app assets", a
     readFile(path.join(projectRoot, "app", "shift-summary.ts"), "utf8"),
     readFile(path.join(projectRoot, "app", "roster-pdf-reader.ts"), "utf8"),
     readFile(path.join(projectRoot, "app", "roster-pdf-domain.ts"), "utf8"),
+    readFile(path.join(projectRoot, "app", "roster-file-store.ts"), "utf8"),
     readFile(path.join(projectRoot, "app", "calendar-sync.ts"), "utf8"),
     readFile(path.join(projectRoot, "functions", "api", "shared-calendar.ts"), "utf8"),
     readFile(path.join(projectRoot, "functions", "api", "calendar.ts"), "utf8"),
@@ -67,6 +68,12 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   assert.match(source, /href="https:\/\/riy\.ivu-cloud\.com\/mbweb\/main\/matter\/desktop\/main-menu"/);
   assert.match(source, /target="_blank"[\s\S]*?rel="noopener noreferrer"/);
   assert.match(source, /Download the original roster PDF/);
+  assert.match(source, />Download saved roster</);
+  assert.match(source, /saveLatestRosterFile\(file\)/);
+  assert.match(source, /loadLatestRosterFileMetadata\(\)/);
+  assert.match(source, /anchor\.download = stored\.metadata\.name/);
+  assert.match(rosterFileStoreSource, /indexedDB\.open\(DATABASE_NAME, DATABASE_VERSION\)/);
+  assert.match(rosterFileStoreSource, /database\.transaction\(\[FILE_STORE, METADATA_STORE\], "readwrite"\)/);
   assert.match(styles, /\.menu-link[\s\S]*?text-decoration: none;/);
   assert.match(source, /application\/pdf/);
   assert.match(source, /roster-image/);
