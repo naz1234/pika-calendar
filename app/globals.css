@@ -979,6 +979,27 @@ textarea:focus-visible {
   content: "";
 }
 
+.day-cell.shift-event:is(.today, .selected):is(.shift-run-continues-previous, .shift-run-continues-next) .day-number::after {
+  animation: date-marker-pulse 1.65s ease-in-out infinite;
+  transform-origin: center;
+  will-change: transform, opacity, box-shadow;
+}
+
+@keyframes date-marker-pulse {
+  0%,
+  100% {
+    opacity: 0.68;
+    box-shadow: 0 0 4px color-mix(in srgb, var(--date-pulse-color) 42%, transparent);
+    transform: scaleX(0.72);
+  }
+
+  50% {
+    opacity: 1;
+    box-shadow: 0 0 12px color-mix(in srgb, var(--date-pulse-color) 88%, transparent);
+    transform: scaleX(1);
+  }
+}
+
 @keyframes date-tile-pulse {
   0%,
   100% {
