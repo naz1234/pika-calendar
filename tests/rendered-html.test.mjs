@@ -21,9 +21,10 @@ test("exports a deployable static calendar", async () => {
 });
 
 test("ships automatic shared sync, roster import, and installable app assets", async () => {
-  const [manifestText, packageText, source, styles, mergeSource, shiftSummarySource, pdfReaderSource, pdfDomainSource, rosterFileStoreSource, syncSource, sharedApiSource, legacyApiSource, schemaSource, serviceWorker] = await Promise.all([
+  const [manifestText, packageText, hostingText, source, styles, mergeSource, shiftSummarySource, pdfReaderSource, pdfDomainSource, rosterFileStoreSource, rosterCloudStoreSource, rosterFilesApiSource, syncSource, sharedApiSource, legacyApiSource, schemaSource, serviceWorker] = await Promise.all([
     readFile(path.join(clientRoot, "manifest.webmanifest"), "utf8"),
     readFile(path.join(projectRoot, "package.json"), "utf8"),
+    readFile(path.join(projectRoot, ".openai", "hosting.json"), "utf8"),
     readFile(path.join(projectRoot, "app", "page.tsx"), "utf8"),
     readFile(path.join(projectRoot, "app", "globals.css"), "utf8"),
     readFile(path.join(projectRoot, "app", "roster-merge.ts"), "utf8"),
@@ -31,6 +32,8 @@ test("ships automatic shared sync, roster import, and installable app assets", a
     readFile(path.join(projectRoot, "app", "roster-pdf-reader.ts"), "utf8"),
     readFile(path.join(projectRoot, "app", "roster-pdf-domain.ts"), "utf8"),
     readFile(path.join(projectRoot, "app", "roster-file-store.ts"), "utf8"),
+    readFile(path.join(projectRoot, "app", "roster-cloud-store.ts"), "utf8"),
+    readFile(path.join(projectRoot, "functions", "api", "roster-files.ts"), "utf8"),
     readFile(path.join(projectRoot, "app", "calendar-sync.ts"), "utf8"),
     readFile(path.join(projectRoot, "functions", "api", "shared-calendar.ts"), "utf8"),
     readFile(path.join(projectRoot, "functions", "api", "calendar.ts"), "utf8"),
@@ -39,6 +42,7 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   ]);
   const manifest = JSON.parse(manifestText);
   const packageJson = JSON.parse(packageText);
+  const hosting = JSON.parse(hostingText);
 
   assert.equal(manifest.name, "My Calendar");
   assert.equal(manifest.display, "standalone");
@@ -72,16 +76,26 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   assert.match(source, /href="https:\/\/riy\.ivu-cloud\.com\/mbweb\/main\/matter\/desktop\/main-menu"/);
   assert.match(source, /target="_blank"[\s\S]*?rel="noopener noreferrer"/);
   assert.match(source, /Download the original roster PDF/);
-  assert.match(source, />Saved roster files</);
-  assert.match(source, /savedRosterFiles\.map\(\(file\) =>/);
+  assert.equal(hosting.r2, "BUCKET");
+  assert.match(source, />Shared across devices</);
+  assert.match(source, /sharedRosterFiles\.map\(\(file\) =>/);
+  assert.match(source, />Only on this device</);
   assert.match(source, /saveRosterFile\(file\)/);
+  assert.match(source, /uploadSharedRosterFile\(file\)/);
   assert.match(source, /listStoredRosterFileMetadata\(\)/);
+  assert.match(source, /listSharedRosterFiles\(\)/);
   assert.match(source, /loadStoredRosterFile\(metadata\.id\)/);
-  assert.match(source, /anchor\.download = stored\.metadata\.name/);
+  assert.match(source, /loadSharedRosterFile\(metadata\.id\)/);
+  assert.match(source, /anchor\.download = name/);
   assert.match(rosterFileStoreSource, /indexedDB\.open\(DATABASE_NAME, DATABASE_VERSION\)/);
   assert.match(rosterFileStoreSource, /database\.transaction\(\[FILE_STORE, METADATA_STORE\], "readwrite"\)/);
   assert.match(rosterFileStoreSource, /objectStore\(METADATA_STORE\)\.put\(metadata, metadata\.id\)/);
   assert.doesNotMatch(rosterFileStoreSource, /LATEST_FILE_KEY/);
+  assert.match(rosterCloudStoreSource, /const API_PATH = "\/api\/roster-files"/);
+  assert.match(rosterCloudStoreSource, /method: "POST"/);
+  assert.match(rosterFilesApiSource, /context\.env\.BUCKET/);
+  assert.match(rosterFilesApiSource, /storage\.put\(`/);
+  assert.match(rosterFilesApiSource, /storage\.get\(`/);
   assert.match(styles, /\.menu-link[\s\S]*?text-decoration: none;/);
   assert.match(source, /application\/pdf/);
   assert.match(source, /roster-image/);
@@ -219,7 +233,7 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   }
   assert.match(styles, /:root,[\s\S]*?--remark-dot:\s*#ffc247;/);
   assert.match(styles, /:root\[data-theme="light"\][\s\S]*?--remark-dot:\s*#e6a20d;/);
-  assert.match(serviceWorker, /my-calendar-v15/);
+  assert.match(serviceWorker, /my-calendar-v16/);
   assert.match(serviceWorker, /includeUncontrolled: true/);
   assert.match(serviceWorker, /try[\s\S]*?await client\.navigate\(client\.url\);[\s\S]*?catch/);
   assert.match(serviceWorker, /client\.navigate\(client\.url\)/);
