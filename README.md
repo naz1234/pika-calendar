@@ -25,9 +25,9 @@ A mobile-first shared calendar with separate **Work** and **Personal** modes. It
 
 Events are cached in the browser so the calendar keeps working offline. With the D1 binding configured, the app automatically loads and saves one shared calendar. Open the normal site URL in any browser, including private/incognito mode, to see the same events—no setup link is required.
 
-Anyone with the site URL can view, add, edit, or delete every Work and Personal event. There is no login or per-user calendar. Use this mode only when that public access is acceptable.
+Anyone with the site URL can view, add, edit, or delete every Work and Personal event, and can download shared roster originals. There is no login or per-user calendar. Use this mode only when that public access is acceptable.
 
-Roster screenshots and PDFs are still read entirely in your browser. The source file is not uploaded or saved; only the Work events you approve enter the shared calendar. Re-importing the same month replaces only that month’s earlier roster-import events, while manual Work events and all Personal events remain.
+Roster screenshots and PDFs are read in your browser to detect shifts. With the R2 binding configured, each original is also saved in the shared roster archive so it can be downloaded from another device. Re-importing the same month replaces only that month’s earlier roster-import events, while manual Work events and all Personal events remain.
 
 Use **Menu → Download backup** occasionally as an extra recovery copy.
 
@@ -56,22 +56,24 @@ The project includes `.node-version`, but setting the Cloudflare environment var
 
 After Cloudflare finishes the first deployment, open the Pages URL on your phone. In Safari or Chrome, use **Add to Home Screen** if you want it to behave more like an app.
 
-## Configure automatic shared sync on Cloudflare Pages
+## Configure automatic shared sync and roster files on Cloudflare Pages
 
 The calendar continues to work from its offline browser cache when this setup is omitted, but browsers cannot share events. To enable automatic shared sync:
 
 1. In Cloudflare, create a D1 database named `pika-calendar`.
 2. Open the database console and run the SQL from the generated file in `drizzle/`.
 3. In the Pages project, add a **D1 database binding** named `DB` for Production and Preview, pointing to that database.
-4. Redeploy the Pages project so the root `functions/` directory is activated.
+4. Create an R2 bucket named `pika-calendar-rosters`.
+5. In the Pages project, add an **R2 bucket binding** named `BUCKET` for Production and Preview, pointing to that bucket.
+6. Redeploy the Pages project so the root `functions/` directory is activated.
 
 Cloudflare Pages discovers the routes in `functions/api/` automatically. Do not move `functions/` into `dist/client`.
 
 ## Use automatic shared sync
 
-1. Redeploy the Pages project after adding the `DB` binding.
-2. Open the normal calendar URL on the browser that already has your roster. Its existing device events are copied into the shared calendar once.
-3. Open that same normal URL on another phone or in private/incognito mode. The shared events load automatically.
+1. Redeploy the Pages project after adding the `DB` and `BUCKET` bindings.
+2. Open the normal calendar URL on the browser that already has your roster. Existing device events and saved roster originals are copied into shared storage once.
+3. Open that same normal URL on another phone or in private/incognito mode. Shared events and downloadable roster files load automatically.
 
 ## Run locally (optional)
 
@@ -100,7 +102,7 @@ The generated static site is written to `dist/client`.
 4. Review every detected day. Correct any highlighted item with its shift picker.
 5. Tap **Import days**.
 
-The latest uploaded PDF or image is saved on this device. Use **Menu → Download saved roster** to download the original file again after closing or refreshing the app. Uploading another roster replaces the previously saved original.
+Every uploaded PDF or image is saved both on the device and in the shared roster archive. Use **Menu → Shared across devices** to download any original from another phone, browser, or installed copy of the app. Existing device-only originals are uploaded to the shared archive when the Work menu is opened.
 
 Supported input formats:
 
