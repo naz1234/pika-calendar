@@ -244,13 +244,18 @@ textarea:focus-visible {
 }
 
 .calendar-toolbar {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
+  display: grid;
+  place-items: center;
   width: 100%;
   margin-top: 4px;
+}
+
+.calendar-control-stack {
+  display: grid;
+  justify-items: center;
+  gap: 7px;
+  width: min(100%, 178px);
+  margin-inline: auto;
 }
 
 .icon-button,
@@ -369,8 +374,8 @@ textarea:focus-visible {
 .calendar-switcher {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 4px;
-  width: min(100%, 178px);
+  gap: 0;
+  width: 100%;
   padding: 3px;
   border: 0;
   border-radius: 999px;
@@ -399,39 +404,28 @@ textarea:focus-visible {
 }
 
 .salary-calculator-trigger {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
-  gap: 7px;
-  min-height: 30px;
-  padding: 0 14px;
-  border: 1px solid color-mix(in srgb, var(--header-accent) 42%, var(--grid));
+  width: calc((100% - 6px) / 2);
+  min-height: 34px;
+  padding: 0 12px;
+  border: 0;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--header-accent) 13%, var(--surface-soft));
-  color: color-mix(in srgb, var(--header-icon) 88%, var(--text));
-  font-size: 0.68rem;
-  font-weight: 750;
-  letter-spacing: 0.01em;
-  transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
+  background: var(--surface-soft);
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 650;
+  transition: background 170ms ease, color 170ms ease, box-shadow 170ms ease, transform 160ms ease;
 }
 
 .salary-calculator-trigger:hover {
-  border-color: color-mix(in srgb, var(--header-accent) 72%, var(--grid));
-  background: color-mix(in srgb, var(--header-accent) 20%, var(--surface-soft));
+  background: color-mix(in srgb, var(--header-accent) 13%, var(--surface-soft));
+  color: color-mix(in srgb, var(--header-icon) 88%, var(--text));
 }
 
 .salary-calculator-trigger:active {
   transform: scale(0.97);
-}
-
-.salary-calculator-trigger svg {
-  width: 14px;
-  height: 14px;
-  fill: none;
-  stroke: currentColor;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 1.7;
 }
 
 .main-content {
