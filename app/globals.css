@@ -2863,10 +2863,13 @@ textarea:focus-visible {
     font-size: 0.58rem;
   }
 
-  .day-cell,
-  .day-cell:last-child {
+  .day-cell {
     margin: 0;
     border-radius: 8px;
+  }
+
+  .day-cell:last-child {
+    margin-right: 0;
   }
 
   .day-number {

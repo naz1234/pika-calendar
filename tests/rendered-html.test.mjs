@@ -184,6 +184,8 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   assert.match(styles, /\.day-cell\.shift-run-continues-previous\s*\{[^}]*border-left-color:\s*var\(--event-fill\);/s);
   assert.match(styles, /\.day-cell\.shift-run-continues-next\s*\{[^}]*overflow:\s*visible;[^}]*border-right-color:\s*transparent;/s);
   assert.match(styles, /\.day-cell\.shift-run-continues-next::after\s*\{[^}]*right:\s*-5px;[^}]*width:\s*5px;[^}]*background:\s*var\(--event-fill\);/s);
+  assert.doesNotMatch(styles, /\.day-cell,\s*\.day-cell:last-child\s*\{[^}]*border-radius:/s);
+  assert.match(styles, /@media \(max-width: 899px\)[\s\S]*?\.day-cell\s*\{[^}]*margin:\s*0;[^}]*border-radius:\s*8px;[^}]*\}[\s\S]*?\.day-cell:last-child\s*\{[^}]*margin-right:\s*0;[^}]*\}/s);
   assert.match(styles, /\.layout-setting input:checked\s*\{[^}]*background:\s*var\(--accent\);/s);
   assert.doesNotMatch(source, /mobile-remark-indicator|mobile-event-summary\$\{remark/);
   assert.doesNotMatch(source, /chip-dot/);
