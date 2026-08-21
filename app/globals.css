@@ -856,7 +856,8 @@ textarea:focus-visible {
 }
 
 .day-cell.shift-event {
-  border-color: color-mix(in srgb, var(--event-ink) 34%, transparent);
+  --event-border-color: color-mix(in srgb, var(--event-ink) 34%, var(--event-fill));
+  border-color: var(--event-border-color);
   background: var(--event-fill);
 }
 
@@ -881,12 +882,12 @@ textarea:focus-visible {
 .day-cell.shift-run-continues-next::after {
   position: absolute;
   top: -1px;
-  /* Start after the current tile's 1px border and cover only the 4px grid gap. */
+  /* The opaque outline can overlap the tile border without a darker double-painted seam. */
   right: -5px;
   bottom: -1px;
-  width: 4px;
-  border-top: 1px solid color-mix(in srgb, var(--event-ink) 34%, transparent);
-  border-bottom: 1px solid color-mix(in srgb, var(--event-ink) 34%, transparent);
+  width: 5px;
+  border-top: 1px solid var(--event-border-color);
+  border-bottom: 1px solid var(--event-border-color);
   background: var(--event-fill);
   content: "";
   pointer-events: none;
