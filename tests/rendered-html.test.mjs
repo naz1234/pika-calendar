@@ -183,13 +183,10 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   assert.match(source, /shift-run-continues-next/);
   assert.match(styles, /\.day-cell\.shift-event\s*\{[^}]*border-color:\s*color-mix\(in srgb, var\(--event-ink\) 34%, transparent\);/s);
   assert.match(styles, /\.day-cell\.shift-run-continues-previous,\s*\.day-cell\.shift-run-continues-next\s*\{[^}]*border-color:\s*transparent;/s);
-  assert.match(styles, /\.day-cell\.shift-run-continues-next\s*\{[^}]*overflow:\s*visible;[^}]*border-right-color:\s*transparent;/s);
-  const shiftRunBridgeStyles = styles.match(/\.day-cell\.shift-run-continues-next::after\s*\{([^}]*)\}/s)?.[1] ?? "";
-  assert.ok(shiftRunBridgeStyles);
-  assert.match(shiftRunBridgeStyles, /top:\s*-1px;[\s\S]*?right:\s*-5px;[\s\S]*?bottom:\s*-1px;[\s\S]*?width:\s*5px;[\s\S]*?background:\s*var\(--event-fill\);/s);
-  assert.doesNotMatch(shiftRunBridgeStyles, /border-(?:top|bottom):/);
+  assert.match(styles, /\.day-cell\.shift-run-continues-next\s*\{[^}]*margin-right:\s*-2px;[^}]*border-right-color:\s*transparent;/s);
+  assert.doesNotMatch(styles, /\.day-cell\.shift-run-continues-next::after/);
   assert.doesNotMatch(styles, /\.day-cell,\s*\.day-cell:last-child\s*\{[^}]*border-radius:/s);
-  assert.match(styles, /@media \(max-width: 899px\)[\s\S]*?\.day-cell\s*\{[^}]*margin:\s*0;[^}]*border-radius:\s*8px;[^}]*\}[\s\S]*?\.day-cell:last-child\s*\{[^}]*margin-right:\s*0;[^}]*\}/s);
+  assert.match(styles, /@media \(max-width: 899px\)[\s\S]*?\.day-cell\s*\{[^}]*margin:\s*0;[^}]*border-radius:\s*8px;[^}]*\}[\s\S]*?\.day-cell:last-child\s*\{[^}]*margin-right:\s*0;[^}]*\}[\s\S]*?\.day-cell\.shift-run-continues-next\s*\{[^}]*margin-right:\s*-4px;[^}]*\}/s);
   assert.match(styles, /\.layout-setting input:checked\s*\{[^}]*background:\s*var\(--accent\);/s);
   assert.doesNotMatch(source, /mobile-remark-indicator|mobile-event-summary\$\{remark/);
   assert.doesNotMatch(source, /chip-dot/);
