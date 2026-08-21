@@ -52,6 +52,10 @@ test("ships automatic shared sync, roster import, and installable app assets", a
       { src: "/icons/calendar-maskable-512.png", sizes: "512x512", purpose: "maskable" },
     ],
   );
+  assert.match(source, /<div className="brand-mark" aria-hidden="true" \/>/);
+  assert.doesNotMatch(source, /className="brand-mark"[^>]*>[\s\S]*?now\.getDate\(\)/s);
+  assert.match(styles, /\.brand-mark\s*\{[^}]*width:\s*48px;[^}]*height:\s*48px;[^}]*background:\s*url\("\/icons\/calendar-192\.png"\) center \/ contain no-repeat;/s);
+  assert.doesNotMatch(styles, /\.brand-mark::before/);
   assert.match(mergeSource, /"work" \| "personal"/);
   assert.match(source, /isoWeekNumber/);
   assert.match(source, /localStorage/);

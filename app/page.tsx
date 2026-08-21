@@ -1625,7 +1625,7 @@ export default function Home() {
           <button className="overlay-dismiss" onClick={() => setMenuOpen(false)} aria-label="Close calendar menu" />
           <aside className="menu-drawer" role="dialog" aria-modal="true" aria-label="Calendar menu" tabIndex={-1} onKeyDown={trapDialogFocus}>
             <div className="menu-header">
-              <div className="brand-mark" aria-hidden="true"><span>{now.getDate()}</span></div>
+              <div className="brand-mark" aria-hidden="true" />
               <div>
                 <strong>My Calendar</strong>
                 <span>{syncStatus === "synced" ? "Shared calendar is up to date" :
