@@ -188,7 +188,7 @@ function MonthlyShiftSummary({
       <dl className="monthly-summary-counts">
         <div className="monthly-summary-stat summary-night">
           <dt>
-            <span className="summary-stat-label">Night shifts<small>Regular Night</small></span>
+            <span className="summary-stat-label">Night shifts<small>Including EXT and RDOT</small></span>
           </dt>
           <dd>{summary.night}</dd>
         </div>

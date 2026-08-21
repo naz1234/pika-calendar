@@ -30,6 +30,7 @@ export type SalaryForecastSettings = {
 
 const EXTENSION_TITLE = /^(?:early|late|night) \(ex\)$/u;
 const RDOT_TITLE = /^(?:early|late|night) rdot$/u;
+const NIGHT_TITLE = /^night(?: \(ex\)| rdot)?$/u;
 const DEFAULT_BASIC_SALARY = 15_000;
 export const DEFAULT_SALARY_WITH_LAUNDRY = 15_100;
 const DEFAULT_NIGHT_ALLOWANCE_RATE = 45;
@@ -64,7 +65,7 @@ function roundCurrency(value: number) {
   return Math.round((value + Number.EPSILON) * 100) / 100;
 }
 
-/** Counts the three requested, mutually exclusive Work-roster categories for one month. */
+/** Counts night work and overtime categories for one month. Categories may overlap. */
 export function countMonthlyWorkShifts(
   events: readonly ShiftSummaryEvent[],
   monthKey: string,
@@ -76,9 +77,9 @@ export function countMonthlyWorkShifts(
     if (!belongsToWorkMonth(event, monthKey)) return;
     const title = normalizedTitle(event.title);
 
-    if (title === "night") summary.night += 1;
-    else if (EXTENSION_TITLE.test(title)) summary.extensions += 1;
-    else if (RDOT_TITLE.test(title)) summary.rdot += 1;
+    if (NIGHT_TITLE.test(title)) summary.night += 1;
+    if (EXTENSION_TITLE.test(title)) summary.extensions += 1;
+    if (RDOT_TITLE.test(title)) summary.rdot += 1;
   });
 
   return summary;
