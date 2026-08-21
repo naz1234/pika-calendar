@@ -28,6 +28,19 @@ export type SalaryForecastSettings = {
   nightAllowanceRate?: number;
 };
 
+export type ManualSalaryEstimateInput = {
+  salaryWithLaundry: number;
+  extensionDays: number;
+  rdotDays: number;
+};
+
+export type ManualSalaryEstimate = ManualSalaryEstimateInput & {
+  basicSalary: number;
+  overtimeHours: number;
+  expectedOvertime: number;
+  expectedSalary: number;
+};
+
 const EXTENSION_TITLE = /^(?:early|late|night) \(ex\)$/u;
 const RDOT_TITLE = /^(?:early|late|night) rdot$/u;
 const NIGHT_TITLE = /^night(?: \(ex\)| rdot)?$/u;
@@ -37,6 +50,8 @@ const DEFAULT_NIGHT_ALLOWANCE_RATE = 45;
 const NORMAL_SHIFT_HOURS = 8.5;
 const MONTHLY_BASE_HOURS = 192;
 const OVERTIME_MULTIPLIER = 1.5;
+const DEFAULT_LAUNDRY_ALLOWANCE = DEFAULT_SALARY_WITH_LAUNDRY - DEFAULT_BASIC_SALARY;
+const EXTENSION_OVERTIME_HOURS = 3.5;
 
 function normalizedTitle(title: string) {
   return title.trim().toLowerCase().replace(/\s+/gu, " ");
@@ -63,6 +78,42 @@ function eventDurationHours(event: ShiftSummaryEvent) {
 
 function roundCurrency(value: number) {
   return Math.round((value + Number.EPSILON) * 100) / 100;
+}
+
+function nonNegativeNumber(value: number) {
+  return Number.isFinite(value) ? Math.max(0, Number(value)) : 0;
+}
+
+/**
+ * Estimates salary from manually entered overtime-day counts.
+ *
+ * Extension days use 3.5 overtime hours and RDOT days use one normal
+ * 8.5-hour shift. The overtime rate uses the salary amount less the app's
+ * standard SAR 100 laundry allowance, matching the monthly forecast defaults.
+ */
+export function calculateManualSalaryEstimate(
+  input: ManualSalaryEstimateInput,
+): ManualSalaryEstimate {
+  const salaryWithLaundry = roundCurrency(nonNegativeNumber(input.salaryWithLaundry));
+  const extensionDays = nonNegativeNumber(input.extensionDays);
+  const rdotDays = nonNegativeNumber(input.rdotDays);
+  const basicSalary = roundCurrency(Math.max(0, salaryWithLaundry - DEFAULT_LAUNDRY_ALLOWANCE));
+  const overtimeHours = Math.round(
+    ((extensionDays * EXTENSION_OVERTIME_HOURS) + (rdotDays * NORMAL_SHIFT_HOURS)) * 10,
+  ) / 10;
+  const expectedOvertime = roundCurrency(
+    basicSalary > 0 ? (basicSalary / MONTHLY_BASE_HOURS * OVERTIME_MULTIPLIER) * overtimeHours : 0,
+  );
+
+  return {
+    salaryWithLaundry,
+    extensionDays,
+    rdotDays,
+    basicSalary,
+    overtimeHours,
+    expectedOvertime,
+    expectedSalary: roundCurrency(salaryWithLaundry + expectedOvertime),
+  };
 }
 
 /** Counts night work and overtime categories for one month. Categories may overlap. */

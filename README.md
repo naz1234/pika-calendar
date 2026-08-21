@@ -12,6 +12,7 @@ A mobile-first shared calendar with separate **Work** and **Personal** modes. It
 - Consecutive matching shifts join into one continuous ES, LS, NS, or RD bar
 - Scrollable monthly Work summary for all Night shifts, extensions, and RDOT
 - Expected salary forecast using the monthly Night allowance and overtime hours, hidden by default behind an eye toggle
+- Work salary calculator for manual salary, Extension-day, and RDOT-day estimates
 - Add, edit, search, and delete events
 - All-day events, overnight shifts, start/end times, and notes
 - Swipe left or right to change months, or tap the centered month to use the device picker

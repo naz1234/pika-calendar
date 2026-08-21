@@ -177,6 +177,7 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   assert.match(styles, /@media \(min-width: 900px\)[\s\S]*?\.main-content\s*\{[^}]*display: grid;/);
   assert.match(shiftSummarySource, /countMonthlyWorkShifts/);
   assert.match(shiftSummarySource, /calculateMonthlyExpectedSalary/);
+  assert.match(shiftSummarySource, /calculateManualSalaryEstimate/);
   assert.match(source, /Expected salary/);
   assert.match(source, /salaryMonthLabel/);
   assert.match(source, /const \[salaryAmountsVisible, setSalaryAmountsVisible\] = useState\(false\)/);
@@ -205,6 +206,19 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   assert.match(source, /JSON\.stringify\(\{[\s\S]*?salaryWithLaundry,[\s\S]*?theme,/s);
   assert.match(styles, /\.salary-setting\s*\{[^}]*grid-template-columns:/s);
   assert.match(styles, /\.salary-setting-control input\s*\{[^}]*font-size:\s*1rem;[^}]*text-align:\s*right;/s);
+  assert.match(source, /className="salary-calculator-trigger"/);
+  assert.match(source, /activeCalendar === "work"[\s\S]*?className="salary-calculator-trigger"/s);
+  assert.match(source, /className="dialog salary-calculator-dialog"/);
+  assert.match(source, /aria-label="Calculator salary plus laundry"/);
+  assert.match(source, /aria-label="Extension days"/);
+  assert.match(source, /aria-label="RDOT days"/);
+  assert.match(source, /manualSalaryEstimate\.expectedSalary/);
+  assert.match(source, /3\.5 overtime hours per Extension day and 8\.5 hours per RDOT day/);
+  assert.match(source, /standard SAR 100 laundry allowance/);
+  assert.match(styles, /\.calendar-toolbar\s*\{[^}]*flex-direction:\s*column;[^}]*align-items:\s*center;/s);
+  assert.match(styles, /\.salary-calculator-trigger\s*\{[^}]*border-radius:\s*999px;/s);
+  assert.match(styles, /\.salary-calculator-overlay\s*\{[^}]*place-items:\s*center;/s);
+  assert.match(styles, /\.dialog\.salary-calculator-dialog\s*\{[^}]*width:\s*min\(100%, 460px\);[^}]*border-radius:\s*24px;/s);
   const workEditorStart = source.indexOf("{editorIsWorkEdit ? (");
   const personalEditorStart = source.indexOf(") : (", workEditorStart);
   assert.ok(workEditorStart >= 0 && personalEditorStart > workEditorStart);
@@ -283,7 +297,7 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   }
   assert.match(styles, /:root,[\s\S]*?--remark-dot:\s*#ffc247;/);
   assert.match(styles, /:root\[data-theme="light"\][\s\S]*?--remark-dot:\s*#e6a20d;/);
-  assert.match(serviceWorker, /my-calendar-v25/);
+  assert.match(serviceWorker, /my-calendar-v26/);
   assert.match(serviceWorker, /includeUncontrolled: true/);
   assert.match(serviceWorker, /try[\s\S]*?await client\.navigate\(client\.url\);[\s\S]*?catch/);
   assert.match(serviceWorker, /client\.navigate\(client\.url\)/);
