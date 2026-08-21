@@ -110,6 +110,7 @@ type RosterDialogState = {
 const STORAGE_KEY = "daymark-calendar-v1";
 const SETTINGS_KEY = "daymark-settings-v1";
 const SHARED_SYNC_MIGRATION_KEY = "daymark-shared-sync-migrated-v2";
+const SHARED_ROSTER_PREVIEW_LIMIT = 3;
 const STATIC_DATE = new Date(2000, 0, 1);
 const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const SHORT_WEEKDAYS = ["S", "M", "T", "W", "T", "F", "S"];
@@ -364,6 +365,7 @@ export default function Home() {
   const [agendaOpen, setAgendaOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [rosterArchiveOpen, setRosterArchiveOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [editor, setEditor] = useState<{ id?: string; draft: EventDraft } | null>(null);
   const [editorError, setEditorError] = useState("");
@@ -387,6 +389,7 @@ export default function Home() {
   const importInput = useRef<HTMLInputElement>(null);
   const rosterInput = useRef<HTMLInputElement>(null);
   const menuTrigger = useRef<HTMLButtonElement>(null);
+  const rosterArchiveCloseButton = useRef<HTMLButtonElement>(null);
   const rosterCloseButton = useRef<HTMLButtonElement>(null);
   const rosterRun = useRef(0);
   const rosterReaderBusy = useRef(false);
@@ -404,6 +407,18 @@ export default function Home() {
       return !sharedSignatures.has(signature) && !deletedSignatures.has(signature);
     });
   }, [deletedRosterSignatures, deviceRosterFiles, sharedRosterFiles]);
+  const sharedRosterPreviewFiles = useMemo(
+    () => sharedRosterFiles.slice(0, SHARED_ROSTER_PREVIEW_LIMIT),
+    [sharedRosterFiles],
+  );
+  const sharedRosterFileGroups = useMemo(() => {
+    const grouped = new Map<string, StoredRosterFileMetadata[]>();
+    sharedRosterFiles.forEach((file) => {
+      const year = String(new Date(file.savedAt).getFullYear());
+      grouped.set(year, [...(grouped.get(year) ?? []), file]);
+    });
+    return [...grouped.entries()].map(([year, files]) => ({ year, files }));
+  }, [sharedRosterFiles]);
   const searchInput = useRef<HTMLInputElement>(null);
   const editorTitleInput = useRef<HTMLInputElement>(null);
   const workEditorTitleSelect = useRef<HTMLSelectElement>(null);
@@ -416,6 +431,11 @@ export default function Home() {
       if (current?.previewUrl) URL.revokeObjectURL(current.previewUrl);
       return null;
     });
+    requestAnimationFrame(() => menuTrigger.current?.focus());
+  }, []);
+
+  const closeRosterArchive = useCallback(() => {
+    setRosterArchiveOpen(false);
     requestAnimationFrame(() => menuTrigger.current?.focus());
   }, []);
 
@@ -895,6 +915,7 @@ export default function Home() {
     const onKeyDown = (event: globalThis.KeyboardEvent) => {
       if (event.key !== "Escape") return;
       setMenuOpen(false);
+      if (rosterArchiveOpen) closeRosterArchive();
       setSearchOpen(false);
       setEditor(null);
       setAgendaOpen(false);
@@ -902,7 +923,7 @@ export default function Home() {
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [closeRosterDialog, rosterDialog]);
+  }, [closeRosterArchive, closeRosterDialog, rosterArchiveOpen, rosterDialog]);
 
   useEffect(() => {
     if (!searchOpen) return;
@@ -924,6 +945,12 @@ export default function Home() {
     const frame = requestAnimationFrame(() => menuCloseButton.current?.focus());
     return () => cancelAnimationFrame(frame);
   }, [menuOpen]);
+
+  useEffect(() => {
+    if (!rosterArchiveOpen) return;
+    const frame = requestAnimationFrame(() => rosterArchiveCloseButton.current?.focus());
+    return () => cancelAnimationFrame(frame);
+  }, [rosterArchiveOpen]);
 
   useEffect(() => {
     if (!rosterStage) return;
@@ -1248,6 +1275,45 @@ export default function Home() {
     } catch {
       showToast("Could not delete the shared roster");
     }
+  }
+
+  function openRosterArchive() {
+    setMenuOpen(false);
+    setRosterArchiveOpen(true);
+  }
+
+  function renderSharedRosterFile(file: StoredRosterFileMetadata) {
+    return (
+      <div className="menu-row roster-menu-row saved-roster-row" key={file.id}>
+        <button
+          className="saved-roster-download"
+          onClick={() => void downloadSharedRosterFile(file)}
+          aria-label={`Download shared file ${file.name}`}
+        >
+          <span>
+            <strong>{file.name}</strong>
+            <small>{formatStoredRosterFileDetails(file)}</small>
+          </span>
+          <span aria-hidden="true">↓</span>
+        </button>
+        <span className="saved-roster-actions">
+          <button
+            className="saved-roster-action"
+            onClick={() => void renameSharedRoster(file)}
+            aria-label={`Rename shared file ${file.name}`}
+          >
+            <span aria-hidden="true">✎</span>
+          </button>
+          <button
+            className="saved-roster-action delete"
+            onClick={() => void deleteSharedRoster(file)}
+            aria-label={`Delete shared file ${file.name}`}
+          >
+            <span aria-hidden="true">×</span>
+          </button>
+        </span>
+      </div>
+    );
   }
 
   async function importRosterFile(file: File) {
@@ -1826,37 +1892,16 @@ export default function Home() {
                 {sharedRosterStatus === "ready" && sharedRosterFiles.length === 0 && (
                   <div className="saved-roster-empty">Upload a PDF or image to share it across devices</div>
                 )}
-                {sharedRosterStatus === "ready" && sharedRosterFiles.map((file) => (
-                  <div className="menu-row roster-menu-row saved-roster-row" key={file.id}>
-                    <button
-                      className="saved-roster-download"
-                      onClick={() => void downloadSharedRosterFile(file)}
-                      aria-label={`Download shared file ${file.name}`}
-                    >
-                      <span>
-                        <strong>{file.name}</strong>
-                        <small>{formatStoredRosterFileDetails(file)}</small>
-                      </span>
-                      <span aria-hidden="true">↓</span>
-                    </button>
-                    <span className="saved-roster-actions">
-                      <button
-                        className="saved-roster-action"
-                        onClick={() => void renameSharedRoster(file)}
-                        aria-label={`Rename shared file ${file.name}`}
-                      >
-                        <span aria-hidden="true">✎</span>
-                      </button>
-                      <button
-                        className="saved-roster-action delete"
-                        onClick={() => void deleteSharedRoster(file)}
-                        aria-label={`Delete shared file ${file.name}`}
-                      >
-                        <span aria-hidden="true">×</span>
-                      </button>
+                {sharedRosterStatus === "ready" && sharedRosterPreviewFiles.map((file) => renderSharedRosterFile(file))}
+                {sharedRosterStatus === "ready" && sharedRosterFiles.length > SHARED_ROSTER_PREVIEW_LIMIT && (
+                  <button className="menu-row roster-menu-row roster-archive-trigger" onClick={openRosterArchive}>
+                    <span>
+                      <strong>View all files ({sharedRosterFiles.length})</strong>
+                      <small>Files are kept until you delete them</small>
                     </span>
-                  </div>
-                ))}
+                    <span aria-hidden="true">›</span>
+                  </button>
+                )}
                 {deviceOnlyRosterFiles.length > 0 && (
                   <>
                     <p className="saved-roster-label">Only on this device</p>
@@ -1962,12 +2007,54 @@ export default function Home() {
                     <button className="menu-row danger" onClick={clearCalendar}><span>Clear calendar data</span><span aria-hidden="true">×</span></button>
                   </div>
                   <p className="device-note">
-                    This is a public shared calendar. Anyone with the site URL can view, add, edit, or delete events. Roster files never leave your device.
+                    This is a public shared calendar. Anyone with the site URL can manage events and shared roster files.
                   </p>
                 </div>
               )}
             </div>
           </aside>
+        </div>
+      )}
+
+      {rosterArchiveOpen && (
+        <div className="overlay centered-overlay roster-archive-overlay">
+          <button className="overlay-dismiss" onClick={closeRosterArchive} aria-label="Close roster file archive" />
+          <section
+            className="dialog roster-archive-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="roster-archive-title"
+            tabIndex={-1}
+            onKeyDown={trapDialogFocus}
+          >
+            <div className="dialog-header roster-archive-header">
+              <div>
+                <p className="eyebrow">Shared across devices</p>
+                <h2 id="roster-archive-title">Roster file archive</h2>
+              </div>
+              <button
+                ref={rosterArchiveCloseButton}
+                className="close-button"
+                onClick={closeRosterArchive}
+                aria-label="Close roster file archive"
+              >×</button>
+            </div>
+            <div className="roster-archive-summary">
+              <strong>{sharedRosterFiles.length} shared {sharedRosterFiles.length === 1 ? "file" : "files"}</strong>
+              <span>Nothing is removed automatically.</span>
+            </div>
+            <div className="roster-archive-list">
+              {sharedRosterFiles.length === 0 && (
+                <div className="saved-roster-empty">No shared roster files</div>
+              )}
+              {sharedRosterFileGroups.map((group) => (
+                <section className="roster-archive-year" key={group.year} aria-labelledby={`roster-year-${group.year}`}>
+                  <h3 id={`roster-year-${group.year}`}>{group.year}</h3>
+                  {group.files.map((file) => renderSharedRosterFile(file))}
+                </section>
+              ))}
+            </div>
+          </section>
         </div>
       )}
 
