@@ -1693,6 +1693,26 @@ textarea:focus-visible {
   white-space: nowrap;
 }
 
+.saved-roster-label {
+  margin: 18px 5px 6px;
+  color: var(--muted);
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.saved-roster-row {
+  min-height: 58px;
+}
+
+.saved-roster-empty {
+  padding: 12px 5px 16px;
+  border-bottom: 1px solid var(--grid-soft);
+  color: var(--muted);
+  font-size: 0.68rem;
+}
+
 .sync-menu-row {
   min-height: 64px;
 }
