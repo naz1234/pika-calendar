@@ -1707,11 +1707,9 @@ export default function Home() {
                               dayIndex,
                             );
                             const joinsPrevious = combineMatchingShifts && Boolean(primaryShiftClass) &&
-                              shiftRun.continuesPrevious && !isToday && !isSelected &&
-                              previousKey !== todayKey && previousKey !== selectedDate;
+                              shiftRun.continuesPrevious;
                             const joinsNext = combineMatchingShifts && Boolean(primaryShiftClass) &&
-                              shiftRun.continuesNext && !isToday && !isSelected &&
-                              nextKey !== todayKey && nextKey !== selectedDate;
+                              shiftRun.continuesNext;
                             const shiftRunClass = `${joinsPrevious ? " shift-run-continues-previous" : ""}${joinsNext ? " shift-run-continues-next" : ""}`;
                             const isOutside = day.getMonth() !== panel.month;
                             const spokenDate = new Intl.DateTimeFormat("en", {
