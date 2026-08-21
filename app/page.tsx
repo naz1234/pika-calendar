@@ -1659,38 +1659,36 @@ export default function Home() {
         </div>
 
         <div className="calendar-toolbar">
-          <div className="calendar-switcher" role="group" aria-label="Calendar mode">
-            {(["work", "personal"] as CalendarKind[]).map((kind) => (
+          <div className="calendar-control-stack">
+            <div className="calendar-switcher" role="group" aria-label="Calendar mode">
+              {(["work", "personal"] as CalendarKind[]).map((kind) => (
+                <button
+                  key={kind}
+                  className={activeCalendar === kind ? "active" : ""}
+                  onClick={() => {
+                    setActiveCalendar(kind);
+                    if (kind === "personal") setSalaryCalculatorOpen(false);
+                  }}
+                  aria-pressed={activeCalendar === kind}
+                >
+                  {kind === "work" ? "Work" : "Personal"}
+                </button>
+              ))}
+            </div>
+            {activeCalendar === "work" && (
               <button
-                key={kind}
-                className={activeCalendar === kind ? "active" : ""}
-                onClick={() => {
-                  setActiveCalendar(kind);
-                  if (kind === "personal") setSalaryCalculatorOpen(false);
-                }}
-                aria-pressed={activeCalendar === kind}
+                ref={salaryCalculatorTrigger}
+                type="button"
+                className="salary-calculator-trigger"
+                onClick={openSalaryCalculator}
+                aria-haspopup="dialog"
+                aria-expanded={salaryCalculatorOpen}
+                aria-controls="salary-calculator-dialog"
               >
-                {kind === "work" ? "Work" : "Personal"}
+                Calculator
               </button>
-            ))}
+            )}
           </div>
-          {activeCalendar === "work" && (
-            <button
-              ref={salaryCalculatorTrigger}
-              type="button"
-              className="salary-calculator-trigger"
-              onClick={openSalaryCalculator}
-              aria-haspopup="dialog"
-              aria-expanded={salaryCalculatorOpen}
-              aria-controls="salary-calculator-dialog"
-            >
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <rect x="5" y="3" width="14" height="18" rx="3" />
-                <path d="M8 7h8M8 11h2m4 0h2M8 15h2m4 0h2M8 18h2m4 0h2" />
-              </svg>
-              Calculator
-            </button>
-          )}
         </div>
       </header>
 

@@ -208,6 +208,9 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   assert.match(styles, /\.salary-setting-control input\s*\{[^}]*font-size:\s*1rem;[^}]*text-align:\s*right;/s);
   assert.match(source, /className="salary-calculator-trigger"/);
   assert.match(source, /activeCalendar === "work"[\s\S]*?className="salary-calculator-trigger"/s);
+  const calculatorTriggerMarkup = source.match(/className="salary-calculator-trigger"[\s\S]*?>([\s\S]*?)<\/button>/)?.[1] ?? "";
+  assert.match(calculatorTriggerMarkup, /Calculator/);
+  assert.doesNotMatch(calculatorTriggerMarkup, /<svg|<img/);
   assert.match(source, /className="dialog salary-calculator-dialog"/);
   assert.match(source, /aria-label="Calculator salary plus laundry"/);
   assert.match(source, /aria-label="Extension days"/);
@@ -215,8 +218,10 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   assert.match(source, /manualSalaryEstimate\.expectedSalary/);
   assert.match(source, /3\.5 overtime hours per Extension day and 8\.5 hours per RDOT day/);
   assert.match(source, /standard SAR 100 laundry allowance/);
-  assert.match(styles, /\.calendar-toolbar\s*\{[^}]*flex-direction:\s*column;[^}]*align-items:\s*center;/s);
-  assert.match(styles, /\.salary-calculator-trigger\s*\{[^}]*border-radius:\s*999px;/s);
+  assert.match(styles, /\.calendar-toolbar\s*\{[^}]*display:\s*grid;[^}]*place-items:\s*center;/s);
+  assert.match(styles, /\.calendar-control-stack\s*\{[^}]*justify-items:\s*center;[^}]*width:\s*min\(100%, 178px\);[^}]*margin-inline:\s*auto;/s);
+  assert.match(styles, /\.calendar-switcher\s*\{[^}]*gap:\s*0;[^}]*width:\s*100%;/s);
+  assert.match(styles, /\.salary-calculator-trigger\s*\{[^}]*width:\s*calc\(\(100% - 6px\) \/ 2\);[^}]*min-height:\s*34px;[^}]*padding:\s*0 12px;[^}]*border-radius:\s*999px;[^}]*font-size:\s*0\.75rem;[^}]*font-weight:\s*650;/s);
   assert.match(styles, /\.salary-calculator-overlay\s*\{[^}]*place-items:\s*center;/s);
   assert.match(styles, /\.dialog\.salary-calculator-dialog\s*\{[^}]*width:\s*min\(100%, 460px\);[^}]*border-radius:\s*24px;/s);
   const workEditorStart = source.indexOf("{editorIsWorkEdit ? (");
@@ -297,7 +302,7 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   }
   assert.match(styles, /:root,[\s\S]*?--remark-dot:\s*#ffc247;/);
   assert.match(styles, /:root\[data-theme="light"\][\s\S]*?--remark-dot:\s*#e6a20d;/);
-  assert.match(serviceWorker, /my-calendar-v26/);
+  assert.match(serviceWorker, /my-calendar-v27/);
   assert.match(serviceWorker, /includeUncontrolled: true/);
   assert.match(serviceWorker, /try[\s\S]*?await client\.navigate\(client\.url\);[\s\S]*?catch/);
   assert.match(serviceWorker, /client\.navigate\(client\.url\)/);
