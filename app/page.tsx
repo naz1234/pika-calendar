@@ -50,9 +50,9 @@ import {
 } from "./roster-merge";
 import type { RosterBarKind, RosterProgress } from "./roster-reader";
 import {
-  loadLatestRosterFile,
-  loadLatestRosterFileMetadata,
-  saveLatestRosterFile,
+  listStoredRosterFileMetadata,
+  loadStoredRosterFile,
+  saveRosterFile,
   type StoredRosterFileMetadata,
 } from "./roster-file-store";
 import {
@@ -172,6 +172,17 @@ function formatSar(value: number) {
 
 function visibleSalaryAmount(value: number, visible: boolean) {
   return visible ? `SAR ${formatSar(value)}` : "••••••";
+}
+
+function formatStoredRosterFileDetails(metadata: StoredRosterFileMetadata) {
+  const savedAt = new Intl.DateTimeFormat("en", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(new Date(metadata.savedAt));
+  const size = metadata.size >= 1024 * 1024
+    ? `${(metadata.size / (1024 * 1024)).toFixed(1)} MB`
+    : `${Math.max(1, Math.round(metadata.size / 1024))} KB`;
+  return `${savedAt} · ${size}`;
 }
 
 function MonthlyShiftSummary({
@@ -347,7 +358,7 @@ export default function Home() {
   const [toast, setToast] = useState("");
   const [announcement, setAnnouncement] = useState("");
   const [rosterDialog, setRosterDialog] = useState<RosterDialogState | null>(null);
-  const [savedRosterFile, setSavedRosterFile] = useState<StoredRosterFileMetadata | null>(null);
+  const [savedRosterFiles, setSavedRosterFiles] = useState<StoredRosterFileMetadata[]>([]);
   const editorIsWorkEdit = Boolean(editor?.id && editor.draft.calendar === "work");
   const editorWorkShift = editorIsWorkEdit && editor ? workEditorShift(editor.draft.title) : "";
   const editorWorkModifier = editorIsWorkEdit && editor ? workEditorModifier(editor.draft.title) : "regular";
@@ -615,9 +626,9 @@ export default function Home() {
 
   useEffect(() => {
     let cancelled = false;
-    void loadLatestRosterFileMetadata()
+    void listStoredRosterFileMetadata()
       .then((metadata) => {
-        if (!cancelled) setSavedRosterFile(metadata);
+        if (!cancelled) setSavedRosterFiles(metadata);
       })
       .catch(() => undefined);
     return () => {
@@ -1061,11 +1072,11 @@ export default function Home() {
     rosterInput.current?.click();
   }
 
-  async function downloadSavedRosterFile() {
+  async function downloadSavedRosterFile(metadata: StoredRosterFileMetadata) {
     try {
-      const stored = await loadLatestRosterFile();
+      const stored = await loadStoredRosterFile(metadata.id);
       if (!stored) {
-        setSavedRosterFile(null);
+        setSavedRosterFiles((current) => current.filter((file) => file.id !== metadata.id));
         showToast("No saved roster file was found");
         return;
       }
@@ -1111,9 +1122,9 @@ export default function Home() {
       rows: [],
     });
 
-    void saveLatestRosterFile(file)
+    void saveRosterFile(file)
       .then((metadata) => {
-        setSavedRosterFile(metadata);
+        setSavedRosterFiles((current) => [metadata, ...current.filter((saved) => saved.id !== metadata.id)]);
         setAnnouncement(`${metadata.name} saved on this device and available to download.`);
       })
       .catch(() => {
@@ -1640,17 +1651,23 @@ export default function Home() {
                   <span><strong>Import roster file</strong><small>Use a screenshot or IVU.plan PDF</small></span>
                   <span aria-hidden="true">↑</span>
                 </button>
-                <button
-                  className="menu-row roster-menu-row"
-                  onClick={() => void downloadSavedRosterFile()}
-                  disabled={!savedRosterFile}
-                >
-                  <span>
-                    <strong>Download saved roster</strong>
-                    <small>{savedRosterFile?.name ?? "Upload a PDF or image to save it here"}</small>
-                  </span>
-                  <span aria-hidden="true">↓</span>
-                </button>
+                <p className="saved-roster-label">Saved roster files</p>
+                {savedRosterFiles.length > 0 ? savedRosterFiles.map((file) => (
+                  <button
+                    className="menu-row roster-menu-row saved-roster-row"
+                    key={file.id}
+                    onClick={() => void downloadSavedRosterFile(file)}
+                    aria-label={`Download ${file.name}`}
+                  >
+                    <span>
+                      <strong>{file.name}</strong>
+                      <small>{formatStoredRosterFileDetails(file)}</small>
+                    </span>
+                    <span aria-hidden="true">↓</span>
+                  </button>
+                )) : (
+                  <div className="saved-roster-empty">Upload a PDF or image to save it here</div>
+                )}
                 <a
                   className="menu-row roster-menu-row menu-link"
                   href="https://riy.ivu-cloud.com/mbweb/main/matter/desktop/main-menu"
