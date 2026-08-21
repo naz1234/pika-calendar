@@ -964,16 +964,39 @@ textarea:focus-visible {
 
 .day-cell.shift-event:is(.today, .selected):is(.shift-run-continues-previous, .shift-run-continues-next) {
   animation: none;
+  border-color: transparent;
   box-shadow: none;
   will-change: auto;
 }
 
-.day-cell.shift-event:is(.today, .selected):is(.shift-run-continues-previous, .shift-run-continues-next) .day-number {
-  border: 1px solid color-mix(in srgb, var(--accent) 76%, var(--grid));
-  border-radius: 7px;
-  background: var(--accent-soft);
-  animation: date-tile-pulse 1.65s ease-in-out infinite;
-  will-change: box-shadow;
+.day-cell.shift-event:is(.today, .selected):is(.shift-run-continues-previous, .shift-run-continues-next) .day-hit::before {
+  position: absolute;
+  inset: 1px;
+  border: 1px solid color-mix(in srgb, var(--date-pulse-color) 68%, transparent);
+  border-radius: 9px;
+  animation: joined-date-tile-pulse 1.65s ease-in-out infinite;
+  content: "";
+  pointer-events: none;
+  will-change: border-color, box-shadow, opacity;
+}
+
+@keyframes joined-date-tile-pulse {
+  0%,
+  100% {
+    border-color: color-mix(in srgb, var(--date-pulse-color) 68%, transparent);
+    box-shadow:
+      inset 0 0 0 0 color-mix(in srgb, var(--date-pulse-color) 36%, transparent),
+      inset 0 0 18px color-mix(in srgb, var(--date-pulse-color) 22%, transparent);
+    opacity: 0.84;
+  }
+
+  50% {
+    border-color: var(--date-pulse-color);
+    box-shadow:
+      inset 0 0 0 1px var(--date-pulse-color),
+      inset 0 0 30px color-mix(in srgb, var(--date-pulse-color) 48%, transparent);
+    opacity: 1;
+  }
 }
 
 @keyframes date-tile-pulse {
@@ -3307,11 +3330,13 @@ textarea:focus-visible {
     box-shadow: none;
   }
 
-  .day-cell.shift-event:is(.today, .selected):is(.shift-run-continues-previous, .shift-run-continues-next) .day-number {
+  .day-cell.shift-event:is(.today, .selected):is(.shift-run-continues-previous, .shift-run-continues-next) .day-hit::before {
     animation: none !important;
+    border-color: color-mix(in srgb, var(--date-pulse-color) 76%, transparent);
     box-shadow:
-      0 0 0 1px color-mix(in srgb, var(--date-pulse-color) 76%, transparent),
-      0 0 20px color-mix(in srgb, var(--date-pulse-color) 48%, transparent);
+      inset 0 0 0 1px color-mix(in srgb, var(--date-pulse-color) 76%, transparent),
+      inset 0 0 20px color-mix(in srgb, var(--date-pulse-color) 36%, transparent);
+    opacity: 1;
     will-change: auto;
   }
 }
