@@ -85,6 +85,10 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   assert.match(source, />Roster file archive</);
   assert.match(source, /Nothing is removed automatically\./);
   assert.match(source, /sharedRosterFileGroups\.map\(\(group\) =>/);
+  assert.match(source, /className="menu-row roster-menu-row menu-import-row"/);
+  assert.match(source, /saved-roster-row shared-roster-row/);
+  assert.match(source, /saved-roster-row device-roster-row/);
+  assert.match(source, /menu-link menu-ivu-row/);
   assert.match(source, />Only on this device</);
   assert.match(source, /saveRosterFile\(file\)/);
   assert.match(source, /uploadSharedRosterFile\(file\)/);
@@ -114,6 +118,15 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   assert.match(rosterFilesApiSource, /export async function onRequestPatch/);
   assert.match(rosterFilesApiSource, /export async function onRequestDelete/);
   assert.match(styles, /\.menu-link[\s\S]*?text-decoration: none;/);
+  assert.match(styles, /--menu-import-ink:/);
+  assert.match(styles, /--menu-file-ink:/);
+  assert.match(styles, /--menu-local-ink:/);
+  assert.match(styles, /--menu-external-ink:/);
+  assert.match(styles, /--menu-settings-ink:/);
+  assert.match(styles, /\.menu-import-row\s*\{/);
+  assert.match(styles, /\.shared-roster-row\s*\{/);
+  assert.match(styles, /\.device-roster-row\s*\{/);
+  assert.match(styles, /\.menu-ivu-row\s*\{/);
   assert.match(source, /application\/pdf/);
   assert.match(source, /roster-image/);
   assert.doesNotMatch(source, /roster-upload-button|upload-glyph/);
@@ -250,7 +263,7 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   }
   assert.match(styles, /:root,[\s\S]*?--remark-dot:\s*#ffc247;/);
   assert.match(styles, /:root\[data-theme="light"\][\s\S]*?--remark-dot:\s*#e6a20d;/);
-  assert.match(serviceWorker, /my-calendar-v18/);
+  assert.match(serviceWorker, /my-calendar-v19/);
   assert.match(serviceWorker, /includeUncontrolled: true/);
   assert.match(serviceWorker, /try[\s\S]*?await client\.navigate\(client\.url\);[\s\S]*?catch/);
   assert.match(serviceWorker, /client\.navigate\(client\.url\)/);
