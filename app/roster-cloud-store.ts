@@ -35,9 +35,12 @@ export async function listSharedRosterFiles() {
     headers: { Accept: "application/json" },
   });
   if (!response.ok) throw await responseError(response);
-  const body = await response.json() as { files?: unknown };
+  const body = await response.json() as { files?: unknown; deletedSignatures?: unknown };
   if (!Array.isArray(body.files)) throw new Error("The shared roster list has an invalid format.");
-  return body.files.filter(validMetadata);
+  const deletedSignatures = Array.isArray(body.deletedSignatures)
+    ? body.deletedSignatures.filter((value): value is string => typeof value === "string" && value.length <= 500)
+    : [];
+  return { files: body.files.filter(validMetadata), deletedSignatures };
 }
 
 export async function uploadSharedRosterFile(file: File) {
@@ -80,4 +83,26 @@ export async function loadSharedRosterFile(id: string): Promise<StoredRosterFile
       savedAt: new Date(0).toISOString(),
     },
   };
+}
+
+export async function renameSharedRosterFile(id: string, name: string) {
+  if (!/^[A-Za-z0-9_-]{1,100}$/u.test(id)) throw new Error("Invalid shared roster file id.");
+  const response = await fetch(API_PATH, {
+    method: "PATCH",
+    headers: { Accept: "application/json", "Content-Type": "application/json" },
+    body: JSON.stringify({ id, name }),
+  });
+  if (!response.ok) throw await responseError(response);
+  const metadata: unknown = await response.json();
+  if (!validMetadata(metadata)) throw new Error("The renamed roster response has an invalid format.");
+  return metadata;
+}
+
+export async function deleteSharedRosterFile(id: string) {
+  if (!/^[A-Za-z0-9_-]{1,100}$/u.test(id)) throw new Error("Invalid shared roster file id.");
+  const response = await fetch(`${API_PATH}?id=${encodeURIComponent(id)}`, {
+    method: "DELETE",
+    headers: { Accept: "application/json" },
+  });
+  if (!response.ok) throw await responseError(response);
 }

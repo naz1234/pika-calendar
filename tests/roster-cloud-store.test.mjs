@@ -31,7 +31,13 @@ Function("module", "exports", "require", compiled.outputText)(
   },
 );
 
-const { listSharedRosterFiles, uploadSharedRosterFile, loadSharedRosterFile } = loadedModule.exports;
+const {
+  deleteSharedRosterFile,
+  listSharedRosterFiles,
+  loadSharedRosterFile,
+  renameSharedRosterFile,
+  uploadSharedRosterFile,
+} = loadedModule.exports;
 const metadata = {
   id: "shared-july",
   name: "July roster.pdf",
@@ -47,10 +53,10 @@ test("lists and uploads shared roster originals through the cross-device API", a
   globalThis.fetch = async (input, init = {}) => {
     requests.push({ input, init });
     if (init.method === "POST") return Response.json(metadata, { status: 201 });
-    return Response.json({ files: [metadata] });
+    return Response.json({ files: [metadata], deletedSignatures: [] });
   };
   try {
-    assert.deepEqual(await listSharedRosterFiles(), [metadata]);
+    assert.deepEqual(await listSharedRosterFiles(), { files: [metadata], deletedSignatures: [] });
     const file = Object.assign(new Blob(["pdf"], { type: "application/pdf" }), {
       name: "July roster.pdf",
       lastModified: metadata.lastModified,
@@ -61,6 +67,29 @@ test("lists and uploads shared roster originals through the cross-device API", a
     assert.equal(requests[1].init.method, "POST");
     assert.equal(requests[1].init.headers["X-Roster-File-Name"], "July%20roster.pdf");
     assert.equal(requests[1].init.body, file);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("renames and deletes a shared roster through the public API", async () => {
+  const originalFetch = globalThis.fetch;
+  const requests = [];
+  const renamed = { ...metadata, name: "August roster.pdf" };
+  globalThis.fetch = async (input, init = {}) => {
+    requests.push({ input, init });
+    if (init.method === "PATCH") return Response.json(renamed);
+    if (init.method === "DELETE") return new Response(null, { status: 204 });
+    throw new Error("Unexpected request");
+  };
+  try {
+    assert.deepEqual(await renameSharedRosterFile(metadata.id, renamed.name), renamed);
+    await deleteSharedRosterFile(metadata.id);
+    assert.equal(requests[0].input, "/api/roster-files");
+    assert.equal(requests[0].init.method, "PATCH");
+    assert.deepEqual(JSON.parse(requests[0].init.body), { id: metadata.id, name: renamed.name });
+    assert.equal(requests[1].input, "/api/roster-files?id=shared-july");
+    assert.equal(requests[1].init.method, "DELETE");
   } finally {
     globalThis.fetch = originalFetch;
   }

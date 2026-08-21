@@ -91,3 +91,11 @@ test("lists all saved metadata newest first", () => {
   assert.match(source, /store\.getAll\(\)/);
   assert.match(source, /Date\.parse\(right\.savedAt\) - Date\.parse\(left\.savedAt\)/);
 });
+
+test("renames and deletes device copies used by shared file actions", () => {
+  assert.match(source, /export async function renameStoredRosterFile/);
+  assert.match(source, /objectStore\(METADATA_STORE\)\.put\(renamed, metadata\.id\)/);
+  assert.match(source, /export async function deleteStoredRosterFile/);
+  assert.match(source, /objectStore\(FILE_STORE\)\.delete\(id\)/);
+  assert.match(source, /objectStore\(METADATA_STORE\)\.delete\(id\)/);
+});

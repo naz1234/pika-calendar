@@ -16,9 +16,11 @@ type R2Object = {
 
 type R2ObjectBody = R2Object & {
   body: ReadableStream<Uint8Array>;
+  arrayBuffer(): Promise<ArrayBuffer>;
 };
 
 type R2Bucket = {
+  delete(key: string): Promise<void>;
   get(key: string): Promise<R2ObjectBody | null>;
   put(
     key: string,
@@ -101,6 +103,7 @@ function validRosterId(value: string | null): value is string {
 
 function objectMetadata(object: R2Object): SharedRosterFileMetadata | null {
   if (!object.key.startsWith(FILE_PREFIX)) return null;
+  if (object.customMetadata?.deleted === "true") return null;
   const id = object.key.slice(FILE_PREFIX.length);
   if (!validRosterId(id)) return null;
   const custom = object.customMetadata ?? {};
@@ -120,6 +123,42 @@ function objectMetadata(object: R2Object): SharedRosterFileMetadata | null {
       : object.uploaded.getTime(),
     savedAt,
   };
+}
+
+function rosterFileSignature(metadata: Pick<SharedRosterFileMetadata, "name" | "size" | "lastModified">) {
+  return `${metadata.name}\u0000${metadata.size}\u0000${metadata.lastModified}`;
+}
+
+function deletedObjectSignature(object: R2Object) {
+  const custom = object.customMetadata ?? {};
+  if (custom.deleted !== "true") return "";
+  const type = rosterContentType(decodedFileName(custom.name), custom.type) || "application/octet-stream";
+  const name = safeFileName(decodedFileName(custom.name), type);
+  const size = Number(custom.originalSize);
+  const lastModified = Number(custom.lastModified);
+  if (!Number.isFinite(size) || size < 0 || !Number.isFinite(lastModified) || lastModified < 0) return "";
+  return rosterFileSignature({ name, size, lastModified });
+}
+
+function storedCustomMetadata(metadata: SharedRosterFileMetadata) {
+  return {
+    name: encodeURIComponent(metadata.name),
+    type: metadata.type,
+    lastModified: String(metadata.lastModified),
+    savedAt: metadata.savedAt,
+  };
+}
+
+async function createDeletionTombstone(storage: R2Bucket, metadata: SharedRosterFileMetadata) {
+  const tombstoneId = `tombstone-${crypto.randomUUID()}`;
+  await storage.put(`${FILE_PREFIX}${tombstoneId}`, new ArrayBuffer(0), {
+    httpMetadata: { contentType: "application/octet-stream" },
+    customMetadata: {
+      ...storedCustomMetadata(metadata),
+      deleted: "true",
+      originalSize: String(metadata.size),
+    },
+  });
 }
 
 function contentDisposition(name: string) {
@@ -165,7 +204,8 @@ export async function onRequestGet(context: PagesContext) {
       .map(objectMetadata)
       .filter((metadata): metadata is SharedRosterFileMetadata => metadata !== null)
       .sort((left, right) => Date.parse(right.savedAt) - Date.parse(left.savedAt));
-    return json({ files });
+    const deletedSignatures = [...new Set(objects.map(deletedObjectSignature).filter(Boolean))];
+    return json({ files, deletedSignatures });
   } catch (error) {
     return json({ error: error instanceof Error ? error.message : "Shared roster storage failed." }, 503);
   }
@@ -205,15 +245,69 @@ export async function onRequestPost(context: PagesContext) {
     };
     await storage.put(`${FILE_PREFIX}${id}`, data, {
       httpMetadata: { contentType: type },
-      customMetadata: {
-        name: encodeURIComponent(name),
-        type,
-        lastModified: String(lastModified),
-        savedAt,
-      },
+      customMetadata: storedCustomMetadata(metadata),
     });
     return json(metadata, 201);
   } catch (error) {
     return json({ error: error instanceof Error ? error.message : "The roster file could not be shared." }, 503);
+  }
+}
+
+export async function onRequestPatch(context: PagesContext) {
+  try {
+    const storage = bucket(context);
+    if (!context.request.headers.get("content-type")?.toLowerCase().startsWith("application/json")) {
+      return json({ error: "Content-Type must be application/json." }, 415);
+    }
+    const body = await context.request.json() as { id?: unknown; name?: unknown };
+    const id = typeof body.id === "string" ? body.id : null;
+    if (!validRosterId(id)) {
+      return json({ error: "Invalid roster file id." }, 400);
+    }
+    if (typeof body.name !== "string" || !body.name.trim()) {
+      return json({ error: "A file name is required." }, 400);
+    }
+    const key = `${FILE_PREFIX}${id}`;
+    const object = await storage.get(key);
+    if (!object) return json({ error: "Roster file not found." }, 404);
+    const current = objectMetadata(object);
+    if (!current) return json({ error: "Roster file metadata is invalid." }, 500);
+    const name = safeFileName(body.name, current.type);
+    if (name === current.name) return json(current);
+
+    const renamed = { ...current, name };
+    const data = await object.arrayBuffer();
+    await storage.put(key, data, {
+      httpMetadata: { contentType: renamed.type },
+      customMetadata: storedCustomMetadata(renamed),
+    });
+    await createDeletionTombstone(storage, current);
+    return json(renamed);
+  } catch (error) {
+    return json({ error: error instanceof Error ? error.message : "The roster file could not be renamed." }, 503);
+  }
+}
+
+export async function onRequestDelete(context: PagesContext) {
+  try {
+    const storage = bucket(context);
+    const requestedId = new URL(context.request.url).searchParams.get("id");
+    if (!validRosterId(requestedId)) return json({ error: "Invalid roster file id." }, 400);
+    const key = `${FILE_PREFIX}${requestedId}`;
+    const object = await storage.get(key);
+    if (!object) return json({ error: "Roster file not found." }, 404);
+    const metadata = objectMetadata(object);
+    if (!metadata) return json({ error: "Roster file metadata is invalid." }, 500);
+    await storage.delete(key);
+    await createDeletionTombstone(storage, metadata);
+    return new Response(null, {
+      status: 204,
+      headers: {
+        "Cache-Control": "no-store",
+        "X-Content-Type-Options": "nosniff",
+      },
+    });
+  } catch (error) {
+    return json({ error: error instanceof Error ? error.message : "The roster file could not be deleted." }, 503);
   }
 }

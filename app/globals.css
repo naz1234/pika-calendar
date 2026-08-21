@@ -1706,6 +1706,48 @@ textarea:focus-visible {
   min-height: 58px;
 }
 
+.saved-roster-download {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 0;
+  min-height: 57px;
+  padding: 0 10px 0 0;
+  background: transparent;
+  color: var(--muted-strong);
+  text-align: left;
+}
+
+.saved-roster-download > span:first-child {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding-right: 12px;
+}
+
+.saved-roster-actions {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 4px;
+}
+
+.saved-roster-action {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 1px solid var(--grid);
+  border-radius: 9px;
+  background: var(--surface-soft);
+  color: var(--muted-strong);
+  font-size: 1rem;
+}
+
+.saved-roster-action.delete {
+  color: var(--danger);
+}
+
 .saved-roster-empty {
   padding: 12px 5px 16px;
   border-bottom: 1px solid var(--grid-soft);

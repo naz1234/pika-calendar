@@ -172,3 +172,34 @@ export async function loadStoredRosterFile(id: string): Promise<StoredRosterFile
     database.close();
   }
 }
+
+export async function renameStoredRosterFile(
+  metadata: StoredRosterFileMetadata,
+  name: string,
+) {
+  const renamed = { ...metadata, name: safeFileName(name, metadata.type) };
+  const database = await openRosterFileDatabase();
+  try {
+    const transaction = database.transaction(METADATA_STORE, "readwrite");
+    const finished = transactionFinished(transaction);
+    transaction.objectStore(METADATA_STORE).put(renamed, metadata.id);
+    await finished;
+    return renamed;
+  } finally {
+    database.close();
+  }
+}
+
+export async function deleteStoredRosterFile(id: string) {
+  if (!id) return;
+  const database = await openRosterFileDatabase();
+  try {
+    const transaction = database.transaction([FILE_STORE, METADATA_STORE], "readwrite");
+    const finished = transactionFinished(transaction);
+    transaction.objectStore(FILE_STORE).delete(id);
+    transaction.objectStore(METADATA_STORE).delete(id);
+    await finished;
+  } finally {
+    database.close();
+  }
+}
