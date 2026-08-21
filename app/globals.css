@@ -876,21 +876,10 @@ textarea:focus-visible {
 }
 
 .day-cell.shift-run-continues-next {
-  overflow: visible;
+  margin-right: -2px;
   border-right-color: transparent;
   border-top-right-radius: 0;
   border-bottom-right-radius: 0;
-}
-
-.day-cell.shift-run-continues-next::after {
-  position: absolute;
-  top: -1px;
-  right: -5px;
-  bottom: -1px;
-  width: 5px;
-  background: var(--event-fill);
-  content: "";
-  pointer-events: none;
 }
 
 .day-hit {
@@ -2871,6 +2860,10 @@ textarea:focus-visible {
 
   .day-cell:last-child {
     margin-right: 0;
+  }
+
+  .day-cell.shift-run-continues-next {
+    margin-right: -4px;
   }
 
   .day-number {
