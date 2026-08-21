@@ -23,7 +23,11 @@ assert.deepEqual(
 
 const loadedModule = { exports: {} };
 Function("module", "exports", compiled.outputText)(loadedModule, loadedModule.exports);
-const { calculateMonthlyExpectedSalary, countMonthlyWorkShifts } = loadedModule.exports;
+const {
+  calculateManualSalaryEstimate,
+  calculateMonthlyExpectedSalary,
+  countMonthlyWorkShifts,
+} = loadedModule.exports;
 
 function event(title, date = "2026-07-01", calendar = "work") {
   return { title, date, calendar };
@@ -138,5 +142,37 @@ test("uses a custom salary plus laundry amount in the forecast", () => {
     nightAllowance: 0,
     expectedOvertime: 0,
     expectedSalary: 16850.75,
+  });
+});
+
+test("estimates salary from manually entered Extension and RDOT days", () => {
+  assert.deepEqual(calculateManualSalaryEstimate({
+    salaryWithLaundry: 15100,
+    extensionDays: 3,
+    rdotDays: 1,
+  }), {
+    salaryWithLaundry: 15100,
+    extensionDays: 3,
+    rdotDays: 1,
+    basicSalary: 15000,
+    overtimeHours: 19,
+    expectedOvertime: 2226.56,
+    expectedSalary: 17326.56,
+  });
+});
+
+test("manual salary estimate accepts fractional days and sanitizes invalid values", () => {
+  assert.deepEqual(calculateManualSalaryEstimate({
+    salaryWithLaundry: Number.NaN,
+    extensionDays: 0.5,
+    rdotDays: -2,
+  }), {
+    salaryWithLaundry: 0,
+    extensionDays: 0.5,
+    rdotDays: 0,
+    basicSalary: 0,
+    overtimeHours: 1.8,
+    expectedOvertime: 0,
+    expectedSalary: 0,
   });
 });

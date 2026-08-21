@@ -66,6 +66,7 @@ import {
 } from "./roster-file-store";
 import {
   DEFAULT_SALARY_WITH_LAUNDRY,
+  calculateManualSalaryEstimate,
   calculateMonthlyExpectedSalary,
   countMonthlyWorkShifts,
   type MonthlySalaryForecast,
@@ -357,6 +358,10 @@ export default function Home() {
   const [salaryAmountsVisible, setSalaryAmountsVisible] = useState(false);
   const [salaryWithLaundry, setSalaryWithLaundry] = useState(DEFAULT_SALARY_WITH_LAUNDRY);
   const [salaryWithLaundryInput, setSalaryWithLaundryInput] = useState(String(DEFAULT_SALARY_WITH_LAUNDRY));
+  const [salaryCalculatorOpen, setSalaryCalculatorOpen] = useState(false);
+  const [calculatorSalaryInput, setCalculatorSalaryInput] = useState(String(DEFAULT_SALARY_WITH_LAUNDRY));
+  const [calculatorExtensionDaysInput, setCalculatorExtensionDaysInput] = useState("0");
+  const [calculatorRdotDaysInput, setCalculatorRdotDaysInput] = useState("0");
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [hydrated, setHydrated] = useState(false);
   const [syncStatus, setSyncStatus] = useState<SyncStatus>("connecting");
@@ -424,6 +429,8 @@ export default function Home() {
   const editorTitleInput = useRef<HTMLInputElement>(null);
   const workEditorTitleSelect = useRef<HTMLSelectElement>(null);
   const menuCloseButton = useRef<HTMLButtonElement>(null);
+  const salaryCalculatorTrigger = useRef<HTMLButtonElement>(null);
+  const salaryCalculatorCloseButton = useRef<HTMLButtonElement>(null);
   const editorIsOpen = editor !== null;
 
   const closeRosterDialog = useCallback(() => {
@@ -438,6 +445,11 @@ export default function Home() {
   const closeRosterArchive = useCallback(() => {
     setRosterArchiveOpen(false);
     requestAnimationFrame(() => menuTrigger.current?.focus());
+  }, []);
+
+  const closeSalaryCalculator = useCallback(() => {
+    setSalaryCalculatorOpen(false);
+    requestAnimationFrame(() => salaryCalculatorTrigger.current?.focus());
   }, []);
 
   const connectToSync = useCallback(async (localEvents: CalendarEvent[], shouldMigrateLocal: boolean) => {
@@ -548,6 +560,11 @@ export default function Home() {
     () => calculateMonthlyExpectedSalary(events, `${view.year}-${pad(view.month + 1)}`, { salaryWithLaundry }),
     [events, salaryWithLaundry, view.month, view.year],
   );
+  const manualSalaryEstimate = useMemo(() => calculateManualSalaryEstimate({
+    salaryWithLaundry: calculatorSalaryInput.trim() ? Number(calculatorSalaryInput) : 0,
+    extensionDays: calculatorExtensionDaysInput.trim() ? Number(calculatorExtensionDaysInput) : 0,
+    rdotDays: calculatorRdotDaysInput.trim() ? Number(calculatorRdotDaysInput) : 0,
+  }), [calculatorExtensionDaysInput, calculatorRdotDaysInput, calculatorSalaryInput]);
   const salaryMonthLabel = new Intl.DateTimeFormat("en", {
     month: "long",
     year: "numeric",
@@ -900,6 +917,11 @@ export default function Home() {
     setSalaryWithLaundryInput(String(roundedSalary));
   }
 
+  function openSalaryCalculator() {
+    setCalculatorSalaryInput(String(salaryWithLaundry));
+    setSalaryCalculatorOpen(true);
+  }
+
   useEffect(() => {
     if (!toast) return;
     const timeout = window.setTimeout(() => setToast(""), 2600);
@@ -920,11 +942,12 @@ export default function Home() {
       setSearchOpen(false);
       setEditor(null);
       setAgendaOpen(false);
+      if (salaryCalculatorOpen) closeSalaryCalculator();
       if (rosterDialog) closeRosterDialog();
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [closeRosterArchive, closeRosterDialog, rosterArchiveOpen, rosterDialog]);
+  }, [closeRosterArchive, closeRosterDialog, closeSalaryCalculator, rosterArchiveOpen, rosterDialog, salaryCalculatorOpen]);
 
   useEffect(() => {
     if (!searchOpen) return;
@@ -940,6 +963,12 @@ export default function Home() {
     });
     return () => cancelAnimationFrame(frame);
   }, [editorIsOpen, editorIsWorkEdit]);
+
+  useEffect(() => {
+    if (!salaryCalculatorOpen) return;
+    const frame = requestAnimationFrame(() => salaryCalculatorCloseButton.current?.focus());
+    return () => cancelAnimationFrame(frame);
+  }, [salaryCalculatorOpen]);
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -1635,13 +1664,33 @@ export default function Home() {
               <button
                 key={kind}
                 className={activeCalendar === kind ? "active" : ""}
-                onClick={() => setActiveCalendar(kind)}
+                onClick={() => {
+                  setActiveCalendar(kind);
+                  if (kind === "personal") setSalaryCalculatorOpen(false);
+                }}
                 aria-pressed={activeCalendar === kind}
               >
                 {kind === "work" ? "Work" : "Personal"}
               </button>
             ))}
           </div>
+          {activeCalendar === "work" && (
+            <button
+              ref={salaryCalculatorTrigger}
+              type="button"
+              className="salary-calculator-trigger"
+              onClick={openSalaryCalculator}
+              aria-haspopup="dialog"
+              aria-expanded={salaryCalculatorOpen}
+              aria-controls="salary-calculator-dialog"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="5" y="3" width="14" height="18" rx="3" />
+                <path d="M8 7h8M8 11h2m4 0h2M8 15h2m4 0h2M8 18h2m4 0h2" />
+              </svg>
+              Calculator
+            </button>
+          )}
         </div>
       </header>
 
@@ -2103,6 +2152,93 @@ export default function Home() {
               )) : (
                 <div className="empty-results"><p>No matching events</p><span>Try another phrase or add a new event.</span></div>
               )}
+            </div>
+          </section>
+        </div>
+      )}
+
+      {salaryCalculatorOpen && (
+        <div className="overlay centered-overlay salary-calculator-overlay">
+          <button className="overlay-dismiss" onClick={closeSalaryCalculator} aria-label="Close salary calculator" />
+          <section
+            id="salary-calculator-dialog"
+            className="dialog salary-calculator-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="salary-calculator-title"
+            tabIndex={-1}
+            onKeyDown={trapDialogFocus}
+          >
+            <div className="dialog-header">
+              <div>
+                <p className="eyebrow">Work calculator</p>
+                <h2 id="salary-calculator-title">Salary calculator</h2>
+              </div>
+              <button
+                ref={salaryCalculatorCloseButton}
+                type="button"
+                className="close-button"
+                onClick={closeSalaryCalculator}
+                aria-label="Close salary calculator"
+              >×</button>
+            </div>
+            <p className="salary-calculator-intro">
+              Enter your salary and overtime days to estimate the amount you may receive.
+            </p>
+            <div className="salary-calculator-fields">
+              <label className="field salary-calculator-salary-field">
+                <span>Salary + laundry</span>
+                <span className="salary-calculator-input">
+                  <b>SAR</b>
+                  <input
+                    aria-label="Calculator salary plus laundry"
+                    type="number"
+                    inputMode="decimal"
+                    min="0"
+                    step="0.01"
+                    value={calculatorSalaryInput}
+                    onChange={(event) => setCalculatorSalaryInput(event.target.value)}
+                  />
+                </span>
+              </label>
+              <label className="field">
+                <span>Extension days</span>
+                <input
+                  aria-label="Extension days"
+                  type="number"
+                  inputMode="decimal"
+                  min="0"
+                  step="0.5"
+                  value={calculatorExtensionDaysInput}
+                  onChange={(event) => setCalculatorExtensionDaysInput(event.target.value)}
+                />
+              </label>
+              <label className="field">
+                <span>RDOT days</span>
+                <input
+                  aria-label="RDOT days"
+                  type="number"
+                  inputMode="decimal"
+                  min="0"
+                  step="0.5"
+                  value={calculatorRdotDaysInput}
+                  onChange={(event) => setCalculatorRdotDaysInput(event.target.value)}
+                />
+              </label>
+            </div>
+            <div className="salary-calculator-result" role="status" aria-live="polite">
+              <span>Estimated salary</span>
+              <strong>SAR {formatSar(manualSalaryEstimate.expectedSalary)}</strong>
+              <div className="salary-calculator-breakdown">
+                <span>Salary + laundry<b>SAR {formatSar(manualSalaryEstimate.salaryWithLaundry)}</b></span>
+                <span>{manualSalaryEstimate.overtimeHours.toFixed(1)} overtime hours<b>SAR {formatSar(manualSalaryEstimate.expectedOvertime)}</b></span>
+              </div>
+            </div>
+            <p className="salary-calculator-note">
+              Estimate uses 3.5 overtime hours per Extension day and 8.5 hours per RDOT day. The overtime rate excludes the standard SAR 100 laundry allowance; night allowance is not included.
+            </p>
+            <div className="editor-actions salary-calculator-actions">
+              <button type="button" className="primary-button" onClick={closeSalaryCalculator}>Done</button>
             </div>
           </section>
         </div>
