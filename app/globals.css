@@ -340,6 +340,7 @@ textarea:focus-visible {
   align-content: start;
   gap: 8px;
   min-width: 0;
+  padding-top: 8px;
   text-align: center;
 }
 
@@ -358,7 +359,7 @@ textarea:focus-visible {
   color: var(--text);
   cursor: pointer;
   font-size: clamp(1.08rem, 5.8vw, 1.8rem);
-  font-weight: 400;
+  font-weight: 820;
   letter-spacing: -0.055em;
   text-transform: uppercase;
   user-select: none;
