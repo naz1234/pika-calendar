@@ -1644,11 +1644,6 @@ export default function Home() {
           </button>
 
           <div className="month-heading">
-            <svg className="month-heading-icon" viewBox="0 0 24 24" aria-hidden="true">
-              <rect x="3" y="5" width="18" height="16" rx="2.5" />
-              <path d="M7 3v4m10-4v4M3 10h18" />
-              <path d="m8 16 2 2 4-4 2 2 2-2" />
-            </svg>
             <label className="month-title">
               <span className="month-title-copy" aria-hidden="true">
                 <span className="month-title-name">{monthName}</span>
