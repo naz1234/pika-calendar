@@ -183,6 +183,9 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   assert.match(source, /const \[salaryAmountsVisible, setSalaryAmountsVisible\] = useState\(false\)/);
   assert.match(source, /visible \? `SAR \$\{formatSar\(value\)\}` : "••••••"/);
   assert.match(source, /aria-label=\{salaryVisible \? "Hide salary amounts" : "Show salary amounts"\}/);
+  const salaryValueMarkup = source.match(/<div className="monthly-salary-value">([\s\S]*?)<\/div>/)?.[1] ?? "";
+  assert.match(salaryValueMarkup, /className="salary-visibility-toggle"[\s\S]*?className=\{`monthly-salary-amount/);
+
   assert.match(source, /salaryVisible=\{salaryAmountsVisible\}/);
   const storedSettingsPayload = source.match(/localStorage\.setItem\(SETTINGS_KEY, JSON\.stringify\(\{([\s\S]*?)\}\)\);/)?.[1] ?? "";
   assert.ok(storedSettingsPayload);
@@ -302,7 +305,7 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   }
   assert.match(styles, /:root,[\s\S]*?--remark-dot:\s*#ffc247;/);
   assert.match(styles, /:root\[data-theme="light"\][\s\S]*?--remark-dot:\s*#e6a20d;/);
-  assert.match(serviceWorker, /my-calendar-v27/);
+  assert.match(serviceWorker, /my-calendar-v28/);
   assert.match(serviceWorker, /includeUncontrolled: true/);
   assert.match(serviceWorker, /try[\s\S]*?await client\.navigate\(client\.url\);[\s\S]*?catch/);
   assert.match(serviceWorker, /client\.navigate\(client\.url\)/);

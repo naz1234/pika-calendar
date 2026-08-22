@@ -250,12 +250,6 @@ function MonthlyShiftSummary({
           <span>Expected salary<small>{salaryMonthLabel} pay forecast</small></span>
         </div>
         <div className="monthly-salary-value">
-          <strong
-            className={`monthly-salary-amount${salaryVisible ? "" : " salary-amount-hidden"}`}
-            aria-label={salaryVisible ? undefined : "Salary amount hidden"}
-          >
-            {visibleSalaryAmount(salaryForecast.expectedSalary, salaryVisible)}
-          </strong>
           <button
             type="button"
             className="salary-visibility-toggle"
@@ -269,6 +263,12 @@ function MonthlyShiftSummary({
               {!salaryVisible && <path d="m4 4 16 16" />}
             </svg>
           </button>
+          <strong
+            className={`monthly-salary-amount${salaryVisible ? "" : " salary-amount-hidden"}`}
+            aria-label={salaryVisible ? undefined : "Salary amount hidden"}
+          >
+            {visibleSalaryAmount(salaryForecast.expectedSalary, salaryVisible)}
+          </strong>
         </div>
         <div className="monthly-salary-breakdown" aria-label="Expected salary breakdown">
           <span>
