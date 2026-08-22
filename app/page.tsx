@@ -1657,7 +1657,6 @@ export default function Home() {
                 aria-label={`Choose month. Currently ${monthLabel}`}
               />
             </label>
-            <span className="month-heading-divider" aria-hidden="true"><i /></span>
           </div>
 
           <button className="icon-button search-button" onClick={() => setSearchOpen(true)} aria-label="Search events">
