@@ -213,7 +213,7 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   assert.match(source, /activeCalendar === "work"[\s\S]*?className="salary-calculator-trigger"/s);
   const calculatorTriggerMarkup = source.match(/className="salary-calculator-trigger"[\s\S]*?>([\s\S]*?)<\/button>/)?.[1] ?? "";
   assert.match(calculatorTriggerMarkup, /Calculator/);
-  assert.doesNotMatch(calculatorTriggerMarkup, /<svg|<img/);
+  assert.match(calculatorTriggerMarkup, /<svg[\s\S]*?<\/svg>[\s\S]*?Calculator/);
   assert.match(source, /className="dialog salary-calculator-dialog"/);
   assert.match(source, /aria-label="Calculator salary plus laundry"/);
   assert.match(source, /aria-label="Extension days"/);
@@ -222,9 +222,9 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   assert.match(source, /3\.5 overtime hours per Extension day and 8\.5 hours per RDOT day/);
   assert.match(source, /standard SAR 100 laundry allowance/);
   assert.match(styles, /\.calendar-toolbar\s*\{[^}]*display:\s*grid;[^}]*place-items:\s*center;/s);
-  assert.match(styles, /\.calendar-control-stack\s*\{[^}]*justify-items:\s*center;[^}]*width:\s*min\(100%, 178px\);[^}]*margin-inline:\s*auto;/s);
-  assert.match(styles, /\.calendar-switcher\s*\{[^}]*gap:\s*0;[^}]*width:\s*100%;/s);
-  assert.match(styles, /\.salary-calculator-trigger\s*\{[^}]*width:\s*calc\(\(100% - 6px\) \/ 2\);[^}]*min-height:\s*34px;[^}]*padding:\s*0 12px;[^}]*border-radius:\s*999px;[^}]*font-size:\s*0\.75rem;[^}]*font-weight:\s*650;/s);
+  assert.match(styles, /\.calendar-control-stack\s*\{[^}]*justify-items:\s*center;[^}]*width:\s*min\(100%, 520px\);[^}]*margin-inline:\s*auto;/s);
+  assert.match(styles, /\.calendar-switcher\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1\.22fr\) minmax\(0, 1fr\) minmax\(0, 1\.08fr\);[^}]*gap:\s*2px;[^}]*width:\s*100%;/s);
+  assert.match(styles, /\.salary-calculator-trigger\s*\{[^}]*width:\s*100%;[^}]*min-height:\s*40px;[^}]*padding:\s*0 9px;[^}]*border-radius:\s*999px;[^}]*font-size:\s*clamp\(0\.66rem, 2\.35vw, 0\.78rem\);[^}]*font-weight:\s*700;/s);
   assert.match(styles, /\.salary-calculator-overlay\s*\{[^}]*place-items:\s*center;/s);
   assert.match(styles, /\.dialog\.salary-calculator-dialog\s*\{[^}]*width:\s*min\(100%, 460px\);[^}]*border-radius:\s*24px;/s);
   const workEditorStart = source.indexOf("{editorIsWorkEdit ? (");
@@ -305,7 +305,7 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   }
   assert.match(styles, /:root,[\s\S]*?--remark-dot:\s*#ffc247;/);
   assert.match(styles, /:root\[data-theme="light"\][\s\S]*?--remark-dot:\s*#e6a20d;/);
-  assert.match(serviceWorker, /my-calendar-v28/);
+  assert.match(serviceWorker, /my-calendar-v29/);
   assert.match(serviceWorker, /includeUncontrolled: true/);
   assert.match(serviceWorker, /try[\s\S]*?await client\.navigate\(client\.url\);[\s\S]*?catch/);
   assert.match(serviceWorker, /client\.navigate\(client\.url\)/);
@@ -352,13 +352,16 @@ test("calculates ISO week numbers across year boundaries", async () => {
   assert.equal(isoWeekNumber(new Date(2026, 7, 3)), 32);
 });
 
-test("uses the centered swipe-first calendar header", async () => {
+test("uses the purple segmented swipe-first calendar header", async () => {
   const [source, styles] = await Promise.all([
     readFile(path.join(projectRoot, "app", "page.tsx"), "utf8"),
     readFile(path.join(projectRoot, "app", "globals.css"), "utf8"),
   ]);
 
   assert.match(source, /<label className="month-title">[\s\S]*?className="month-title-input"[\s\S]*?type="month"[\s\S]*?onChange=\{\(event\) => chooseMonth\(event\.currentTarget\.value\)\}/);
+  assert.match(source, /className="month-heading-icon"[\s\S]*?className="month-title-name"[\s\S]*?className="month-title-year"[\s\S]*?className="month-heading-divider"/s);
+  assert.match(source, /className="calendar-switcher"[\s\S]*?className="salary-calculator-trigger"[\s\S]*?\(\["work", "personal"\] as CalendarKind\[\]\)\.map/s);
+  assert.match(source, /data-has-calculator=\{activeCalendar === "work"\}/);
   assert.match(source, /function chooseMonth\(value: string\)[\s\S]*?setView\(\{ year, month: month - 1 \}\)[\s\S]*?setSelectedDate\(dateKey\(nextSelection\)\)/);
   assert.match(source, /className="icon-button search-button"[\s\S]*?aria-label="Search events"[\s\S]*?className="search-glyph"/);
   assert.match(source, /className="calendar-switcher"[\s\S]*?aria-label="Calendar mode"[\s\S]*?setActiveCalendar\(kind\)[\s\S]*?aria-pressed=\{activeCalendar === kind\}/);
@@ -382,8 +385,8 @@ test("uses the centered swipe-first calendar header", async () => {
   assert.match(styles, /\.calendar-app\s*\{[^}]*overflow-y:\s*auto;[^}]*overscroll-behavior-y:\s*contain;/s);
   assert.match(styles, /@media \(max-width: 899px\)[\s\S]*?\.calendar-app\s*\{[^}]*scrollbar-width:\s*none;[^}]*-ms-overflow-style:\s*none;/s);
   assert.match(styles, /\.calendar-app::-webkit-scrollbar\s*\{[^}]*display:\s*none;[^}]*width:\s*0;[^}]*height:\s*0;/s);
-  assert.match(styles, /\.topbar\s*\{[^}]*padding:\s*max\(10px, env\(safe-area-inset-top\)\)[^}]*8px/s);
-  assert.match(styles, /\.calendar-toolbar\s*\{[^}]*margin-top:\s*4px;/s);
+  assert.match(styles, /\.topbar\s*\{[^}]*margin:\s*max\(10px, env\(safe-area-inset-top\)\)[^}]*padding:\s*16px 12px 14px;[^}]*border-radius:\s*24px;/s);
+  assert.match(styles, /\.calendar-toolbar\s*\{[^}]*margin-top:\s*18px;/s);
   assert.match(styles, /@media \(min-width: 900px\)[\s\S]*?\.calendar-app\s*\{[^}]*overflow:\s*hidden;/s);
   assert.match(styles, /\.month-title-input\s*\{[^}]*position:\s*absolute;[^}]*inset:\s*0;[^}]*opacity:\s*0;/s);
   assert.doesNotMatch(styles, /\.month-dialog/);
@@ -395,6 +398,11 @@ test("uses the centered swipe-first calendar header", async () => {
   assert.match(styles, /\.month-swipe-panel\s*\{[^}]*flex:\s*0 0 33\.333333%;[^}]*width:\s*33\.333333%;[^}]*height:\s*100%;[^}]*min-height:\s*100%;/s);
   assert.doesNotMatch(styles, /month-slide-from-|\.month-card\.month-slide-/);
   assert.match(styles, /\.calendar-switcher button\.active\s*\{[^}]*background:\s*var\(--header-accent\);/s);
+  assert.match(styles, /\.month-heading-icon\s*\{[^}]*stroke:\s*var\(--header-accent\);/s);
+  assert.match(styles, /\.month-title-year\s*\{[^}]*color:\s*var\(--header-accent\);/s);
+  assert.match(styles, /\.month-heading-divider\s*\{[^}]*grid-template-columns:/s);
+  assert.match(styles, /\.topbar::before,[\s\S]*?\.topbar::after\s*\{[^}]*pointer-events:\s*none;/s);
+  assert.match(styles, /\.calendar-switcher\[data-has-calculator="false"\]\s*\{[^}]*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\);/s);
 });
 
 test("references only files present in the exported site", async () => {
