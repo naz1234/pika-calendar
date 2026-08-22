@@ -547,6 +547,7 @@ export default function Home() {
     month: "long",
     year: "numeric",
   }).format(new Date(view.year, view.month, 1));
+  const monthName = monthLabel.replace(String(view.year), "").trim();
   const selectedLabel = new Intl.DateTimeFormat("en", {
     weekday: "long",
     month: "long",
@@ -1642,16 +1643,27 @@ export default function Home() {
             <span className="menu-glyph" aria-hidden="true"><i /><i /><i /></span>
           </button>
 
-          <label className="month-title">
-            <span aria-hidden="true">{monthLabel}</span>
-            <input
-              className="month-title-input"
-              type="month"
-              value={`${view.year}-${pad(view.month + 1)}`}
-              onChange={(event) => chooseMonth(event.currentTarget.value)}
-              aria-label={`Choose month. Currently ${monthLabel}`}
-            />
-          </label>
+          <div className="month-heading">
+            <svg className="month-heading-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="3" y="5" width="18" height="16" rx="2.5" />
+              <path d="M7 3v4m10-4v4M3 10h18" />
+              <path d="m8 16 2 2 4-4 2 2 2-2" />
+            </svg>
+            <label className="month-title">
+              <span className="month-title-copy" aria-hidden="true">
+                <span className="month-title-name">{monthName}</span>
+                <span className="month-title-year">{view.year}</span>
+              </span>
+              <input
+                className="month-title-input"
+                type="month"
+                value={`${view.year}-${pad(view.month + 1)}`}
+                onChange={(event) => chooseMonth(event.currentTarget.value)}
+                aria-label={`Choose month. Currently ${monthLabel}`}
+              />
+            </label>
+            <span className="month-heading-divider" aria-hidden="true"><i /></span>
+          </div>
 
           <button className="icon-button search-button" onClick={() => setSearchOpen(true)} aria-label="Search events">
             <span className="search-glyph" aria-hidden="true" />
@@ -1660,7 +1672,29 @@ export default function Home() {
 
         <div className="calendar-toolbar">
           <div className="calendar-control-stack">
-            <div className="calendar-switcher" role="group" aria-label="Calendar mode">
+            <div
+              className="calendar-switcher"
+              role="group"
+              aria-label="Calendar mode"
+              data-has-calculator={activeCalendar === "work"}
+            >
+              {activeCalendar === "work" && (
+                <button
+                  ref={salaryCalculatorTrigger}
+                  type="button"
+                  className="salary-calculator-trigger"
+                  onClick={openSalaryCalculator}
+                  aria-haspopup="dialog"
+                  aria-expanded={salaryCalculatorOpen}
+                  aria-controls="salary-calculator-dialog"
+                >
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <rect x="5" y="3" width="14" height="18" rx="2" />
+                    <path d="M8 7h8M8 11h2m4 0h2M8 15h2m4 0h2M8 18h2m4 0h2" />
+                  </svg>
+                  <span>Calculator</span>
+                </button>
+              )}
               {(["work", "personal"] as CalendarKind[]).map((kind) => (
                 <button
                   key={kind}
@@ -1671,23 +1705,21 @@ export default function Home() {
                   }}
                   aria-pressed={activeCalendar === kind}
                 >
-                  {kind === "work" ? "Work" : "Personal"}
+                  {kind === "work" ? (
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <rect x="3" y="7" width="18" height="13" rx="2" />
+                      <path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 12h18m-10 0v2h2v-2" />
+                    </svg>
+                  ) : (
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <circle cx="12" cy="8" r="4" />
+                      <path d="M4 21a8 8 0 0 1 16 0H4Z" />
+                    </svg>
+                  )}
+                  <span>{kind === "work" ? "Work" : "Personal"}</span>
                 </button>
               ))}
             </div>
-            {activeCalendar === "work" && (
-              <button
-                ref={salaryCalculatorTrigger}
-                type="button"
-                className="salary-calculator-trigger"
-                onClick={openSalaryCalculator}
-                aria-haspopup="dialog"
-                aria-expanded={salaryCalculatorOpen}
-                aria-controls="salary-calculator-dialog"
-              >
-                Calculator
-              </button>
-            )}
           </div>
         </div>
       </header>
