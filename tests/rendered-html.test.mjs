@@ -359,7 +359,8 @@ test("uses the purple segmented swipe-first calendar header", async () => {
   ]);
 
   assert.match(source, /<label className="month-title">[\s\S]*?className="month-title-input"[\s\S]*?type="month"[\s\S]*?onChange=\{\(event\) => chooseMonth\(event\.currentTarget\.value\)\}/);
-  assert.match(source, /className="month-heading-icon"[\s\S]*?className="month-title-name"[\s\S]*?className="month-title-year"[\s\S]*?className="month-heading-divider"/s);
+  assert.doesNotMatch(source, /className="month-heading-icon"/);
+  assert.match(source, /className="month-title-name"[\s\S]*?className="month-title-year"[\s\S]*?className="month-heading-divider"/s);
   assert.match(source, /className="calendar-switcher"[\s\S]*?className="salary-calculator-trigger"[\s\S]*?\(\["work", "personal"\] as CalendarKind\[\]\)\.map/s);
   assert.match(source, /data-has-calculator=\{activeCalendar === "work"\}/);
   assert.match(source, /function chooseMonth\(value: string\)[\s\S]*?setView\(\{ year, month: month - 1 \}\)[\s\S]*?setSelectedDate\(dateKey\(nextSelection\)\)/);
@@ -398,8 +399,8 @@ test("uses the purple segmented swipe-first calendar header", async () => {
   assert.match(styles, /\.month-swipe-panel\s*\{[^}]*flex:\s*0 0 33\.333333%;[^}]*width:\s*33\.333333%;[^}]*height:\s*100%;[^}]*min-height:\s*100%;/s);
   assert.doesNotMatch(styles, /month-slide-from-|\.month-card\.month-slide-/);
   assert.match(styles, /\.calendar-switcher button\.active\s*\{[^}]*background:\s*var\(--header-accent\);/s);
-  assert.match(styles, /\.month-heading-icon\s*\{[^}]*stroke:\s*var\(--header-accent\);/s);
-  assert.match(styles, /\.month-title-year\s*\{[^}]*color:\s*var\(--header-accent\);/s);
+  assert.doesNotMatch(styles, /\.month-heading-icon\s*\{/);
+  assert.match(styles, /\.month-title-year\s*\{[^}]*color:\s*var\(--text\);/s);
   assert.match(styles, /\.month-heading-divider\s*\{[^}]*grid-template-columns:/s);
   assert.match(styles, /\.topbar::before,[\s\S]*?\.topbar::after\s*\{[^}]*pointer-events:\s*none;/s);
   assert.match(styles, /\.calendar-switcher\[data-has-calculator="false"\]\s*\{[^}]*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\);/s);
