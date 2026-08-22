@@ -343,16 +343,6 @@ textarea:focus-visible {
   text-align: center;
 }
 
-.month-heading-icon {
-  width: 32px;
-  height: 32px;
-  fill: none;
-  stroke: var(--header-accent);
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 1.8;
-}
-
 .month-title {
   position: relative;
   display: flex;
@@ -384,7 +374,7 @@ textarea:focus-visible {
 }
 
 .month-title-year {
-  color: var(--header-accent);
+  color: var(--text);
 }
 
 .month-heading-divider {
