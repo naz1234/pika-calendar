@@ -358,7 +358,7 @@ textarea:focus-visible {
   color: var(--text);
   cursor: pointer;
   font-size: clamp(1.08rem, 5.8vw, 1.8rem);
-  font-weight: 820;
+  font-weight: 400;
   letter-spacing: -0.055em;
   text-transform: uppercase;
   user-select: none;
@@ -375,29 +375,6 @@ textarea:focus-visible {
 
 .month-title-year {
   color: var(--text);
-}
-
-.month-heading-divider {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 9px minmax(0, 1fr);
-  align-items: center;
-  gap: 7px;
-  width: min(100%, 140px);
-  color: var(--header-accent);
-}
-
-.month-heading-divider::before,
-.month-heading-divider::after {
-  height: 2px;
-  background: currentColor;
-  content: "";
-}
-
-.month-heading-divider i {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  background: currentColor;
 }
 
 .month-title:focus-within {
