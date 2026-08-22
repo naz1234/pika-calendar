@@ -403,7 +403,7 @@ test("uses the purple segmented swipe-first calendar header", async () => {
   assert.doesNotMatch(styles, /\.month-heading-icon\s*\{/);
   assert.match(styles, /\.month-title-year\s*\{[^}]*color:\s*var\(--text\);/s);
   assert.match(styles, /\.month-heading\s*\{[^}]*padding-top:\s*8px;/s);
-  assert.match(styles, /\.month-title\s*\{[^}]*font-weight:\s*820;/s);
+  assert.match(styles, /\.month-title\s*\{[^}]*font-weight:\s*700;/s);
   assert.doesNotMatch(styles, /\.month-heading-divider\s*\{/);
   assert.match(styles, /\.topbar::before,[\s\S]*?\.topbar::after\s*\{[^}]*pointer-events:\s*none;/s);
   assert.match(styles, /\.calendar-switcher\[data-has-calculator="false"\]\s*\{[^}]*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\);/s);
