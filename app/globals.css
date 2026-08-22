@@ -17,9 +17,9 @@
   --personal: #ff8d72;
   --personal-strong: #f2674a;
   --personal-soft: rgba(255, 141, 114, 0.17);
-  --header-accent: #4f46e5;
-  --header-icon: #b8b0ff;
-  --header-accent-shadow: rgba(79, 70, 229, 0.3);
+  --header-accent: #7047eb;
+  --header-icon: #cbb9ff;
+  --header-accent-shadow: rgba(112, 71, 235, 0.3);
   --shift-early-ink: #ffd166;
   --shift-early-bg: #3a2d16;
   --shift-late-ink: #67d4f2;
@@ -62,9 +62,9 @@
   --personal: #d9583f;
   --personal-strong: #c94a32;
   --personal-soft: rgba(217, 88, 63, 0.12);
-  --header-accent: #4f46e5;
-  --header-icon: #5147d9;
-  --header-accent-shadow: rgba(79, 70, 229, 0.22);
+  --header-accent: #7047eb;
+  --header-icon: #6241dc;
+  --header-accent-shadow: rgba(112, 71, 235, 0.22);
   --shift-early-ink: #7a4a00;
   --shift-early-bg: #fff0c7;
   --shift-late-ink: #075c73;
@@ -229,17 +229,48 @@ textarea:focus-visible {
 .topbar {
   position: relative;
   z-index: 20;
-  padding: max(10px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) 8px max(10px, env(safe-area-inset-left));
-  border-bottom: 1px solid var(--grid-soft);
-  background: color-mix(in srgb, var(--surface) 91%, transparent);
+  overflow: hidden;
+  isolation: isolate;
+  margin: max(10px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) 0 max(10px, env(safe-area-inset-left));
+  padding: 16px 12px 14px;
+  border: 1px solid color-mix(in srgb, var(--header-accent) 22%, var(--grid-soft));
+  border-radius: 24px;
+  background:
+    radial-gradient(ellipse at 2% 115%, color-mix(in srgb, var(--header-accent) 18%, transparent), transparent 34%),
+    radial-gradient(ellipse at 100% 122%, color-mix(in srgb, var(--header-accent) 16%, transparent), transparent 36%),
+    color-mix(in srgb, var(--surface) 94%, transparent);
   backdrop-filter: blur(18px);
+}
+
+.topbar::before,
+.topbar::after {
+  position: absolute;
+  z-index: -1;
+  bottom: -64px;
+  width: 46%;
+  height: 108px;
+  border: 1px solid color-mix(in srgb, var(--header-accent) 50%, transparent);
+  border-radius: 50%;
+  content: "";
+  opacity: 0.72;
+  pointer-events: none;
+}
+
+.topbar::before {
+  left: -16%;
+  transform: rotate(12deg);
+}
+
+.topbar::after {
+  right: -16%;
+  transform: rotate(-12deg);
 }
 
 .topbar-main {
   display: grid;
   grid-template-columns: 44px minmax(0, 1fr) 44px;
-  align-items: center;
-  gap: 12px;
+  align-items: start;
+  gap: 8px;
   width: 100%;
 }
 
@@ -247,14 +278,13 @@ textarea:focus-visible {
   display: grid;
   place-items: center;
   width: 100%;
-  margin-top: 4px;
+  margin-top: 18px;
 }
 
 .calendar-control-stack {
   display: grid;
   justify-items: center;
-  gap: 7px;
-  width: min(100%, 178px);
+  width: min(100%, 520px);
   margin-inline: auto;
 }
 
@@ -293,13 +323,34 @@ textarea:focus-visible {
 
 .menu-button,
 .search-button {
-  border-color: transparent;
-  background: transparent;
-  color: var(--header-icon);
+  margin-top: 2px;
+  border-color: color-mix(in srgb, var(--grid) 75%, transparent);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--surface-raised) 82%, transparent);
+  color: var(--text);
 }
 
 .menu-button {
   justify-self: start;
+}
+
+.month-heading {
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 8px;
+  min-width: 0;
+  text-align: center;
+}
+
+.month-heading-icon {
+  width: 32px;
+  height: 32px;
+  fill: none;
+  stroke: var(--header-accent);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
 }
 
 .month-title {
@@ -310,18 +361,53 @@ textarea:focus-visible {
   justify-self: center;
   min-width: 0;
   width: 100%;
-  height: 44px;
-  overflow: hidden;
+  min-height: 32px;
   padding: 0;
   border-radius: 10px;
   background: transparent;
   color: var(--text);
   cursor: pointer;
-  font-size: clamp(1.12rem, 4.8vw, 1.48rem);
-  font-weight: 680;
-  letter-spacing: -0.035em;
+  font-size: clamp(1.08rem, 5.8vw, 1.8rem);
+  font-weight: 820;
+  letter-spacing: -0.055em;
+  text-transform: uppercase;
   user-select: none;
   white-space: nowrap;
+}
+
+.month-title-copy {
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+.month-title-year {
+  color: var(--header-accent);
+}
+
+.month-heading-divider {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 9px minmax(0, 1fr);
+  align-items: center;
+  gap: 7px;
+  width: min(100%, 140px);
+  color: var(--header-accent);
+}
+
+.month-heading-divider::before,
+.month-heading-divider::after {
+  height: 2px;
+  background: currentColor;
+  content: "";
+}
+
+.month-heading-divider i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: currentColor;
 }
 
 .month-title:focus-within {
@@ -373,55 +459,70 @@ textarea:focus-visible {
 
 .calendar-switcher {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0;
+  grid-template-columns: minmax(0, 1.22fr) minmax(0, 1fr) minmax(0, 1.08fr);
+  gap: 2px;
   width: 100%;
-  padding: 3px;
-  border: 0;
+  padding: 4px;
+  border: 1px solid color-mix(in srgb, var(--grid) 82%, transparent);
   border-radius: 999px;
-  background: var(--surface-soft);
+  background: color-mix(in srgb, var(--surface-soft) 88%, transparent);
+}
+
+.calendar-switcher[data-has-calculator="false"] {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .calendar-switcher button {
   display: flex;
+  min-width: 0;
   align-items: center;
   justify-content: center;
-  gap: 7px;
-  min-height: 34px;
-  padding: 0 12px;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 9px;
   border-radius: 999px;
   background: transparent;
-  color: var(--muted);
-  font-size: 0.75rem;
-  font-weight: 650;
+  color: var(--muted-strong);
+  font-size: clamp(0.66rem, 2.35vw, 0.78rem);
+  font-weight: 700;
+  white-space: nowrap;
   transition: background 170ms ease, color 170ms ease, box-shadow 170ms ease;
+}
+
+.calendar-switcher button svg {
+  width: 17px;
+  height: 17px;
+  flex: 0 0 17px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
 }
 
 .calendar-switcher button.active {
   background: var(--header-accent);
+  background-image: linear-gradient(135deg, color-mix(in srgb, var(--header-accent) 78%, #ffffff), var(--header-accent));
   color: #ffffff;
   box-shadow: 0 5px 16px var(--header-accent-shadow);
 }
 
 .salary-calculator-trigger {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: calc((100% - 6px) / 2);
-  min-height: 34px;
-  padding: 0 12px;
+  width: 100%;
+  min-height: 40px;
+  padding: 0 9px;
   border: 0;
   border-radius: 999px;
-  background: var(--surface-soft);
-  color: var(--muted);
-  font-size: 0.75rem;
-  font-weight: 650;
-  transition: background 170ms ease, color 170ms ease, box-shadow 170ms ease, transform 160ms ease;
+  background: transparent;
+  color: var(--muted-strong);
+  font-size: clamp(0.66rem, 2.35vw, 0.78rem);
+  font-weight: 700;
+  transition: background 170ms ease, color 170ms ease, transform 160ms ease;
 }
 
 .salary-calculator-trigger:hover {
-  background: color-mix(in srgb, var(--header-accent) 13%, var(--surface-soft));
-  color: color-mix(in srgb, var(--header-icon) 88%, var(--text));
+  background: color-mix(in srgb, var(--header-accent) 15%, transparent);
+  color: var(--text);
 }
 
 .salary-calculator-trigger:active {
@@ -3063,17 +3164,17 @@ textarea:focus-visible {
     max-width: 1480px;
     width: 100%;
     margin: 0 auto;
-    padding: 16px 22px;
+    padding: 20px 22px 18px;
     border: 1px solid var(--grid-soft);
     border-radius: 19px 19px 0 0;
   }
 
   .month-title {
-    font-size: 1.35rem;
+    font-size: 1.85rem;
   }
 
   .calendar-toolbar {
-    margin-top: 14px;
+    margin-top: 18px;
   }
 
   .main-content {
@@ -3254,7 +3355,15 @@ textarea:focus-visible {
   }
 
   .calendar-switcher button {
-    padding: 0 7px;
+    gap: 4px;
+    padding: 0 5px;
+    font-size: 0.63rem;
+  }
+
+  .calendar-switcher button svg {
+    width: 14px;
+    height: 14px;
+    flex-basis: 14px;
   }
 
   .weekday-strip,
