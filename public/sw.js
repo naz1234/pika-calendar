@@ -1,5 +1,5 @@
 const CACHE_PREFIX = "my-calendar-v";
-const CACHE_NAME = "my-calendar-v30";
+const CACHE_NAME = "my-calendar-v31";
 const APP_SHELL = [
   "/manifest.webmanifest",
   "/icons/calendar-192.png",
