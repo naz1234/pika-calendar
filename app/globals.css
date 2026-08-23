@@ -1551,12 +1551,12 @@ textarea:focus-visible {
 .menu-drawer {
   position: relative;
   z-index: 1;
-  width: min(88vw, 365px);
+  width: min(86vw, 390px);
   height: 100%;
   overflow-y: auto;
-  padding: max(20px, env(safe-area-inset-top)) 18px max(20px, env(safe-area-inset-bottom));
-  border-right: 1px solid var(--grid);
-  background: var(--surface-raised);
+  padding: max(26px, env(safe-area-inset-top)) 22px max(24px, env(safe-area-inset-bottom));
+  border-right: 1px solid color-mix(in srgb, var(--grid) 48%, transparent);
+  background: color-mix(in srgb, var(--surface-raised) 88%, var(--bg));
   box-shadow: var(--shadow);
   animation: drawer-in 180ms ease both;
 }
@@ -1568,8 +1568,10 @@ textarea:focus-visible {
 
 .menu-header {
   align-items: center;
-  padding-bottom: 22px;
-  border-bottom: 1px solid var(--grid-soft);
+  gap: 13px;
+  min-height: 62px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid color-mix(in srgb, var(--grid-soft) 78%, transparent);
 }
 
 .brand-mark {
@@ -1588,12 +1590,17 @@ textarea:focus-visible {
 }
 
 .menu-header strong {
-  font-size: 0.95rem;
+  color: var(--text);
+  font-size: 1.08rem;
+  letter-spacing: -0.035em;
 }
 
 .menu-header span {
+  overflow: hidden;
   color: var(--muted);
   font-size: 0.72rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .menu-section {
@@ -1604,6 +1611,7 @@ textarea:focus-visible {
 .menu-label {
   margin-bottom: 12px;
   color: var(--muted);
+  letter-spacing: 0.15em;
 }
 
 .theme-toggle {
@@ -2089,6 +2097,94 @@ textarea:focus-visible {
 .settings-toggle strong,
 .settings-toggle .settings-chevron {
   color: var(--menu-settings-ink);
+}
+
+.menu-drawer .menu-import-row,
+.menu-drawer .shared-roster-toggle,
+.menu-drawer .menu-ivu-row,
+.menu-drawer .settings-toggle {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) 24px;
+  align-items: center;
+  gap: 14px;
+  min-height: 76px;
+  margin: 0;
+  padding: 0 2px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.menu-drawer .menu-action-icon {
+  width: 27px;
+  height: 27px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.7;
+}
+
+.menu-drawer .menu-action-copy {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.menu-drawer .menu-action-copy strong {
+  overflow: hidden;
+  color: var(--text);
+  font-size: 0.87rem;
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.menu-drawer .menu-action-copy small {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 0.69rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.menu-drawer .menu-action-icon-import,
+.menu-drawer .menu-import-row > span:last-child {
+  color: var(--menu-import-ink);
+}
+
+.menu-drawer .menu-action-icon-shared,
+.menu-drawer .shared-roster-chevron {
+  color: var(--menu-file-ink);
+}
+
+.menu-drawer .menu-action-icon-external,
+.menu-drawer .menu-ivu-row > span:last-child {
+  color: var(--menu-external-ink);
+}
+
+.menu-drawer .menu-action-icon-settings,
+.menu-drawer .settings-chevron {
+  color: var(--menu-settings-ink);
+}
+
+.menu-drawer .menu-import-row > span:last-child,
+.menu-drawer .menu-ivu-row > span:last-child {
+  width: auto;
+  height: auto;
+  background: transparent;
+  font-size: 1.15rem;
+}
+
+.menu-drawer .shared-roster-chevron,
+.menu-drawer .settings-chevron {
+  justify-self: center;
+  font-size: 1.55rem;
+}
+
+.menu-drawer .settings-section {
+  padding-top: 12px;
+  border-bottom: 0;
 }
 
 .saved-roster-empty {
