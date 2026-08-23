@@ -352,6 +352,27 @@ test("calculates ISO week numbers across year boundaries", async () => {
   assert.equal(isoWeekNumber(new Date(2026, 7, 3)), 32);
 });
 
+test("uses a spacious icon-led calendar sidebar", async () => {
+  const [source, styles] = await Promise.all([
+    readFile(path.join(projectRoot, "app", "page.tsx"), "utf8"),
+    readFile(path.join(projectRoot, "app", "globals.css"), "utf8"),
+  ]);
+
+  assert.match(source, /className="menu-action-icon menu-action-icon-import"/);
+  assert.match(source, /className="menu-action-icon menu-action-icon-shared"/);
+  assert.match(source, /className="menu-action-icon menu-action-icon-external"/);
+  assert.match(source, /className="menu-action-icon menu-action-icon-settings"/);
+  assert.match(source, /className="menu-action-copy"><strong>Import roster file<\/strong>/);
+  assert.match(source, /onClick=\{chooseRosterFile\}/);
+  assert.match(source, /setSharedRosterOpen\(\(current\) => !current\)/);
+  assert.match(source, /setSettingsOpen\(\(current\) => !current\)/);
+  assert.match(styles, /\.menu-drawer\s*\{[^}]*width:\s*min\(86vw, 390px\);[^}]*background:\s*color-mix\(in srgb, var\(--surface-raised\) 88%, var\(--bg\)\);/s);
+  assert.match(styles, /\.menu-drawer \.menu-import-row,[\s\S]*?\.menu-drawer \.settings-toggle\s*\{[^}]*grid-template-columns:\s*30px minmax\(0, 1fr\) 24px;[^}]*min-height:\s*76px;[^}]*border:\s*0;[^}]*background:\s*transparent;/s);
+  assert.match(styles, /\.menu-drawer \.menu-action-icon\s*\{[^}]*stroke:\s*currentColor;/s);
+  assert.match(styles, /\.menu-drawer \.menu-action-copy strong\s*\{[^}]*color:\s*var\(--text\);/s);
+  assert.match(styles, /\.menu-drawer \.settings-section\s*\{[^}]*border-bottom:\s*0;/s);
+});
+
 test("uses the purple segmented swipe-first calendar header", async () => {
   const [source, styles] = await Promise.all([
     readFile(path.join(projectRoot, "app", "page.tsx"), "utf8"),
