@@ -1951,7 +1951,12 @@ export default function Home() {
               <div className="menu-section">
                 <p className="menu-label">Work roster</p>
                 <button className="menu-row roster-menu-row menu-import-row" onClick={chooseRosterFile}>
-                  <span><strong>Import roster file</strong><small>Use a screenshot or IVU.plan PDF</small></span>
+                  <svg className="menu-action-icon menu-action-icon-import" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h8" />
+                    <path d="M14 2v6h6M14 2l6 6v4M8 13h7M8 17h4" />
+                    <path d="M18 22v-8m-3 3 3-3 3 3" />
+                  </svg>
+                  <span className="menu-action-copy"><strong>Import roster file</strong><small>Use a screenshot or IVU.plan PDF</small></span>
                   <span aria-hidden="true">↑</span>
                 </button>
                 <button
@@ -1960,7 +1965,12 @@ export default function Home() {
                   aria-expanded={sharedRosterOpen}
                   aria-controls="shared-roster-panel"
                 >
-                  <span>
+                  <svg className="menu-action-icon menu-action-icon-shared" viewBox="0 0 24 24" aria-hidden="true">
+                    <rect x="2" y="4" width="15" height="12" rx="1.5" />
+                    <path d="M7 20h5m-2.5-4v4" />
+                    <rect x="15" y="9" width="7" height="12" rx="1.2" />
+                  </svg>
+                  <span className="menu-action-copy">
                     <strong>Shared across devices</strong>
                     <small>
                       {sharedRosterStatus === "loading" && "Loading uploaded files…"}
@@ -2019,7 +2029,11 @@ export default function Home() {
                   rel="noopener noreferrer"
                   aria-label="Open IVU Website to download the original roster PDF in a new tab"
                 >
-                  <span><strong>IVU Website</strong><small>Download the original roster PDF</small></span>
+                  <svg className="menu-action-icon menu-action-icon-external" viewBox="0 0 24 24" aria-hidden="true">
+                    <circle cx="12" cy="12" r="9" />
+                    <path d="M3 12h18M12 3c2.5 2.5 3.5 5.5 3.5 9s-1 6.5-3.5 9c-2.5-2.5-3.5-5.5-3.5-9S9.5 5.5 12 3Z" />
+                  </svg>
+                  <span className="menu-action-copy"><strong>IVU Website</strong><small>Download the original roster PDF</small></span>
                   <span aria-hidden="true">↗</span>
                 </a>
               </div>
@@ -2031,7 +2045,11 @@ export default function Home() {
                 aria-expanded={settingsOpen}
                 aria-controls="calendar-settings-panel"
               >
-                <span><strong>Settings</strong><small>Appearance, layout, salary, sync, backups, and data</small></span>
+                <svg className="menu-action-icon menu-action-icon-settings" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M9.7 4.2 10.3 2h3.4l.6 2.2a8.4 8.4 0 0 1 1.8 1l2.2-.6 1.7 3-1.6 1.6c.2.6.3 1.2.3 1.8s-.1 1.2-.3 1.8l1.6 1.6-1.7 3-2.2-.6a8.4 8.4 0 0 1-1.8 1l-.6 2.2h-3.4l-.6-2.2a8.4 8.4 0 0 1-1.8-1l-2.2.6-1.7-3 1.6-1.6a6 6 0 0 1 0-3.6L4 7.6l1.7-3 2.2.6a8.4 8.4 0 0 1 1.8-1Z" />
+                  <circle cx="12" cy="11" r="2.5" />
+                </svg>
+                <span className="menu-action-copy"><strong>Settings</strong><small>Appearance, layout, salary, sync, backups, and data</small></span>
                 <span className="settings-chevron" aria-hidden="true">›</span>
               </button>
               {settingsOpen && (
