@@ -146,6 +146,19 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   assert.match(source, /agenda-note/);
   assert.match(source, />Remark</);
   assert.match(styles, /\.agenda-note-text/);
+  assert.match(source, /activeCalendar === "personal" && panel\.offset === 0/);
+  assert.match(source, /className="personal-day-details"/);
+  assert.match(source, /aria-label=\{`Personal details for \$\{selectedLabel\}`\}/);
+  assert.match(source, /className="personal-day-event"[\s\S]*?eventTimeLabel\(calendarEvent\)[\s\S]*?calendarEvent\.title/s);
+  assert.match(source, /className="personal-day-remark"[\s\S]*?>Remark<[\s\S]*?\{remark\}/s);
+  assert.match(source, /No personal details for this day/);
+  assert.match(source, /className="personal-day-add"[\s\S]*?openCreate\(selectedDate\)/s);
+  assert.match(source, /setAgendaOpen\(activeCalendar === "work"\)/);
+  assert.match(source, /if \(kind === "personal"\) \{[\s\S]*?setSalaryCalculatorOpen\(false\);[\s\S]*?setAgendaOpen\(false\);/s);
+  assert.match(styles, /\.personal-day-details\s*\{[^}]*display:\s*none;/s);
+  assert.match(styles, /@media \(max-width: 899px\)[\s\S]*?\.month-swipe-panel > \.personal-day-details\s*\{[^}]*display:\s*block;[^}]*width:\s*100%;[^}]*border:\s*1px solid var\(--grid\);[^}]*border-radius:\s*16px;[^}]*background-color:\s*var\(--surface\);/s);
+  assert.match(styles, /\.personal-day-event\s*\{[^}]*grid-template-columns:\s*68px minmax\(0, 1fr\) 18px;[^}]*border-radius:\s*13px;[^}]*background:\s*var\(--surface-soft\);/s);
+  assert.match(styles, /\.personal-day-remark\s*\{[^}]*border:[^;}]+var\(--remark-dot\)[^;}]+;[^}]*background:[^;}]+var\(--remark-dot\)/s);
   assert.match(source, /eventDisplayRemark/);
   assert.match(source, /dayHasRemark/);
   assert.match(source, /day-remark-dot/);
@@ -320,7 +333,7 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   }
   assert.match(styles, /:root,[\s\S]*?--remark-dot:\s*#ffc247;/);
   assert.match(styles, /:root\[data-theme="light"\][\s\S]*?--remark-dot:\s*#e6a20d;/);
-  assert.match(serviceWorker, /my-calendar-v44/);
+  assert.match(serviceWorker, /my-calendar-v45/);
   assert.match(serviceWorker, /includeUncontrolled: true/);
   assert.match(serviceWorker, /try[\s\S]*?await client\.navigate\(client\.url\);[\s\S]*?catch/);
   assert.match(serviceWorker, /client\.navigate\(client\.url\)/);
