@@ -227,6 +227,7 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   assert.match(styles, /\.salary-calculator-trigger\s*\{[^}]*width:\s*100%;[^}]*min-height:\s*40px;[^}]*padding:\s*0 9px;[^}]*border-radius:\s*999px;[^}]*font-size:\s*clamp\(0\.66rem, 2\.35vw, 0\.78rem\);[^}]*font-weight:\s*700;/s);
   assert.match(styles, /\.salary-calculator-overlay\s*\{[^}]*place-items:\s*center;/s);
   assert.match(styles, /\.dialog\.salary-calculator-dialog\s*\{[^}]*width:\s*min\(100%, 460px\);[^}]*border-radius:\s*24px;/s);
+  assert.match(styles, /\.summary-mobile \.monthly-summary-heading h2,\s*\.salary-calculator-dialog \.dialog-header h2\s*\{[^}]*margin-top:\s*7px;[^}]*font-size:\s*1\.45rem;[^}]*font-weight:\s*500;[^}]*letter-spacing:\s*-0\.025em;[^}]*line-height:\s*1\.2;/s);
   const workEditorStart = source.indexOf("{editorIsWorkEdit ? (");
   const personalEditorStart = source.indexOf(") : (", workEditorStart);
   assert.ok(workEditorStart >= 0 && personalEditorStart > workEditorStart);
@@ -313,7 +314,7 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   }
   assert.match(styles, /:root,[\s\S]*?--remark-dot:\s*#ffc247;/);
   assert.match(styles, /:root\[data-theme="light"\][\s\S]*?--remark-dot:\s*#e6a20d;/);
-  assert.match(serviceWorker, /my-calendar-v36/);
+  assert.match(serviceWorker, /my-calendar-v37/);
   assert.match(serviceWorker, /includeUncontrolled: true/);
   assert.match(serviceWorker, /try[\s\S]*?await client\.navigate\(client\.url\);[\s\S]*?catch/);
   assert.match(serviceWorker, /client\.navigate\(client\.url\)/);

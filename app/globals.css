@@ -775,10 +775,13 @@ textarea:focus-visible {
   margin-bottom: 16px;
 }
 
-.summary-mobile .monthly-summary-heading h2 {
+.summary-mobile .monthly-summary-heading h2,
+.salary-calculator-dialog .dialog-header h2 {
   margin-top: 7px;
   font-size: 1.45rem;
   font-weight: 500;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
 }
 
 .summary-mobile .monthly-summary-counts {
