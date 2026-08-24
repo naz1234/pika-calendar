@@ -1185,6 +1185,24 @@ textarea:focus-visible {
   box-shadow: 0 3px 9px color-mix(in srgb, currentColor 16%, transparent);
 }
 
+.event-chip:not(.shift-event) .mobile-event-summary {
+  width: 100%;
+  min-width: 0;
+  padding-inline: 4px;
+}
+
+.mobile-event-title {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  color: currentColor;
+  font-size: 0.5rem;
+  font-weight: 750;
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .event-chip.shift-event .mobile-event-summary {
   justify-content: flex-start;
   width: 100%;

@@ -254,6 +254,9 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   assert.doesNotMatch(styles, /\.today \.day-number\s*\{[^}]*background:\s*var\(--accent\)/s);
   assert.match(source, /mobileEventCode/);
   assert.match(source, /mobile-event-code/);
+  assert.match(source, /<span className="mobile-event-title">\{calendarEvent\.title\}<\/span>/);
+  assert.match(styles, /\.event-chip:not\(\.shift-event\) \.mobile-event-summary\s*\{[^}]*width:\s*100%;[^}]*min-width:\s*0;[^}]*padding-inline:\s*4px;/s);
+  assert.match(styles, /\.mobile-event-title\s*\{[^}]*overflow:\s*hidden;[^}]*font-size:\s*0\.5rem;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s);
   assert.match(source, /rosterShiftModifier/);
   assert.match(source, /className=\{`mobile-event-code\$\{shiftModifier \? " mobile-event-code-modified" : ""\}`\}/);
   assert.match(styles, /\.mobile-event-code-modified\s*\{[^}]*letter-spacing:\s*-0\.025em;/s);
@@ -310,7 +313,7 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   }
   assert.match(styles, /:root,[\s\S]*?--remark-dot:\s*#ffc247;/);
   assert.match(styles, /:root\[data-theme="light"\][\s\S]*?--remark-dot:\s*#e6a20d;/);
-  assert.match(serviceWorker, /my-calendar-v35/);
+  assert.match(serviceWorker, /my-calendar-v36/);
   assert.match(serviceWorker, /includeUncontrolled: true/);
   assert.match(serviceWorker, /try[\s\S]*?await client\.navigate\(client\.url\);[\s\S]*?catch/);
   assert.match(serviceWorker, /client\.navigate\(client\.url\)/);
