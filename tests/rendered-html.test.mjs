@@ -91,6 +91,9 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   assert.doesNotMatch(source, /SHARED_ROSTER_PREVIEW_LIMIT|sharedRosterPreviewFiles|View all files/);
   assert.match(source, />Roster file archive</);
   assert.match(source, /Nothing is removed automatically\./);
+  assert.match(styles, /\.roster-archive-overlay\s*\{[^}]*place-items:\s*center;[^}]*padding:\s*max\(16px, env\(safe-area-inset-top\)\) 16px max\(16px, env\(safe-area-inset-bottom\)\);/s);
+  assert.match(styles, /\.dialog\.roster-archive-dialog\s*\{[^}]*width:\s*min\(100%, 460px\);[^}]*max-height:\s*min\(92dvh, 720px\);[^}]*border-radius:\s*24px;/s);
+  assert.match(styles, /\.roster-archive-summary\s*\{[^}]*margin:\s*0 18px;[^}]*border:\s*1px solid color-mix\(in srgb, var\(--work\) 28%, var\(--grid\)\);[^}]*border-radius:\s*14px;[^}]*background:\s*linear-gradient\(135deg, var\(--work-soft\), var\(--surface-soft\)\);/s);
   assert.match(source, /sharedRosterStatus === "loading"[\s\S]*?Loading shared roster files…/);
   assert.match(source, /sharedRosterStatus === "unavailable"[\s\S]*?Shared roster files are temporarily unavailable/);
   assert.match(source, /sharedRosterStatus === "ready" && sharedRosterFileGroups\.map\(\(group\) =>/);
@@ -225,12 +228,12 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   assert.match(styles, /\.salary-calculator-trigger\s*\{[^}]*width:\s*100%;[^}]*min-height:\s*40px;[^}]*padding:\s*0 9px;[^}]*border-radius:\s*999px;[^}]*font-size:\s*clamp\(0\.66rem, 2\.35vw, 0\.78rem\);[^}]*font-weight:\s*700;/s);
   assert.match(styles, /\.salary-calculator-overlay\s*\{[^}]*place-items:\s*center;/s);
   assert.match(styles, /\.dialog\.salary-calculator-dialog\s*\{[^}]*width:\s*min\(100%, 460px\);[^}]*border-radius:\s*24px;/s);
-  assert.match(styles, /\.summary-mobile\.monthly-shift-summary,\s*\.dialog\.salary-calculator-dialog\s*\{[^}]*border:\s*1px solid var\(--grid\);[^}]*background-color:\s*var\(--surface\);[^}]*background-image:\s*radial-gradient\(circle at 92% 8%, color-mix\(in srgb, var\(--work\) 8%, transparent\), transparent 32%\);[^}]*box-shadow:\s*0 12px 32px color-mix\(in srgb, var\(--text\) 8%, transparent\);/s);
+  assert.match(styles, /\.summary-mobile\.monthly-shift-summary,\s*\.dialog\.salary-calculator-dialog,\s*\.dialog\.roster-archive-dialog\s*\{[^}]*border:\s*1px solid var\(--grid\);[^}]*background-color:\s*var\(--surface\);[^}]*background-image:\s*radial-gradient\(circle at 92% 8%, color-mix\(in srgb, var\(--work\) 8%, transparent\), transparent 32%\);[^}]*box-shadow:\s*0 12px 32px color-mix\(in srgb, var\(--text\) 8%, transparent\);/s);
   assert.ok(
-    styles.indexOf(".summary-mobile.monthly-shift-summary,\n.dialog.salary-calculator-dialog") >
+    styles.indexOf(".summary-mobile.monthly-shift-summary,\n.dialog.salary-calculator-dialog,\n.dialog.roster-archive-dialog") >
       styles.indexOf(".dialog {")
   );
-  assert.match(styles, /\.summary-mobile \.monthly-summary-heading h2,\s*\.salary-calculator-dialog \.dialog-header h2\s*\{[^}]*margin-top:\s*7px;[^}]*font-size:\s*1\.45rem;[^}]*font-weight:\s*500;[^}]*letter-spacing:\s*-0\.025em;[^}]*line-height:\s*1\.2;/s);
+  assert.match(styles, /\.summary-mobile \.monthly-summary-heading h2,\s*\.salary-calculator-dialog \.dialog-header h2,\s*\.roster-archive-dialog \.dialog-header h2\s*\{[^}]*margin-top:\s*7px;[^}]*font-size:\s*1\.45rem;[^}]*font-weight:\s*500;[^}]*letter-spacing:\s*-0\.025em;[^}]*line-height:\s*1\.2;/s);
   const workEditorStart = source.indexOf("{editorIsWorkEdit ? (");
   const personalEditorStart = source.indexOf(") : (", workEditorStart);
   assert.ok(workEditorStart >= 0 && personalEditorStart > workEditorStart);
@@ -317,7 +320,7 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   }
   assert.match(styles, /:root,[\s\S]*?--remark-dot:\s*#ffc247;/);
   assert.match(styles, /:root\[data-theme="light"\][\s\S]*?--remark-dot:\s*#e6a20d;/);
-  assert.match(serviceWorker, /my-calendar-v43/);
+  assert.match(serviceWorker, /my-calendar-v44/);
   assert.match(serviceWorker, /includeUncontrolled: true/);
   assert.match(serviceWorker, /try[\s\S]*?await client\.navigate\(client\.url\);[\s\S]*?catch/);
   assert.match(serviceWorker, /client\.navigate\(client\.url\)/);
