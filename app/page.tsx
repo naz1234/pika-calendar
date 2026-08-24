@@ -111,7 +111,6 @@ type RosterDialogState = {
 const STORAGE_KEY = "daymark-calendar-v1";
 const SETTINGS_KEY = "daymark-settings-v1";
 const SHARED_SYNC_MIGRATION_KEY = "daymark-shared-sync-migrated-v2";
-const SHARED_ROSTER_PREVIEW_LIMIT = 3;
 const STATIC_DATE = new Date(2000, 0, 1);
 const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const SHORT_WEEKDAYS = ["S", "M", "T", "W", "T", "F", "S"];
@@ -370,7 +369,6 @@ export default function Home() {
   const [agendaOpen, setAgendaOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [sharedRosterOpen, setSharedRosterOpen] = useState(false);
   const [rosterArchiveOpen, setRosterArchiveOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [editor, setEditor] = useState<{ id?: string; draft: EventDraft } | null>(null);
@@ -414,10 +412,6 @@ export default function Home() {
       return !sharedSignatures.has(signature) && !deletedSignatures.has(signature);
     });
   }, [deletedRosterSignatures, deviceRosterFiles, sharedRosterFiles]);
-  const sharedRosterPreviewFiles = useMemo(
-    () => sharedRosterFiles.slice(0, SHARED_ROSTER_PREVIEW_LIMIT),
-    [sharedRosterFiles],
-  );
   const sharedRosterFileGroups = useMemo(() => {
     const grouped = new Map<string, StoredRosterFileMetadata[]>();
     sharedRosterFiles.forEach((file) => {
@@ -702,7 +696,7 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    if (!menuOpen || activeCalendar !== "work") return;
+    if ((!menuOpen && !rosterArchiveOpen) || activeCalendar !== "work") return;
     let cancelled = false;
     async function refreshSharedRosterFiles() {
       setSharedRosterStatus("loading");
@@ -768,7 +762,7 @@ export default function Home() {
     return () => {
       cancelled = true;
     };
-  }, [activeCalendar, deviceRosterFiles, menuOpen]);
+  }, [activeCalendar, deviceRosterFiles, menuOpen, rosterArchiveOpen]);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -1968,10 +1962,10 @@ export default function Home() {
                   <span aria-hidden="true">↑</span>
                 </button>
                 <button
-                  className={`menu-row shared-roster-toggle${sharedRosterOpen ? " open" : ""}`}
-                  onClick={() => setSharedRosterOpen((current) => !current)}
-                  aria-expanded={sharedRosterOpen}
-                  aria-controls="shared-roster-panel"
+                  className="menu-row shared-roster-action"
+                  onClick={openRosterArchive}
+                  aria-haspopup="dialog"
+                  aria-controls="roster-archive-dialog"
                 >
                   <svg className="menu-action-icon menu-action-icon-shared" viewBox="0 0 24 24" aria-hidden="true">
                     <rect x="2" y="4" width="15" height="12" rx="1.5" />
@@ -1988,29 +1982,6 @@ export default function Home() {
                   </span>
                   <span className="shared-roster-chevron" aria-hidden="true">›</span>
                 </button>
-                {sharedRosterOpen && (
-                  <div id="shared-roster-panel" className="shared-roster-panel">
-                    {sharedRosterStatus === "loading" && (
-                      <div className="saved-roster-empty">Loading shared roster files…</div>
-                    )}
-                    {sharedRosterStatus === "unavailable" && (
-                      <div className="saved-roster-empty">Shared roster files are temporarily unavailable</div>
-                    )}
-                    {sharedRosterStatus === "ready" && sharedRosterFiles.length === 0 && (
-                      <div className="saved-roster-empty">Upload a PDF or image to share it across devices</div>
-                    )}
-                    {sharedRosterStatus === "ready" && sharedRosterPreviewFiles.map((file) => renderSharedRosterFile(file))}
-                    {sharedRosterStatus === "ready" && sharedRosterFiles.length > SHARED_ROSTER_PREVIEW_LIMIT && (
-                      <button className="menu-row roster-menu-row roster-archive-trigger" onClick={openRosterArchive}>
-                        <span>
-                          <strong>View all files ({sharedRosterFiles.length})</strong>
-                          <small>Files are kept until you delete them</small>
-                        </span>
-                        <span aria-hidden="true">›</span>
-                      </button>
-                    )}
-                  </div>
-                )}
                 {deviceOnlyRosterFiles.length > 0 && (
                   <>
                     <p className="saved-roster-label device-roster-label">Only on this device</p>
@@ -2137,6 +2108,7 @@ export default function Home() {
         <div className="overlay centered-overlay roster-archive-overlay">
           <button className="overlay-dismiss" onClick={closeRosterArchive} aria-label="Close roster file archive" />
           <section
+            id="roster-archive-dialog"
             className="dialog roster-archive-dialog"
             role="dialog"
             aria-modal="true"
@@ -2161,10 +2133,16 @@ export default function Home() {
               <span>Nothing is removed automatically.</span>
             </div>
             <div className="roster-archive-list">
-              {sharedRosterFiles.length === 0 && (
+              {sharedRosterStatus === "loading" && (
+                <div className="saved-roster-empty">Loading shared roster files…</div>
+              )}
+              {sharedRosterStatus === "unavailable" && (
+                <div className="saved-roster-empty">Shared roster files are temporarily unavailable</div>
+              )}
+              {sharedRosterStatus === "ready" && sharedRosterFiles.length === 0 && (
                 <div className="saved-roster-empty">No shared roster files</div>
               )}
-              {sharedRosterFileGroups.map((group) => (
+              {sharedRosterStatus === "ready" && sharedRosterFileGroups.map((group) => (
                 <section className="roster-archive-year" key={group.year} aria-labelledby={`roster-year-${group.year}`}>
                   <h3 id={`roster-year-${group.year}`}>{group.year}</h3>
                   {group.files.map((file) => renderSharedRosterFile(file))}
