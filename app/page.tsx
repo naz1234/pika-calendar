@@ -1037,7 +1037,7 @@ export default function Home() {
   function chooseDay(day: Date) {
     const key = dateKey(day);
     setSelectedDate(key);
-    setAgendaOpen(true);
+    setAgendaOpen(activeCalendar === "work");
     if (day.getMonth() !== view.month || day.getFullYear() !== view.year) {
       setView({ year: day.getFullYear(), month: day.getMonth() });
     }
@@ -1693,7 +1693,10 @@ export default function Home() {
                   className={activeCalendar === kind ? "active" : ""}
                   onClick={() => {
                     setActiveCalendar(kind);
-                    if (kind === "personal") setSalaryCalculatorOpen(false);
+                    if (kind === "personal") {
+                      setSalaryCalculatorOpen(false);
+                      setAgendaOpen(false);
+                    }
                   }}
                   aria-pressed={activeCalendar === kind}
                 >
@@ -1876,6 +1879,56 @@ export default function Home() {
                     salaryVisible={salaryAmountsVisible}
                     onToggleSalaryVisibility={() => setSalaryAmountsVisible((visible) => !visible)}
                   />
+                )}
+
+                {activeCalendar === "personal" && panel.offset === 0 && (
+                  <section
+                    className="personal-day-details"
+                    aria-label={`Personal details for ${selectedLabel}`}
+                    aria-live="polite"
+                  >
+                    <div className="personal-day-details-header">
+                      <div>
+                        <p className="eyebrow">Personal day</p>
+                        <h2>{selectedLabel}</h2>
+                      </div>
+                      <button className="personal-day-add" type="button" onClick={() => openCreate(selectedDate)}>
+                        Add event
+                      </button>
+                    </div>
+                    <div className="personal-day-events">
+                      {selectedEvents.length ? (
+                        selectedEvents.map((calendarEvent) => {
+                          const remark = eventDisplayRemark(calendarEvent);
+                          return (
+                            <button
+                              className="personal-day-event"
+                              type="button"
+                              key={calendarEvent.id}
+                              onClick={() => openEdit(calendarEvent)}
+                            >
+                              <span className="personal-day-time">{eventTimeLabel(calendarEvent)}</span>
+                              <span className="personal-day-event-body">
+                                <strong>{calendarEvent.title}</strong>
+                                {remark && (
+                                  <span className="personal-day-remark">
+                                    <span>Remark</span>
+                                    <small>{remark}</small>
+                                  </span>
+                                )}
+                              </span>
+                              <span className="event-arrow" aria-hidden="true">›</span>
+                            </button>
+                          );
+                        })
+                      ) : (
+                        <div className="personal-day-empty">
+                          <strong>No personal details for this day</strong>
+                          <span>Add an event, reminder, appointment, or note.</span>
+                        </div>
+                      )}
+                    </div>
+                  </section>
                 )}
               </div>
             ))}

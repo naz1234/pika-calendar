@@ -766,6 +766,123 @@ textarea:focus-visible {
   border-radius: 16px;
 }
 
+.personal-day-details {
+  display: none;
+}
+
+.personal-day-details-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.personal-day-details-header h2 {
+  margin: 6px 0 0;
+  font-size: 1.05rem;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+}
+
+.personal-day-add {
+  min-height: 38px;
+  padding: 0 13px;
+  border-radius: 12px;
+  background: var(--accent-strong);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.personal-day-events {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.personal-day-event {
+  display: grid;
+  grid-template-columns: 68px minmax(0, 1fr) 18px;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  min-height: 64px;
+  padding: 10px;
+  border: 1px solid color-mix(in srgb, var(--accent) 26%, var(--grid));
+  border-radius: 13px;
+  background: var(--surface-soft);
+  text-align: left;
+}
+
+.personal-day-time {
+  color: var(--accent);
+  font-size: 0.7rem;
+  font-weight: 750;
+  line-height: 1.3;
+}
+
+.personal-day-event-body {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.personal-day-event-body > strong {
+  overflow: hidden;
+  color: var(--text);
+  font-size: 0.82rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.personal-day-remark {
+  display: grid;
+  gap: 3px;
+  padding: 7px 8px;
+  border: 1px solid color-mix(in srgb, var(--remark-dot) 30%, var(--grid));
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--remark-dot) 8%, var(--surface-raised));
+}
+
+.personal-day-remark > span {
+  color: var(--remark-dot);
+  font-size: 0.56rem;
+  font-weight: 850;
+  letter-spacing: 0.09em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.personal-day-remark small {
+  color: var(--muted-strong);
+  font-size: 0.71rem;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.personal-day-empty {
+  display: grid;
+  gap: 5px;
+  min-height: 82px;
+  place-content: center;
+  padding: 16px;
+  border: 1px dashed color-mix(in srgb, var(--accent) 28%, var(--grid));
+  border-radius: 13px;
+  background: var(--surface-soft);
+  text-align: center;
+}
+
+.personal-day-empty strong {
+  font-size: 0.82rem;
+}
+
+.personal-day-empty span {
+  color: var(--muted);
+  font-size: 0.7rem;
+  line-height: 1.4;
+}
+
 .summary-mobile .monthly-summary-heading {
   align-items: center;
   margin-bottom: 16px;
@@ -3496,6 +3613,18 @@ textarea:focus-visible {
     width: 100%;
     max-width: none;
     margin: 0 0 calc(24px + env(safe-area-inset-bottom));
+  }
+
+  .month-swipe-panel > .personal-day-details {
+    display: block;
+    width: 100%;
+    margin: 0 0 calc(24px + env(safe-area-inset-bottom));
+    padding: 16px;
+    border: 1px solid var(--grid);
+    border-radius: 16px;
+    background-color: var(--surface);
+    background-image: radial-gradient(circle at 92% 8%, color-mix(in srgb, var(--accent) 9%, transparent), transparent 34%);
+    box-shadow: 0 12px 32px color-mix(in srgb, var(--text) 8%, transparent);
   }
 
   .weekday-strip,
