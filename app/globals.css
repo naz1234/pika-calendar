@@ -1568,7 +1568,7 @@ textarea:focus-visible {
 .menu-drawer {
   position: relative;
   z-index: 1;
-  width: min(86vw, 390px);
+  width: min(82vw, 370px);
   height: 100%;
   overflow-y: auto;
   padding: max(26px, env(safe-area-inset-top)) 22px max(24px, env(safe-area-inset-bottom));
