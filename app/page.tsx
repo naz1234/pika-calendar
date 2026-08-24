@@ -1831,7 +1831,11 @@ export default function Home() {
                                         aria-label={`${calendarEvent.title}, ${eventTimeLabel(calendarEvent)}${remark ? `, Remark: ${remark}` : ""}`}
                                       >
                                         <span className="mobile-event-summary" aria-hidden="true">
-                                          <span className={`mobile-event-code${shiftModifier ? " mobile-event-code-modified" : ""}`}>{showShiftLabel ? eventCode : ""}</span>
+                                          {isShift ? (
+                                            <span className={`mobile-event-code${shiftModifier ? " mobile-event-code-modified" : ""}`}>{showShiftLabel ? eventCode : ""}</span>
+                                          ) : (
+                                            <span className="mobile-event-title">{calendarEvent.title}</span>
+                                          )}
                                         </span>
                                         <span className="event-title">
                                           {isShift ? (showShiftLabel ? eventCode : "") : calendarEvent.title}
