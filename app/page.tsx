@@ -384,6 +384,7 @@ export default function Home() {
   const [deletedRosterSignatures, setDeletedRosterSignatures] = useState<string[]>([]);
   const [sharedRosterStatus, setSharedRosterStatus] = useState<"loading" | "ready" | "unavailable">("loading");
   const editorIsWorkEdit = Boolean(editor?.id && editor.draft.calendar === "work");
+  const editorIsPersonal = editor?.draft.calendar === "personal";
   const editorWorkShift = editorIsWorkEdit && editor ? workEditorShift(editor.draft.title) : "";
   const editorWorkModifier = editorIsWorkEdit && editor ? workEditorModifier(editor.draft.title) : "regular";
   const editorWorkSupportsModifier = ["early", "late", "night"].includes(editorWorkShift);
@@ -1077,7 +1078,7 @@ export default function Home() {
         calendar: activeCalendar,
         title: "",
         date: forDate,
-        allDay: false,
+        allDay: activeCalendar === "personal",
         startTime: "09:00",
         endTime: "10:00",
         endsNextDay: false,
@@ -1122,15 +1123,18 @@ export default function Home() {
   function saveEvent(submitEvent: FormEvent) {
     submitEvent.preventDefault();
     if (!editor) return;
-    const title = editor.draft.title.trim();
+    const draft = editor.draft.calendar === "personal"
+      ? { ...editor.draft, allDay: true, endsNextDay: false }
+      : editor.draft;
+    const title = draft.title.trim();
     if (!title) {
       setEditorError("Add a title before saving.");
       return;
     }
     if (
-      !editor.draft.allDay &&
-      editor.draft.endTime <= editor.draft.startTime &&
-      !editor.draft.endsNextDay
+      !draft.allDay &&
+      draft.endTime <= draft.startTime &&
+      !draft.endsNextDay
     ) {
       setEditorError("The end is earlier than the start. Mark it as ending the next day.");
       return;
@@ -1140,7 +1144,7 @@ export default function Home() {
       setEvents((current) =>
         current.map((event) =>
           event.id === editor.id
-            ? { ...event, ...editor.draft, title, updatedAt: timestamp }
+            ? { ...event, ...draft, title, updatedAt: timestamp }
             : event,
         ),
       );
@@ -1149,12 +1153,12 @@ export default function Home() {
       const id = typeof crypto.randomUUID === "function" ? crypto.randomUUID() : `${Date.now()}`;
       setEvents((current) => [
         ...current,
-        { ...editor.draft, id, title, createdAt: timestamp, updatedAt: timestamp },
+        { ...draft, id, title, createdAt: timestamp, updatedAt: timestamp },
       ]);
       showToast("Event added");
     }
-    const savedDate = editor.draft.date;
-    const savedCalendar = editor.draft.calendar;
+    const savedDate = draft.date;
+    const savedCalendar = draft.calendar;
     const saved = parseDateKey(savedDate);
     setSelectedDate(savedDate);
     setActiveCalendar(savedCalendar);
@@ -2467,12 +2471,14 @@ export default function Home() {
             ) : (
               <>
                 <label className="field title-field"><span>Title</span><input ref={editorTitleInput} value={editor.draft.title} onChange={(event) => setEditor({ ...editor, draft: { ...editor.draft, title: event.target.value } })} placeholder="What is happening?" maxLength={80} required /></label>
-                <div className="field-row">
-                  <label className="field"><span>Date</span><input type="date" value={editor.draft.date} onChange={(event) => setEditor({ ...editor, draft: { ...editor.draft, date: event.target.value } })} required /></label>
-                  <label className="field"><span>Calendar</span><select value={editor.draft.calendar} onChange={(event) => setEditor({ ...editor, draft: { ...editor.draft, calendar: event.target.value as CalendarKind } })}><option value="work">Work</option><option value="personal">Personal</option></select></label>
-                </div>
-                <label className="all-day-toggle"><input type="checkbox" checked={editor.draft.allDay} onChange={(event) => setEditor({ ...editor, draft: { ...editor.draft, allDay: event.target.checked, endsNextDay: event.target.checked ? false : editor.draft.endsNextDay } })} /><span>All-day event</span></label>
-                {!editor.draft.allDay && (
+                <label className="field"><span>Calendar</span><select value={editor.draft.calendar} onChange={(event) => setEditor({ ...editor, draft: { ...editor.draft, calendar: event.target.value as CalendarKind } })}><option value="work">Work</option><option value="personal">Personal</option></select></label>
+                {!editorIsPersonal && (
+                  <>
+                    <label className="field"><span>Date</span><input type="date" value={editor.draft.date} onChange={(event) => setEditor({ ...editor, draft: { ...editor.draft, date: event.target.value } })} required /></label>
+                    <label className="all-day-toggle"><input type="checkbox" checked={editor.draft.allDay} onChange={(event) => setEditor({ ...editor, draft: { ...editor.draft, allDay: event.target.checked, endsNextDay: event.target.checked ? false : editor.draft.endsNextDay } })} /><span>All-day event</span></label>
+                  </>
+                )}
+                {!editorIsPersonal && !editor.draft.allDay && (
                   <>
                     <div className="field-row">
                       <label className="field"><span>Starts</span><input type="time" value={editor.draft.startTime} onChange={(event) => setEditor({ ...editor, draft: { ...editor.draft, startTime: event.target.value } })} required /></label>

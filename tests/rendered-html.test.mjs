@@ -235,7 +235,12 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   assert.match(workEditorMarkup, />Shift type</);
   assert.match(workEditorMarkup, /WORK_EDITOR_MODIFIER_OPTIONS/);
   assert.doesNotMatch(workEditorMarkup, />Date<|>Calendar<|>Starts<|>Ends<|All-day event|Ends the next day/);
-  assert.match(source.slice(personalEditorStart), />Date<|>Calendar<|>Starts<|>Ends</);
+  const personalEditorMarkup = source.slice(personalEditorStart, source.indexOf('<label className="field"><span>Notes', personalEditorStart));
+  assert.match(personalEditorMarkup, />Calendar</);
+  assert.match(personalEditorMarkup, /!editorIsPersonal/);
+  assert.match(source, /const editorIsPersonal = editor\?\.draft\.calendar === "personal"/);
+  assert.match(source, /allDay: activeCalendar === "personal"/);
+  assert.match(source, /editor\.draft\.calendar === "personal"[\s\S]*?allDay: true,[\s\S]*?endsNextDay: false/);
   assert.match(styles, /\.day-cell\.selected\s*\{[^}]*border-color:[^;}]+;[^}]*box-shadow:\s*none;/s);
   assert.match(styles, /\.day-cell\.shift-event\.selected\s*\{[^}]*border-color:[^;}]+;[^}]*box-shadow:\s*none;/s);
   assert.match(styles, /\.day-number\s*\{[^}]*border:\s*0;[^}]*border-radius:\s*0;/s);
@@ -305,7 +310,7 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   }
   assert.match(styles, /:root,[\s\S]*?--remark-dot:\s*#ffc247;/);
   assert.match(styles, /:root\[data-theme="light"\][\s\S]*?--remark-dot:\s*#e6a20d;/);
-  assert.match(serviceWorker, /my-calendar-v29/);
+  assert.match(serviceWorker, /my-calendar-v35/);
   assert.match(serviceWorker, /includeUncontrolled: true/);
   assert.match(serviceWorker, /try[\s\S]*?await client\.navigate\(client\.url\);[\s\S]*?catch/);
   assert.match(serviceWorker, /client\.navigate\(client\.url\)/);
