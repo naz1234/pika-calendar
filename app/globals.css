@@ -764,10 +764,6 @@ textarea:focus-visible {
   padding: 18px;
   border: 1px solid var(--grid);
   border-radius: 16px;
-  background:
-    radial-gradient(circle at 92% 8%, color-mix(in srgb, var(--work) 8%, transparent), transparent 32%),
-    var(--surface);
-  box-shadow: 0 12px 32px color-mix(in srgb, var(--text) 8%, transparent);
 }
 
 .summary-mobile .monthly-summary-heading {
@@ -2280,12 +2276,7 @@ textarea:focus-visible {
 .dialog.salary-calculator-dialog {
   width: min(100%, 460px);
   max-height: min(92dvh, 720px);
-  border: 1px solid var(--grid);
   border-radius: 24px;
-  background:
-    radial-gradient(circle at 92% 8%, color-mix(in srgb, var(--work) 8%, transparent), transparent 32%),
-    var(--surface);
-  box-shadow: 0 12px 32px color-mix(in srgb, var(--text) 8%, transparent);
 }
 
 .salary-calculator-intro {
@@ -2486,6 +2477,15 @@ textarea:focus-visible {
   background: var(--surface-raised);
   box-shadow: var(--shadow);
   animation: sheet-in 180ms ease both;
+}
+
+.summary-mobile.monthly-shift-summary,
+.dialog.salary-calculator-dialog {
+  border: 1px solid var(--grid);
+  background-color: var(--surface);
+  background-image:
+    radial-gradient(circle at 92% 8%, color-mix(in srgb, var(--work) 8%, transparent), transparent 32%);
+  box-shadow: 0 12px 32px color-mix(in srgb, var(--text) 8%, transparent);
 }
 
 @keyframes sheet-in {
