@@ -1921,7 +1921,7 @@ textarea:focus-visible {
   text-transform: uppercase;
 }
 
-.shared-roster-toggle {
+.shared-roster-action {
   min-height: 62px;
   margin-top: 8px;
   padding: 0 12px;
@@ -1931,22 +1931,22 @@ textarea:focus-visible {
   color: var(--text);
 }
 
-.shared-roster-toggle > span:first-child {
+.shared-roster-action > span:first-child {
   display: grid;
   gap: 4px;
   min-width: 0;
 }
 
-.shared-roster-toggle strong,
+.shared-roster-action strong,
 .shared-roster-chevron {
   color: var(--menu-file-ink);
 }
 
-.shared-roster-toggle strong {
+.shared-roster-action strong {
   font-size: 0.86rem;
 }
 
-.shared-roster-toggle small {
+.shared-roster-action small {
   overflow: hidden;
   color: var(--muted);
   font-size: 0.68rem;
@@ -1956,30 +1956,6 @@ textarea:focus-visible {
 
 .shared-roster-chevron {
   font-size: 1.35rem;
-  transition: transform 160ms ease;
-}
-
-.shared-roster-toggle.open .shared-roster-chevron {
-  transform: rotate(90deg);
-}
-
-.shared-roster-panel {
-  margin: 3px 8px 0;
-  padding: 0;
-}
-
-.shared-roster-panel .shared-roster-row {
-  margin: 0;
-}
-
-.shared-roster-panel .shared-roster-row + .shared-roster-row,
-.shared-roster-panel .roster-archive-trigger {
-  margin-top: 4px;
-}
-
-.shared-roster-panel .saved-roster-empty {
-  padding: 9px 8px 6px;
-  border-bottom: 0;
 }
 
 .device-roster-label {
@@ -2070,31 +2046,10 @@ textarea:focus-visible {
   color: var(--danger);
 }
 
-.roster-archive-trigger {
-  margin-top: 8px;
-  padding: 0 10px;
-  border: 1px solid color-mix(in srgb, var(--menu-settings-ink) 36%, var(--grid));
-  border-radius: 11px;
-  background: var(--menu-settings-bg);
-}
-
-.roster-archive-trigger strong {
-  color: var(--menu-settings-ink);
-}
-
-.roster-archive-trigger > span:last-child {
-  color: var(--menu-settings-ink);
-  font-size: 1.3rem;
-}
-
 .menu-ivu-row {
   margin-top: 12px;
   border-color: color-mix(in srgb, var(--menu-external-ink) 38%, var(--grid));
   background: var(--menu-external-bg);
-}
-
-.shared-roster-panel + .menu-ivu-row {
-  margin-top: 8px;
 }
 
 .menu-ivu-row strong,
@@ -2117,7 +2072,7 @@ textarea:focus-visible {
 }
 
 .menu-drawer .menu-import-row,
-.menu-drawer .shared-roster-toggle,
+.menu-drawer .shared-roster-action,
 .menu-drawer .menu-ivu-row,
 .menu-drawer .settings-toggle {
   display: grid;
