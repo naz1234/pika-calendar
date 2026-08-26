@@ -3122,6 +3122,13 @@ textarea:focus-visible {
   overflow: hidden;
 }
 
+@media (max-width: 520px) {
+  .event-date-range {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+}
+
 .title-field input {
   font-size: 0.95rem;
 }
