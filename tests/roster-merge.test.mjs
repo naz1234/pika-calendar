@@ -29,7 +29,7 @@ const mergeModule = await loadTypeScriptModule(
   (specifier) => specifier === "./roster-domain" ? domain : (() => { throw new Error(`Unexpected require: ${specifier}`); })(),
 );
 const { choiceToEvent } = domain;
-const { eventDisplayRemark, mergeRosterMonthEvents } = mergeModule;
+const { eventDisplayRemark, eventEndDate, eventOccursOnDate, mergeRosterMonthEvents } = mergeModule;
 
 const firstTimestamp = "2026-07-01T00:00:00.000Z";
 const secondTimestamp = "2026-07-02T00:00:00.000Z";
@@ -59,6 +59,18 @@ function prepared(date, choice, rawCode) {
     rawCode,
   };
 }
+
+test("treats a missing end date as one day and includes both ends of a range", () => {
+  const oneDay = event({ date: "2026-07-02" });
+  const range = event({ date: "2026-07-02", endDate: "2026-07-04" });
+
+  assert.equal(eventEndDate(oneDay), "2026-07-02");
+  assert.equal(eventOccursOnDate(range, "2026-07-01"), false);
+  assert.equal(eventOccursOnDate(range, "2026-07-02"), true);
+  assert.equal(eventOccursOnDate(range, "2026-07-03"), true);
+  assert.equal(eventOccursOnDate(range, "2026-07-04"), true);
+  assert.equal(eventOccursOnDate(range, "2026-07-05"), false);
+});
 
 test("shows user remarks but hides untouched roster import metadata", () => {
   const source = { type: "roster-image", rosterMonth: "2026-07", key: "roster:2026-07-01", rawCode: "E3-DC" };
