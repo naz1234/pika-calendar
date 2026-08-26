@@ -130,6 +130,17 @@ function parseDateKey(value: string) {
   return new Date(year, month - 1, day);
 }
 
+function formatDateInputValue(value: string) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return "Choose date";
+  const date = parseDateKey(value);
+  if (dateKey(date) !== value) return "Choose date";
+  return new Intl.DateTimeFormat("en", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  }).format(date);
+}
+
 function addDays(date: Date, amount: number) {
   const next = new Date(date);
   next.setDate(next.getDate() + amount);
@@ -2533,20 +2544,32 @@ export default function Home() {
               <>
                 <label className="field title-field"><span>Title</span><input ref={editorTitleInput} value={editor.draft.title} onChange={(event) => setEditor({ ...editor, draft: { ...editor.draft, title: event.target.value } })} placeholder="What is happening?" maxLength={80} required /></label>
                 <div className="field-row event-date-range">
-                  <label className="field"><span>From</span><input type="date" value={editor.draft.date} onChange={(event) => {
-                    const date = event.target.value;
-                    setEditor({
-                      ...editor,
-                      draft: {
-                        ...editor.draft,
-                        date,
-                        endDate: !editor.draft.endDate || editor.draft.endDate < date
-                          ? date
-                          : editor.draft.endDate,
-                      },
-                    });
-                  }} required /></label>
-                  <label className="field"><span>To</span><input type="date" min={editor.draft.date} value={editor.draft.endDate ?? editor.draft.date} onChange={(event) => setEditor({ ...editor, draft: { ...editor.draft, endDate: event.target.value } })} required /></label>
+                  <label className="field">
+                    <span>From</span>
+                    <span className="date-input-shell">
+                      <span className="date-input-value" aria-hidden="true">{formatDateInputValue(editor.draft.date)}</span>
+                      <input className="date-input-control" aria-label="From date" type="date" value={editor.draft.date} onChange={(event) => {
+                        const date = event.target.value;
+                        setEditor({
+                          ...editor,
+                          draft: {
+                            ...editor.draft,
+                            date,
+                            endDate: !editor.draft.endDate || editor.draft.endDate < date
+                              ? date
+                              : editor.draft.endDate,
+                          },
+                        });
+                      }} required />
+                    </span>
+                  </label>
+                  <label className="field">
+                    <span>To</span>
+                    <span className="date-input-shell">
+                      <span className="date-input-value" aria-hidden="true">{formatDateInputValue(editor.draft.endDate ?? editor.draft.date)}</span>
+                      <input className="date-input-control" aria-label="To date" type="date" min={editor.draft.date} value={editor.draft.endDate ?? editor.draft.date} onChange={(event) => setEditor({ ...editor, draft: { ...editor.draft, endDate: event.target.value } })} required />
+                    </span>
+                  </label>
                 </div>
               </>
             )}

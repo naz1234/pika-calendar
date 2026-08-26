@@ -3115,18 +3115,52 @@ textarea:focus-visible {
   gap: 12px;
 }
 
-.event-date-range input[type="date"] {
-  display: block;
+.date-input-shell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
   min-width: 0;
-  max-width: 100%;
+  min-height: 47px;
+  padding: 11px 13px;
+  border: 1px solid var(--grid);
+  border-radius: 13px;
   overflow: hidden;
+  background: var(--surface-soft);
 }
 
-@media (max-width: 520px) {
-  .event-date-range {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 0;
-  }
+.date-input-shell:focus-within {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.date-input-value {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text);
+  font-size: 1rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.field .date-input-control {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+  height: 100%;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  outline: 0;
+  opacity: 0;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
 }
 
 .title-field input {

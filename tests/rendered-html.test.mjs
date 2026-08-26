@@ -259,10 +259,14 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   assert.doesNotMatch(manualEditorMarkup, />Calendar<|All-day event|>Starts<|>Ends<|Ends the next day/);
   assert.match(manualEditorMarkup, />From</);
   assert.match(manualEditorMarkup, />To</);
-  assert.match(manualEditorMarkup, /min=\{editor\.draft\.date\}/);
+  assert.match(manualEditorMarkup, /className="date-input-shell"/);
+  assert.match(manualEditorMarkup, /className="date-input-value"/);
+  assert.match(manualEditorMarkup, /className="date-input-control" aria-label="From date"/);
+  assert.match(manualEditorMarkup, /className="date-input-control" aria-label="To date"[\s\S]*?min=\{editor\.draft\.date\}/);
   assert.match(styles, /\.event-date-range\s*\{[^}]*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\);[^}]*gap:\s*12px;/s);
-  assert.match(styles, /\.event-date-range input\[type="date"\]\s*\{[^}]*display:\s*block;[^}]*min-width:\s*0;[^}]*max-width:\s*100%;[^}]*overflow:\s*hidden;/s);
-  assert.match(styles, /@media \(max-width: 520px\)\s*\{\s*\.event-date-range\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\);[^}]*gap:\s*0;/s);
+  assert.match(styles, /\.date-input-shell\s*\{[^}]*position:\s*relative;[^}]*width:\s*100%;[^}]*min-width:\s*0;[^}]*overflow:\s*hidden;/s);
+  assert.match(styles, /\.field \.date-input-control\s*\{[^}]*position:\s*absolute;[^}]*inset:\s*0;[^}]*width:\s*100%;[^}]*opacity:\s*0;[^}]*-webkit-appearance:\s*none;[^}]*appearance:\s*none;/s);
+  assert.doesNotMatch(styles, /@media \(max-width: 520px\)[\s\S]*?\.event-date-range/);
   assert.match(source, /endDate: forDate,[\s\S]*?allDay: true,[\s\S]*?startTime: "",[\s\S]*?endTime: ""/);
   assert.match(source, /const draft = editorIsWorkEdit[\s\S]*?endDate: editor\.draft\.endDate \?\? editor\.draft\.date,[\s\S]*?allDay: true,[\s\S]*?endsNextDay: false/);
   assert.match(source, /eventEndDate\(draft\) < draft\.date/);
@@ -338,7 +342,7 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   }
   assert.match(styles, /:root,[\s\S]*?--remark-dot:\s*#ffc247;/);
   assert.match(styles, /:root\[data-theme="light"\][\s\S]*?--remark-dot:\s*#e6a20d;/);
-  assert.match(serviceWorker, /my-calendar-v46/);
+  assert.match(serviceWorker, /my-calendar-v47/);
   assert.match(serviceWorker, /includeUncontrolled: true/);
   assert.match(serviceWorker, /try[\s\S]*?await client\.navigate\(client\.url\);[\s\S]*?catch/);
   assert.match(serviceWorker, /client\.navigate\(client\.url\)/);

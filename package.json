@@ -6,7 +6,7 @@
     "node": ">=22.23.2 <23"
   },
   "scripts": {
-    "dev": "vinext dev",
+    "dev": "vite",
     "build": "vinext build && node scripts/prepare-static-output.mjs",
     "start": "vinext start",
     "test": "npm run build && node --test tests/rendered-html.test.mjs tests/roster-domain.test.mjs tests/roster-merge.test.mjs tests/roster-reader.test.mjs tests/roster-pdf-domain.test.mjs tests/roster-file-store.test.mjs tests/roster-cloud-store.test.mjs tests/roster-files-api.test.mjs tests/shift-summary.test.mjs tests/sync-client.test.mjs tests/calendar-api.test.mjs tests/calendar-store.test.mjs",
