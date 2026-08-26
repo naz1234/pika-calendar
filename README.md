@@ -14,7 +14,7 @@ A mobile-first shared calendar with separate **Work** and **Personal** modes. It
 - Expected salary forecast using the monthly Night allowance and overtime hours, hidden by default behind an eye toggle
 - Work salary calculator for manual salary, Extension-day, and RDOT-day estimates
 - Add, edit, search, and delete events
-- All-day events, overnight shifts, start/end times, and notes
+- Inclusive multi-day all-day events, overnight roster shifts, and notes
 - Swipe left or right to change months, or tap the centered month to use the device picker
 - Dark and light themes
 - JSON backup and restore

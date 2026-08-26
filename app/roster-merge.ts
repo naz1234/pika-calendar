@@ -14,6 +14,7 @@ export type CalendarEventRecord = {
   calendar: CalendarKind;
   title: string;
   date: string;
+  endDate?: string;
   allDay: boolean;
   startTime: string;
   endTime: string;
@@ -23,6 +24,17 @@ export type CalendarEventRecord = {
   updatedAt: string;
   source?: RosterEventSource;
 };
+
+export function eventEndDate(event: Pick<CalendarEventRecord, "date" | "endDate">) {
+  return event.endDate ?? event.date;
+}
+
+export function eventOccursOnDate(
+  event: Pick<CalendarEventRecord, "date" | "endDate">,
+  date: string,
+) {
+  return event.date <= date && date <= eventEndDate(event);
+}
 
 export type PreparedRosterEntry = {
   details: RosterEventDetails;

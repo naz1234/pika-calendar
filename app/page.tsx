@@ -43,6 +43,8 @@ import {
   type WorkEditorShift,
 } from "./roster-domain";
 import {
+  eventEndDate,
+  eventOccursOnDate,
   eventDisplayRemark,
   mergeRosterMonthEvents,
   type CalendarEventRecord,
@@ -294,9 +296,13 @@ function sortEvents(a: CalendarEvent, b: CalendarEvent) {
 function validImportedEvent(value: unknown): value is CalendarEvent {
   if (!value || typeof value !== "object") return false;
   const item = value as Partial<CalendarEvent>;
-  const dateIsReal =
-    /^\d{4}-\d{2}-\d{2}$/.test(item.date ?? "") &&
-    dateKey(parseDateKey(item.date ?? "")) === item.date;
+  const isRealDate = (value: string | undefined) =>
+    /^\d{4}-\d{2}-\d{2}$/.test(value ?? "") &&
+    dateKey(parseDateKey(value ?? "")) === value;
+  const dateIsReal = isRealDate(item.date);
+  const endDateIsValid = item.endDate === undefined || (
+    isRealDate(item.endDate) && item.endDate >= (item.date ?? "")
+  );
   const validTime = (time: string | undefined) => /^([01]\d|2[0-3]):[0-5]\d$/.test(time ?? "");
   const timestampsAreReal =
     typeof item.createdAt === "string" &&
@@ -318,6 +324,7 @@ function validImportedEvent(value: unknown): value is CalendarEvent {
     (item.calendar === "work" || item.calendar === "personal") &&
     typeof item.title === "string" && item.title.trim().length > 0 &&
     dateIsReal &&
+    endDateIsValid &&
     typeof item.allDay === "boolean" &&
     typeof item.startTime === "string" &&
     typeof item.endTime === "string" &&
@@ -381,9 +388,8 @@ export default function Home() {
   const [sharedRosterFiles, setSharedRosterFiles] = useState<StoredRosterFileMetadata[]>([]);
   const [deletedRosterSignatures, setDeletedRosterSignatures] = useState<string[]>([]);
   const [sharedRosterStatus, setSharedRosterStatus] = useState<"loading" | "ready" | "unavailable">("loading");
-  const editorIsWorkEdit = Boolean(editor?.id && editor.draft.calendar === "work");
-  const editorIsPersonal = editor?.draft.calendar === "personal";
-  const editorWorkShift = editorIsWorkEdit && editor ? workEditorShift(editor.draft.title) : "";
+  const editorWorkShift = editor?.draft.calendar === "work" ? workEditorShift(editor.draft.title) : "";
+  const editorIsWorkEdit = Boolean(editor?.id && editorWorkShift);
   const editorWorkModifier = editorIsWorkEdit && editor ? workEditorModifier(editor.draft.title) : "regular";
   const editorWorkSupportsModifier = ["early", "late", "night"].includes(editorWorkShift);
   const pointerStart = useRef<SwipeGesture | null>(null);
@@ -530,13 +536,20 @@ export default function Home() {
   );
   const eventsByDate = useMemo(() => {
     const grouped = new Map<string, CalendarEvent[]>();
+    const visibleDateKeys = new Set(
+      swipeMonths.flatMap((panel) => panel.days.map(dateKey)),
+    );
+    visibleDateKeys.add(selectedDate);
     visibleEvents.forEach((event) => {
-      const current = grouped.get(event.date) ?? [];
-      current.push(event);
-      grouped.set(event.date, current.sort(sortEvents));
+      visibleDateKeys.forEach((key) => {
+        if (!eventOccursOnDate(event, key)) return;
+        const current = grouped.get(key) ?? [];
+        current.push(event);
+        grouped.set(key, current.sort(sortEvents));
+      });
     });
     return grouped;
-  }, [visibleEvents]);
+  }, [selectedDate, swipeMonths, visibleEvents]);
   const selectedEvents = eventsByDate.get(selectedDate) ?? [];
   const monthLabel = new Intl.DateTimeFormat("en", {
     month: "long",
@@ -570,7 +583,7 @@ export default function Home() {
     const query = searchQuery.trim().toLowerCase();
     return visibleEvents
       .filter((event) => {
-        if (!query) return event.date >= todayKey;
+        if (!query) return eventEndDate(event) >= todayKey;
         return `${event.title} ${event.notes}`.toLowerCase().includes(query);
       })
       .sort(sortEvents)
@@ -1072,9 +1085,10 @@ export default function Home() {
         calendar: activeCalendar,
         title: "",
         date: forDate,
-        allDay: activeCalendar === "personal",
-        startTime: "09:00",
-        endTime: "10:00",
+        endDate: forDate,
+        allDay: true,
+        startTime: "",
+        endTime: "",
         endsNextDay: false,
         notes: "",
       },
@@ -1090,6 +1104,7 @@ export default function Home() {
         calendar: event.calendar,
         title: event.title,
         date: event.date,
+        endDate: event.endDate ?? event.date,
         allDay: event.allDay,
         startTime: event.startTime,
         endTime: event.endTime,
@@ -1117,12 +1132,23 @@ export default function Home() {
   function saveEvent(submitEvent: FormEvent) {
     submitEvent.preventDefault();
     if (!editor) return;
-    const draft = editor.draft.calendar === "personal"
-      ? { ...editor.draft, allDay: true, endsNextDay: false }
-      : editor.draft;
+    const draft = editorIsWorkEdit
+      ? editor.draft
+      : {
+        ...editor.draft,
+        endDate: editor.draft.endDate ?? editor.draft.date,
+        allDay: true,
+        startTime: "",
+        endTime: "",
+        endsNextDay: false,
+      };
     const title = draft.title.trim();
     if (!title) {
       setEditorError("Add a title before saving.");
+      return;
+    }
+    if (eventEndDate(draft) < draft.date) {
+      setEditorError("The To date cannot be before the From date.");
       return;
     }
     if (
@@ -1176,7 +1202,7 @@ export default function Home() {
   }
 
   function exportBackup() {
-    const payload = JSON.stringify({ version: 2, exportedAt: new Date().toISOString(), events }, null, 2);
+    const payload = JSON.stringify({ version: 3, exportedAt: new Date().toISOString(), events }, null, 2);
     const url = URL.createObjectURL(new Blob([payload], { type: "application/json" }));
     const anchor = document.createElement("a");
     anchor.href = url;
@@ -2506,22 +2532,22 @@ export default function Home() {
             ) : (
               <>
                 <label className="field title-field"><span>Title</span><input ref={editorTitleInput} value={editor.draft.title} onChange={(event) => setEditor({ ...editor, draft: { ...editor.draft, title: event.target.value } })} placeholder="What is happening?" maxLength={80} required /></label>
-                <label className="field"><span>Calendar</span><select value={editor.draft.calendar} onChange={(event) => setEditor({ ...editor, draft: { ...editor.draft, calendar: event.target.value as CalendarKind } })}><option value="work">Work</option><option value="personal">Personal</option></select></label>
-                {!editorIsPersonal && (
-                  <>
-                    <label className="field"><span>Date</span><input type="date" value={editor.draft.date} onChange={(event) => setEditor({ ...editor, draft: { ...editor.draft, date: event.target.value } })} required /></label>
-                    <label className="all-day-toggle"><input type="checkbox" checked={editor.draft.allDay} onChange={(event) => setEditor({ ...editor, draft: { ...editor.draft, allDay: event.target.checked, endsNextDay: event.target.checked ? false : editor.draft.endsNextDay } })} /><span>All-day event</span></label>
-                  </>
-                )}
-                {!editorIsPersonal && !editor.draft.allDay && (
-                  <>
-                    <div className="field-row">
-                      <label className="field"><span>Starts</span><input type="time" value={editor.draft.startTime} onChange={(event) => setEditor({ ...editor, draft: { ...editor.draft, startTime: event.target.value } })} required /></label>
-                      <label className="field"><span>Ends</span><input type="time" value={editor.draft.endTime} onChange={(event) => setEditor({ ...editor, draft: { ...editor.draft, endTime: event.target.value } })} required /></label>
-                    </div>
-                    <label className="all-day-toggle next-day-toggle"><input type="checkbox" checked={editor.draft.endsNextDay ?? false} onChange={(event) => setEditor({ ...editor, draft: { ...editor.draft, endsNextDay: event.target.checked } })} /><span>Ends the next day</span></label>
-                  </>
-                )}
+                <div className="field-row event-date-range">
+                  <label className="field"><span>From</span><input type="date" value={editor.draft.date} onChange={(event) => {
+                    const date = event.target.value;
+                    setEditor({
+                      ...editor,
+                      draft: {
+                        ...editor.draft,
+                        date,
+                        endDate: !editor.draft.endDate || editor.draft.endDate < date
+                          ? date
+                          : editor.draft.endDate,
+                      },
+                    });
+                  }} required /></label>
+                  <label className="field"><span>To</span><input type="date" min={editor.draft.date} value={editor.draft.endDate ?? editor.draft.date} onChange={(event) => setEditor({ ...editor, draft: { ...editor.draft, endDate: event.target.value } })} required /></label>
+                </div>
               </>
             )}
             <label className="field"><span>Notes <em>optional</em></span><textarea value={editor.draft.notes} onChange={(event) => setEditor({ ...editor, draft: { ...editor.draft, notes: event.target.value } })} placeholder="Add a location, reminder, or detail" rows={3} maxLength={500} /></label>
