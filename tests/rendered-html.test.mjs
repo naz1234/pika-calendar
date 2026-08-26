@@ -260,6 +260,8 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   assert.match(manualEditorMarkup, />From</);
   assert.match(manualEditorMarkup, />To</);
   assert.match(manualEditorMarkup, /min=\{editor\.draft\.date\}/);
+  assert.match(styles, /\.event-date-range\s*\{[^}]*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\);[^}]*gap:\s*12px;/s);
+  assert.match(styles, /\.event-date-range input\[type="date"\]\s*\{[^}]*display:\s*block;[^}]*min-width:\s*0;[^}]*max-width:\s*100%;[^}]*overflow:\s*hidden;/s);
   assert.match(source, /endDate: forDate,[\s\S]*?allDay: true,[\s\S]*?startTime: "",[\s\S]*?endTime: ""/);
   assert.match(source, /const draft = editorIsWorkEdit[\s\S]*?endDate: editor\.draft\.endDate \?\? editor\.draft\.date,[\s\S]*?allDay: true,[\s\S]*?endsNextDay: false/);
   assert.match(source, /eventEndDate\(draft\) < draft\.date/);
