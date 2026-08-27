@@ -1936,7 +1936,7 @@ export default function Home() {
                     visible={salaryAmountsVisible}
                     onToggleVisibility={() => setSalaryAmountsVisible((visible) => !visible)}
                     onSave={salaryReceipts.save}
-                    onRetry={salaryReceipts.retry}
+                    onBlur={salaryReceipts.flush}
                   />
                 )}
 
@@ -2054,7 +2054,7 @@ export default function Home() {
               visible={salaryAmountsVisible}
               onToggleVisibility={() => setSalaryAmountsVisible((visible) => !visible)}
               onSave={salaryReceipts.save}
-              onRetry={salaryReceipts.retry}
+              onBlur={salaryReceipts.flush}
             />
           )}
           <button className="agenda-add" onClick={() => openCreate(selectedDate)}>Add event</button>

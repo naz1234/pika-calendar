@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useState } from "react";
 import { compareSalary, isSalaryCents, parseSalaryCents, type SalaryReceiptDraft } from "./salary-receipts";
 import type { SalaryReceiptEntry } from "./salary-receipts-sync";
 
@@ -9,7 +9,7 @@ function amount(cents: number, visible: boolean) {
 }
 
 export function SalaryReceivedPanel({
-  className, workMonth, monthLabel, payMonthLabel, expectedSalary, entry, visible, onToggleVisibility, onSave, onRetry,
+  className, workMonth, monthLabel, payMonthLabel, expectedSalary, entry, visible, onToggleVisibility, onSave, onBlur,
 }: {
   className: string;
   workMonth: string;
@@ -20,40 +20,34 @@ export function SalaryReceivedPanel({
   visible: boolean;
   onToggleVisibility: () => void;
   onSave: (month: string, draft: SalaryReceiptDraft) => void;
-  onRetry: () => void;
+  onBlur: (month: string) => void;
 }) {
-  const [editing, setEditing] = useState(false);
-  const [input, setInput] = useState("");
+  const [input, setInput] = useState<string | null>(null);
+  const [focused, setFocused] = useState(false);
   const [error, setError] = useState("");
   const receipt = entry?.pending ?? entry?.receipt;
-  const showForm = editing || !receipt;
+  const inputValue = input ?? (receipt ? (receipt.receivedCents / 100).toFixed(2) : "");
+  const inputHidden = Boolean(receipt && !visible && !focused);
   const comparison = receipt ? compareSalary(receipt.receivedCents, receipt.expectedCents) : null;
   const loading = !entry || entry.status === "loading";
   const saved = entry?.status === "synced" && !entry.pending;
   const expectedChanged = receipt && receipt.expectedCents !== Math.round(expectedSalary * 100);
 
-  function save(event: FormEvent) {
-    event.preventDefault();
-    const receivedCents = parseSalaryCents(input);
+  function change(value: string) {
+    setInput(value);
+    setError("");
+    if (!value.trim()) return;
+    const receivedCents = parseSalaryCents(value);
     if (receivedCents === null) {
-      setError("Enter a valid amount of zero or more, with up to 2 decimal places.");
+      setError("Enter an amount of zero or more with up to 2 decimal places. The last valid amount is unchanged.");
       return;
     }
     const expectedCents = Math.round(expectedSalary * 100);
     if (!isSalaryCents(expectedCents)) {
-      setError("Check the salary forecast settings before saving.");
+      setError("Check the salary forecast settings before entering an amount.");
       return;
     }
     onSave(workMonth, { receivedCents, expectedCents });
-    setInput("");
-    setError("");
-    setEditing(false);
-  }
-
-  function edit() {
-    setInput(receipt ? (receipt.receivedCents / 100).toFixed(2) : "");
-    setError("");
-    setEditing(true);
   }
 
   return (
@@ -74,27 +68,26 @@ export function SalaryReceivedPanel({
         </button>
       </div>
 
-      {showForm && (
-        <form onSubmit={save} className="salary-received-form">
-          <label className="field">
-            <span>{receipt ? "Update" : "Add"} received salary for {payMonthLabel}</span>
-            <span className="salary-received-input">
-              <span aria-hidden="true">SAR</span>
-              <input type="text" inputMode="decimal" autoComplete="off" maxLength={12}
-                aria-label={`Salary received in ${payMonthLabel} (SAR)`} aria-invalid={Boolean(error)}
-                placeholder="0.00" value={input} onChange={(event) => { setInput(event.target.value); setError(""); }} />
-            </span>
-          </label>
-          <p className="salary-received-note">Expected salary: {amount(Math.round(expectedSalary * 100), visible)}</p>
-          {error && <p className="salary-received-error" role="alert">{error}</p>}
-          <div className="salary-received-actions">
-            <button type="submit" className="primary-button" disabled={loading}>Save salary</button>
-            {receipt && <button type="button" className="secondary-button" onClick={() => { setEditing(false); setInput(""); setError(""); }}>Cancel</button>}
-          </div>
-        </form>
-      )}
+      <div className="salary-received-form">
+        <label className="field">
+          <span>Received salary for {payMonthLabel}</span>
+          <span className="salary-received-input">
+            <span aria-hidden="true">SAR</span>
+            <input type="text" inputMode="decimal" autoComplete="off" maxLength={12}
+              aria-label={`Salary received in ${payMonthLabel} (SAR)`} aria-invalid={Boolean(error)}
+              placeholder={inputHidden ? "••••••" : "0.00"} value={inputHidden ? "" : inputValue}
+              onChange={(event) => change(event.target.value)}
+              onFocus={() => { setFocused(true); setInput(inputValue); }}
+              onBlur={() => { onBlur(workMonth); setFocused(false); setInput(null); }}
+              onKeyDown={(event) => { if (event.key === "Enter") event.currentTarget.blur(); }} />
+          </span>
+        </label>
+        <p className="salary-received-note">Saves and syncs automatically after you stop typing.</p>
+        {!receipt && <p className="salary-received-note">Expected salary: {amount(Math.round(expectedSalary * 100), visible)}</p>}
+        {error && <p className="salary-received-error" role="alert">{error}</p>}
+      </div>
 
-      {receipt && comparison && !showForm && (
+      {receipt && comparison && (
         <>
           <dl className="salary-received-values">
             <div><dt>Received salary</dt><dd aria-label={visible ? undefined : "Salary amount hidden"}>{amount(receipt.receivedCents, visible)}</dd></div>
@@ -105,23 +98,21 @@ export function SalaryReceivedPanel({
             <span>{comparison.status === "Match" ? "Matches expected salary" : `${amount(Math.abs(comparison.differenceCents), visible)} ${comparison.status === "Short" ? "below" : "above"} expected`}</span>
           </div>
           <p className="salary-received-note">Compared with the {monthLabel} forecast saved with this amount.</p>
-          {expectedChanged && <p className="salary-received-note">The current forecast has changed. Edit and save again to update the comparison.</p>}
-          <button type="button" className="secondary-button salary-received-edit" onClick={edit}>Edit received salary</button>
+          {expectedChanged && <p className="salary-received-note">The forecast has changed. Re-enter the received amount to update the comparison.</p>}
         </>
       )}
 
       <p className="salary-received-sync" role="status">
         {loading ? "Loading saved salary…" : entry?.status === "conflict"
-          ? "Changed on another device. Your entry is kept here; edit and save again to confirm it."
-          : saved ? (receipt ? "Saved online · available on other devices" : "Ready to save online")
-          : entry?.status === "saving" ? "Saving salary online…"
-          : entry?.pending ? (entry.locallySaved ? "Saved on this device · waiting to sync online" : "Not saved yet. Keep this page open and retry.")
-          : "Offline · showing the last saved copy"}
+          ? "Changed on another device. Your entry is kept here; re-enter the amount to confirm your change."
+          : saved ? (receipt ? "Saved online · available on other devices" : "Ready to save automatically")
+          : entry?.status === "saving" ? "Saving salary automatically…"
+          : entry?.pending ? (entry.locallySaved ? "Saved on this device · sync will retry automatically" : "Not saved yet. Keep this page open; sync will retry automatically.")
+          : "Sync unavailable · retrying automatically"}
       </p>
       {entry?.status === "conflict" && entry.receipt && (
         <p className="salary-received-note">Latest online received amount: {amount(entry.receipt.receivedCents, visible)}</p>
       )}
-      {entry?.status === "offline" && <button type="button" className="secondary-button" onClick={onRetry}>Retry sync</button>}
       <p className="salary-received-privacy">Shared calendar: anyone with this site link can view saved salaries.</p>
     </section>
   );
