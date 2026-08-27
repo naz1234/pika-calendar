@@ -13,6 +13,9 @@ import {
   useState,
 } from "react";
 import { flushSync } from "react-dom";
+import { SalaryReceivedPanel } from "./salary-received-panel";
+import { salaryPayMonth } from "./salary-receipts";
+import { useSalaryReceipts } from "./use-salary-receipts";
 import {
   SHARED_SYNC_SECRET,
   SyncConflictError,
@@ -368,6 +371,8 @@ export default function Home() {
   const [now, setNow] = useState(STATIC_DATE);
   const todayKey = dateKey(now);
   const [view, setView] = useState({ year: now.getFullYear(), month: now.getMonth() });
+  const workMonth = `${view.year}-${pad(view.month + 1)}`;
+  const salaryReceipts = useSalaryReceipts(workMonth);
   const [selectedDate, setSelectedDate] = useState(todayKey);
   const [activeCalendar, setActiveCalendar] = useState<CalendarKind>("work");
   const [theme, setTheme] = useState<Theme>("dark");
@@ -588,7 +593,7 @@ export default function Home() {
   const salaryMonthLabel = new Intl.DateTimeFormat("en", {
     month: "long",
     year: "numeric",
-  }).format(new Date(view.year, view.month + 1, 1));
+  }).format(parseDateKey(`${salaryPayMonth(workMonth)}-01`));
 
   const searchResults = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -1551,6 +1556,7 @@ export default function Home() {
 
   function handlePointerDown(event: PointerEvent<HTMLDivElement>) {
     if (!event.isPrimary || event.button !== 0 || monthSwipeTimer.current !== null) return;
+    if (event.target instanceof Element && event.target.closest(".salary-received-panel")) return;
     pointerStart.current = {
       pointerId: event.pointerId,
       startX: event.clientX,
@@ -1918,6 +1924,22 @@ export default function Home() {
                   />
                 )}
 
+                {activeCalendar === "work" && panel.offset === 0 && (
+                  <SalaryReceivedPanel
+                    key={workMonth}
+                    className="summary-mobile"
+                    workMonth={workMonth}
+                    monthLabel={monthLabel}
+                    payMonthLabel={salaryMonthLabel}
+                    expectedSalary={monthlySalaryForecast.expectedSalary}
+                    entry={salaryReceipts.entry}
+                    visible={salaryAmountsVisible}
+                    onToggleVisibility={() => setSalaryAmountsVisible((visible) => !visible)}
+                    onSave={salaryReceipts.save}
+                    onRetry={salaryReceipts.retry}
+                  />
+                )}
+
                 {activeCalendar === "personal" && panel.offset === 0 && (
                   <section
                     className="personal-day-details"
@@ -2018,6 +2040,21 @@ export default function Home() {
               salaryForecast={monthlySalaryForecast}
               salaryVisible={salaryAmountsVisible}
               onToggleSalaryVisibility={() => setSalaryAmountsVisible((visible) => !visible)}
+            />
+          )}
+          {activeCalendar === "work" && (
+            <SalaryReceivedPanel
+              key={workMonth}
+              className="summary-desktop"
+              workMonth={workMonth}
+              monthLabel={monthLabel}
+              payMonthLabel={salaryMonthLabel}
+              expectedSalary={monthlySalaryForecast.expectedSalary}
+              entry={salaryReceipts.entry}
+              visible={salaryAmountsVisible}
+              onToggleVisibility={() => setSalaryAmountsVisible((visible) => !visible)}
+              onSave={salaryReceipts.save}
+              onRetry={salaryReceipts.retry}
             />
           )}
           <button className="agenda-add" onClick={() => openCreate(selectedDate)}>Add event</button>
