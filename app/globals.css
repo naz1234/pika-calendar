@@ -591,8 +591,7 @@ textarea:focus-visible {
 
 .salary-received-heading p:not(.eyebrow),
 .salary-received-note,
-.salary-received-sync,
-.salary-received-privacy {
+.salary-received-sync {
   margin: 8px 0;
   color: var(--muted);
   font-size: 0.72rem;
@@ -670,7 +669,6 @@ textarea:focus-visible {
 .salary-comparison-exceed { color: var(--shift-late-ink); background: var(--shift-late-bg); }
 .salary-received-error { color: var(--danger); font-size: 0.78rem; }
 .salary-received-sync { color: var(--muted-strong); }
-.salary-received-privacy { margin-top: 14px; font-size: 0.65rem; }
 
 .monthly-summary-heading {
   display: flex;

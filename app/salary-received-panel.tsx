@@ -32,6 +32,12 @@ export function SalaryReceivedPanel({
   const loading = !entry || entry.status === "loading";
   const saved = entry?.status === "synced" && !entry.pending;
   const expectedChanged = receipt && receipt.expectedCents !== Math.round(expectedSalary * 100);
+  const syncMessage = loading ? "Loading saved salary…" : entry?.status === "conflict"
+    ? "Changed on another device. Your entry is kept here; re-enter the amount to confirm your change."
+    : saved ? (receipt ? "Saved online · available on other devices" : "Ready to save automatically")
+    : entry?.status === "saving" ? "Saving salary automatically…"
+    : entry?.pending ? (entry.locallySaved ? null : "Not saved yet. Keep this page open; sync will retry automatically.")
+    : "Sync unavailable · retrying automatically";
 
   function change(value: string) {
     setInput(value);
@@ -82,7 +88,6 @@ export function SalaryReceivedPanel({
               onKeyDown={(event) => { if (event.key === "Enter") event.currentTarget.blur(); }} />
           </span>
         </label>
-        <p className="salary-received-note">Saves and syncs automatically after you stop typing.</p>
         {!receipt && <p className="salary-received-note">Expected salary: {amount(Math.round(expectedSalary * 100), visible)}</p>}
         {error && <p className="salary-received-error" role="alert">{error}</p>}
       </div>
@@ -102,18 +107,10 @@ export function SalaryReceivedPanel({
         </>
       )}
 
-      <p className="salary-received-sync" role="status">
-        {loading ? "Loading saved salary…" : entry?.status === "conflict"
-          ? "Changed on another device. Your entry is kept here; re-enter the amount to confirm your change."
-          : saved ? (receipt ? "Saved online · available on other devices" : "Ready to save automatically")
-          : entry?.status === "saving" ? "Saving salary automatically…"
-          : entry?.pending ? (entry.locallySaved ? "Saved on this device · sync will retry automatically" : "Not saved yet. Keep this page open; sync will retry automatically.")
-          : "Sync unavailable · retrying automatically"}
-      </p>
+      {syncMessage && <p className="salary-received-sync" role="status">{syncMessage}</p>}
       {entry?.status === "conflict" && entry.receipt && (
         <p className="salary-received-note">Latest online received amount: {amount(entry.receipt.receivedCents, visible)}</p>
       )}
-      <p className="salary-received-privacy">Shared calendar: anyone with this site link can view saved salaries.</p>
     </section>
   );
 }

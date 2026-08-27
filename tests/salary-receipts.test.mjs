@@ -235,14 +235,14 @@ const panelProps = {
   expectedSalary: 17065, visible: true, onSave() {}, onBlur() {}, onToggleVisibility() {},
 };
 
-test("salary panel renders the pay month, automatic saving, and sharing notice", () => {
+test("salary panel renders the pay month without helper text or manual save buttons", () => {
   const html = renderToStaticMarkup(React.createElement(SalaryReceivedPanel, panelProps));
   assert.match(html, /Received salary for August 2026/);
   assert.match(html, /For your July 2026 work calendar/);
   assert.match(html, /inputMode="decimal"/);
-  assert.match(html, /Saves and syncs automatically/);
+  assert.doesNotMatch(html, /Saves and syncs automatically after you stop typing/);
   assert.doesNotMatch(html, /Save salary|Retry sync|Edit received salary|Cancel/);
-  assert.match(html, /anyone with this site link can view saved salaries/);
+  assert.doesNotMatch(html, /Shared calendar: anyone with this site link can view saved salaries/);
   assert.doesNotMatch(html, /salary-comparison-short|salary-comparison-match|salary-comparison-exceed/);
 });
 
@@ -259,10 +259,11 @@ test("salary panel renders Short, Match, Exceed and masks all saved amounts", ()
   assert.match(hidden, /••••••/);
 });
 
-test("salary panel distinguishes pending, failed, and conflicting saves", () => {
+test("salary panel hides locally saved retry text but keeps failed and conflicting save warnings", () => {
   const entry = { receipt: null, pending: { ...draft, id: "pending", expectedVersion: 0 }, status: "offline", locallySaved: true };
   const render = (next) => renderToStaticMarkup(React.createElement(SalaryReceivedPanel, { ...panelProps, entry: next }));
-  assert.match(render(entry), /Saved on this device · sync will retry automatically/);
+  assert.doesNotMatch(render(entry), /Saved on this device · sync will retry automatically/);
+  assert.doesNotMatch(render(entry), /salary-received-sync/);
   assert.doesNotMatch(render(entry), /Saved online/);
   assert.match(render({ ...entry, locallySaved: false }), /Not saved yet/);
   assert.match(render({ ...entry, status: "conflict" }), /Changed on another device/);

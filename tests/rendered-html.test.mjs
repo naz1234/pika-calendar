@@ -342,7 +342,7 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   }
   assert.match(styles, /:root,[\s\S]*?--remark-dot:\s*#ffc247;/);
   assert.match(styles, /:root\[data-theme="light"\][\s\S]*?--remark-dot:\s*#e6a20d;/);
-  assert.match(serviceWorker, /my-calendar-v49/);
+  assert.match(serviceWorker, /my-calendar-v50/);
   assert.match(serviceWorker, /includeUncontrolled: true/);
   assert.match(serviceWorker, /try[\s\S]*?await client\.navigate\(client\.url\);[\s\S]*?catch/);
   assert.match(serviceWorker, /client\.navigate\(client\.url\)/);
