@@ -17,16 +17,20 @@ export function useSalaryReceipts(workMonth: string) {
     client.current = sync;
     const refresh = () => void sync.refresh(currentMonth.current);
     const onVisible = () => { if (document.visibilityState === "visible") refresh(); };
+    const flush = () => void sync.flush();
     refresh();
     window.addEventListener("online", refresh);
     window.addEventListener("pageshow", refresh);
+    window.addEventListener("pagehide", flush);
     document.addEventListener("visibilitychange", onVisible);
     const timer = window.setInterval(onVisible, 15_000);
     return () => {
       active = false;
+      flush();
       client.current = null;
       window.removeEventListener("online", refresh);
       window.removeEventListener("pageshow", refresh);
+      window.removeEventListener("pagehide", flush);
       document.removeEventListener("visibilitychange", onVisible);
       window.clearInterval(timer);
     };
@@ -35,9 +39,10 @@ export function useSalaryReceipts(workMonth: string) {
   useEffect(() => {
     currentMonth.current = workMonth;
     void client.current?.refresh(workMonth);
+    return () => { void client.current?.flush(workMonth); };
   }, [workMonth]);
 
-  const save = useCallback((month: string, draft: SalaryReceiptDraft) => client.current?.save(month, draft), []);
-  const retry = useCallback(() => void client.current?.refresh(currentMonth.current), []);
-  return { entry: entries[workMonth], save, retry };
+  const save = useCallback((month: string, draft: SalaryReceiptDraft) => client.current?.autosave(month, draft), []);
+  const flush = useCallback((month: string) => void client.current?.flush(month), []);
+  return { entry: entries[workMonth], save, flush };
 }

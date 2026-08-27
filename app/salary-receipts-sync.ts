@@ -1,6 +1,7 @@
 import { isSalaryReceipt, isSalaryReceiptDraft, isWorkMonth, type SalaryReceipt, type SalaryReceiptDraft } from "./salary-receipts";
 
 const STORAGE_PREFIX = "pika-salary-received-v1:";
+export const SALARY_AUTOSAVE_DELAY_MS = 700;
 type PendingReceipt = SalaryReceiptDraft & { expectedVersion: number; id: string };
 export type SalaryReceiptEntry = {
   receipt: SalaryReceipt | null;
@@ -13,6 +14,7 @@ export type SalaryReceiptEntry = {
 export class SalaryReceiptSync {
   private entries: Record<string, SalaryReceiptEntry> = {};
   private busy = new Set<string>();
+  private saveTimers = new Map<string, ReturnType<typeof setTimeout>>();
 
   constructor(
     private storage: Storage | undefined,
@@ -70,7 +72,34 @@ export class SalaryReceiptSync {
     entry.pending = { ...draft, expectedVersion: entry.receipt?.version ?? 0, id: crypto.randomUUID() };
     entry.status = "saving";
     this.publish(month); // Persist the queue before starting the network request.
+    this.clearSaveTimer(month);
     return this.sync(month);
+  }
+
+  autosave(month: string, draft: SalaryReceiptDraft) {
+    if (!isWorkMonth(month) || !isSalaryReceiptDraft(draft)) throw new Error("Invalid received salary.");
+    const entry = this.load(month);
+    const previous = entry.pending ?? entry.receipt;
+    if (entry.status !== "conflict" && previous?.receivedCents === draft.receivedCents && previous.expectedCents === draft.expectedCents) return;
+    entry.pending = { ...draft, expectedVersion: entry.receipt?.version ?? 0, id: crypto.randomUUID() };
+    entry.status = "saving";
+    this.publish(month);
+    this.clearSaveTimer(month);
+    this.saveTimers.set(month, setTimeout(() => {
+      this.saveTimers.delete(month);
+      void this.sync(month);
+    }, SALARY_AUTOSAVE_DELAY_MS));
+  }
+
+  private clearSaveTimer(month: string) {
+    clearTimeout(this.saveTimers.get(month));
+    this.saveTimers.delete(month);
+  }
+
+  async flush(month?: string) {
+    const months = month ? [month] : Object.keys(this.entries).filter((key) => this.entries[key].pending);
+    months.forEach((key) => this.clearSaveTimer(key));
+    await Promise.all(months.map((key) => this.sync(key)));
   }
 
   async refresh(month: string) {
@@ -95,7 +124,7 @@ export class SalaryReceiptSync {
   }
 
   private async sync(month: string) {
-    if (this.busy.has(month)) return;
+    if (this.busy.has(month) || this.saveTimers.has(month)) return;
     const entry = this.load(month);
     if (entry.status === "conflict") {
       this.publish(month);
@@ -135,8 +164,8 @@ export class SalaryReceiptSync {
           entry.receipt = current;
           // An edit started while loading must be reviewed if its base was stale.
         }
-      } while (entry.pending);
-      entry.status = "synced";
+      } while (entry.pending && !this.saveTimers.has(month));
+      entry.status = entry.pending ? "saving" : "synced";
     } catch {
       entry.status = "offline";
     } finally {

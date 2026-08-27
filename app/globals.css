@@ -633,13 +633,6 @@ textarea:focus-visible {
   font-size: 16px;
 }
 
-.salary-received-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 14px;
-}
-
 .salary-received-values {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -676,7 +669,6 @@ textarea:focus-visible {
 .salary-comparison-match { color: var(--shift-rest-ink); background: var(--shift-rest-bg); }
 .salary-comparison-exceed { color: var(--shift-late-ink); background: var(--shift-late-bg); }
 .salary-received-error { color: var(--danger); font-size: 0.78rem; }
-.salary-received-edit { margin: 6px 0; }
 .salary-received-sync { color: var(--muted-strong); }
 .salary-received-privacy { margin-top: 14px; font-size: 0.65rem; }
 

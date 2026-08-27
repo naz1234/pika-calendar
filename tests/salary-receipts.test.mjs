@@ -29,7 +29,7 @@ const api = await load("../functions/api/salary-receipts.ts", {
   "../../app/salary-receipts": domain,
   "../lib/calendar-store": store,
 });
-const { SalaryReceiptSync } = await load("../app/salary-receipts-sync.ts", { "./salary-receipts": domain });
+const { SalaryReceiptSync, SALARY_AUTOSAVE_DELAY_MS } = await load("../app/salary-receipts-sync.ts", { "./salary-receipts": domain });
 const { SalaryReceivedPanel } = await load("../app/salary-received-panel.tsx", {
   react: React, "react/jsx-runtime": jsxRuntime, "./salary-receipts": domain,
 });
@@ -232,15 +232,16 @@ test("blocked local storage never claims an offline salary is saved", async () =
 
 const panelProps = {
   className: "summary-mobile", workMonth: "2026-07", monthLabel: "July 2026", payMonthLabel: "August 2026",
-  expectedSalary: 17065, visible: true, onSave() {}, onRetry() {}, onToggleVisibility() {},
+  expectedSalary: 17065, visible: true, onSave() {}, onBlur() {}, onToggleVisibility() {},
 };
 
-test("salary panel renders the pay month, decimal input, save control, and sharing notice", () => {
+test("salary panel renders the pay month, automatic saving, and sharing notice", () => {
   const html = renderToStaticMarkup(React.createElement(SalaryReceivedPanel, panelProps));
-  assert.match(html, /Add received salary for August 2026/);
+  assert.match(html, /Received salary for August 2026/);
   assert.match(html, /For your July 2026 work calendar/);
   assert.match(html, /inputMode="decimal"/);
-  assert.match(html, /Save salary/);
+  assert.match(html, /Saves and syncs automatically/);
+  assert.doesNotMatch(html, /Save salary|Retry sync|Edit received salary|Cancel/);
   assert.match(html, /anyone with this site link can view saved salaries/);
   assert.doesNotMatch(html, /salary-comparison-short|salary-comparison-match|salary-comparison-exceed/);
 });
@@ -254,15 +255,101 @@ test("salary panel renders Short, Match, Exceed and masks all saved amounts", ()
     assert.match(html, /Saved online · available on other devices/);
   }
   const hidden = renderToStaticMarkup(React.createElement(SalaryReceivedPanel, { ...panelProps, entry, visible: false }));
-  assert.doesNotMatch(hidden, /17,000|17,065|SAR 65/);
+  assert.doesNotMatch(hidden, /17,000|17,065|17000|17065|SAR 65/);
   assert.match(hidden, /••••••/);
 });
 
 test("salary panel distinguishes pending, failed, and conflicting saves", () => {
   const entry = { receipt: null, pending: { ...draft, id: "pending", expectedVersion: 0 }, status: "offline", locallySaved: true };
   const render = (next) => renderToStaticMarkup(React.createElement(SalaryReceivedPanel, { ...panelProps, entry: next }));
-  assert.match(render(entry), /Saved on this device · waiting to sync online/);
+  assert.match(render(entry), /Saved on this device · sync will retry automatically/);
   assert.doesNotMatch(render(entry), /Saved online/);
   assert.match(render({ ...entry, locallySaved: false }), /Not saved yet/);
   assert.match(render({ ...entry, status: "conflict" }), /Changed on another device/);
+  assert.doesNotMatch(render(entry), /Save salary|Retry sync|Edit received salary|Cancel/);
+});
+
+test("autosave keeps input locally immediately and sends only the final amount after typing pauses", async (t) => {
+  t.mock.timers.enable({ apis: ["setTimeout"] });
+  const db = database();
+  t.after(() => db.close());
+  const request = transport(db);
+  let writes = 0;
+  const first = client((url, options) => {
+    if (options?.method === "PUT") writes += 1;
+    return request(url, options);
+  });
+  first.sync.autosave("2026-07", { ...draft, receivedCents: 100 });
+  assert.equal(first.entry().locallySaved, true);
+  assert.equal(first.entry().pending.receivedCents, 100);
+  assert.equal(writes, 0);
+  t.mock.timers.tick(SALARY_AUTOSAVE_DELAY_MS - 1);
+  first.sync.autosave("2026-07", draft);
+  await first.sync.refresh("2026-07");
+  assert.equal(writes, 0, "background refresh must not bypass the typing delay");
+  t.mock.timers.tick(SALARY_AUTOSAVE_DELAY_MS - 1);
+  assert.equal(writes, 0);
+  t.mock.timers.tick(1);
+  await new Promise(setImmediate);
+  assert.equal(writes, 1);
+  assert.equal(first.entry().receipt.receivedCents, draft.receivedCents);
+  assert.equal(first.entry().status, "synced");
+  first.sync.autosave("2026-07", draft);
+  t.mock.timers.tick(SALARY_AUTOSAVE_DELAY_MS);
+  assert.equal(writes, 1, "unchanged input must not write another version");
+});
+
+test("leaving the field or month flushes an autosave before the typing delay", async (t) => {
+  t.mock.timers.enable({ apis: ["setTimeout"] });
+  const db = database();
+  t.after(() => db.close());
+  const first = client(transport(db));
+  first.sync.autosave("2026-07", draft);
+  await first.sync.flush("2026-07");
+  assert.equal(first.entry().status, "synced");
+  t.mock.timers.tick(SALARY_AUTOSAVE_DELAY_MS);
+  assert.equal(first.entry().receipt.version, 1);
+  const second = client(transport(db));
+  await second.sync.refresh("2026-07");
+  assert.deepEqual(second.entry().receipt, first.entry().receipt);
+});
+
+test("an autosave survives closing the app before its timer or while offline", async (t) => {
+  t.mock.timers.enable({ apis: ["setTimeout"] });
+  const db = database();
+  t.after(() => db.close());
+  const first = client(async () => { throw new Error("offline"); });
+  first.sync.autosave("2026-07", draft);
+  // Simulate reopening with independent client state before the old timer fired.
+  const reopened = client(transport(db), first.storage);
+  await reopened.sync.refresh("2026-08");
+  assert.equal(reopened.entry().status, "synced");
+  assert.equal(reopened.entry().receipt.receivedCents, draft.receivedCents);
+});
+
+test("typing during an active request keeps the newer amount queued until its own delay", async (t) => {
+  t.mock.timers.enable({ apis: ["setTimeout"] });
+  const db = database();
+  t.after(() => db.close());
+  const request = transport(db);
+  let release;
+  const gate = new Promise((resolve) => { release = resolve; });
+  let writes = 0;
+  const first = client(async (url, options) => {
+    if (options?.method === "PUT" && ++writes === 1) await gate;
+    return request(url, options);
+  });
+  first.sync.autosave("2026-07", draft);
+  t.mock.timers.tick(SALARY_AUTOSAVE_DELAY_MS);
+  first.sync.autosave("2026-07", { ...draft, receivedCents: 123 });
+  release();
+  await new Promise(setImmediate);
+  assert.equal(first.entry().status, "saving");
+  assert.equal(first.entry().pending.receivedCents, 123);
+  assert.equal(writes, 1);
+  t.mock.timers.tick(SALARY_AUTOSAVE_DELAY_MS);
+  await new Promise(setImmediate);
+  assert.equal(first.entry().status, "synced");
+  assert.equal(first.entry().receipt.receivedCents, 123);
+  assert.equal(first.entry().receipt.version, 2);
 });

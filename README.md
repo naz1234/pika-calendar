@@ -34,9 +34,9 @@ Received salary records use the same public sharing model: **anyone with the sit
 
 ## Record received salary
 
-Open a Work month and scroll below its summary to **Salary received**. July 2026 shows **August 2026** pay. Enter the amount in SAR and select **Save salary**. The panel compares amounts to the nearest halala and shows **Short**, **Match**, or **Exceed**. Select **Edit received salary** to correct a record.
+Open a Work month and scroll below its summary to **Salary received**. July 2026 shows **August 2026** pay. Enter the amount in SAR. Valid amounts are kept on this device immediately and sync automatically after a brief pause in typing, when you leave the field, or when you change months. The panel compares amounts to the nearest halala and shows **Short**, **Match**, or **Exceed**. Tap the amount field to correct a record; there are no Save or Retry buttons. Blank or invalid input leaves the last valid amount unchanged.
 
-Each record saves the expected forecast at the time of saving, so another device shows the same comparison even if its local salary settings differ. Later roster or salary-setting changes do not silently rewrite a saved comparison; edit and save again to use the current forecast.
+Each record saves the expected forecast at the time of saving, so another device shows the same comparison even if its local salary settings differ. Later roster or salary-setting changes do not silently rewrite a saved comparison; re-enter the amount to use the current forecast.
 
 Wait for **Saved online · available on other devices** before closing the page or switching devices. Offline entries are queued on this device and retried on reconnect, reopening the app, or every 15 seconds while visible. A conflicting edit from another device is kept for review instead of overwritten. Salary records use separate rows in the existing D1 `calendars` table; no new binding or migration is needed, and event sync cannot erase them. JSON event backups do not include salary records.
 
