@@ -566,6 +566,120 @@ textarea:focus-visible {
   display: none;
 }
 
+.salary-received-panel {
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid var(--grid);
+  border-radius: 18px;
+  background: var(--surface-raised);
+  box-shadow: 0 16px 42px rgba(0, 0, 0, 0.18);
+}
+
+.salary-received-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.salary-received-heading h2 {
+  margin: 8px 0 5px;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.salary-received-heading p:not(.eyebrow),
+.salary-received-note,
+.salary-received-sync,
+.salary-received-privacy {
+  margin: 8px 0;
+  color: var(--muted);
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+
+.salary-received-form .field {
+  margin-bottom: 12px;
+}
+
+.salary-received-input {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 0 12px;
+  border: 1px solid var(--grid);
+  border-radius: 12px;
+  background: var(--surface-soft);
+  color: var(--muted);
+}
+
+.salary-received-input:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
+.field .salary-received-input input {
+  width: 100%;
+  min-width: 0;
+  min-height: 46px;
+  padding: 10px 0;
+  border: 0;
+  border-radius: 0;
+  outline: 0;
+  background: transparent;
+  box-shadow: none;
+  font-size: 16px;
+}
+
+.salary-received-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.salary-received-values {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0 0 14px;
+}
+
+.salary-received-values dt {
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
+.salary-received-values dd {
+  margin: 6px 0 0;
+  font-size: 1rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.salary-comparison {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid currentColor;
+  border-radius: 12px;
+  font-size: 0.75rem;
+}
+
+.salary-comparison strong { font-size: 0.9rem; }
+.salary-comparison-short { color: var(--shift-early-ink); background: var(--shift-early-bg); }
+.salary-comparison-match { color: var(--shift-rest-ink); background: var(--shift-rest-bg); }
+.salary-comparison-exceed { color: var(--shift-late-ink); background: var(--shift-late-bg); }
+.salary-received-error { color: var(--danger); font-size: 0.78rem; }
+.salary-received-edit { margin: 6px 0; }
+.salary-received-sync { color: var(--muted-strong); }
+.salary-received-privacy { margin-top: 14px; font-size: 0.65rem; }
+
 .monthly-summary-heading {
   display: flex;
   align-items: flex-start;
@@ -3515,6 +3629,11 @@ textarea:focus-visible {
     box-shadow: none;
     visibility: visible;
     transform: none;
+    overflow-y: auto;
+  }
+
+  .agenda-panel > * {
+    flex-shrink: 0;
   }
 
   .sheet-handle,

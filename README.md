@@ -12,6 +12,8 @@ A mobile-first shared calendar with separate **Work** and **Personal** modes. It
 - Consecutive matching shifts join into one continuous ES, LS, NS, or RD bar
 - Scrollable monthly Work summary for all Night shifts, extensions, and RDOT
 - Expected salary forecast using the monthly Night allowance and overtime hours, hidden by default behind an eye toggle
+- Received salary panel below the Work summary: July work records August pay (including December → January), with Short, Match, or Exceed and the difference
+- Received salary and its expected-salary snapshot saved to shared D1 storage, with offline retry and protection against conflicting edits from another device
 - Work salary calculator for manual salary, Extension-day, and RDOT-day estimates
 - Add, edit, search, and delete events
 - Inclusive multi-day all-day events, overnight roster shifts, and notes
@@ -27,6 +29,16 @@ A mobile-first shared calendar with separate **Work** and **Personal** modes. It
 Events are cached in the browser so the calendar keeps working offline. With the D1 binding configured, the app automatically loads and saves one shared calendar. Open the normal site URL in any browser, including private/incognito mode, to see the same events—no setup link is required.
 
 Anyone with the site URL can view, add, edit, or delete every Work and Personal event, and can download, rename, or delete shared roster originals. There is no login or per-user calendar. Use this mode only when that public access is acceptable.
+
+Received salary records use the same public sharing model: **anyone with the site URL can view or change them**. The eye buttons hide amounts on screen only; they are not access control.
+
+## Record received salary
+
+Open a Work month and scroll below its summary to **Salary received**. July 2026 shows **August 2026** pay. Enter the amount in SAR and select **Save salary**. The panel compares amounts to the nearest halala and shows **Short**, **Match**, or **Exceed**. Select **Edit received salary** to correct a record.
+
+Each record saves the expected forecast at the time of saving, so another device shows the same comparison even if its local salary settings differ. Later roster or salary-setting changes do not silently rewrite a saved comparison; edit and save again to use the current forecast.
+
+Wait for **Saved online · available on other devices** before closing the page or switching devices. Offline entries are queued on this device and retried on reconnect, reopening the app, or every 15 seconds while visible. A conflicting edit from another device is kept for review instead of overwritten. Salary records use separate rows in the existing D1 `calendars` table; no new binding or migration is needed, and event sync cannot erase them. JSON event backups do not include salary records.
 
 Roster screenshots and PDFs are read in your browser to detect shifts. With the R2 binding configured, each original is also saved in the shared roster archive so it can be downloaded from another device. Re-importing the same month replaces only that month’s earlier roster-import events, while manual Work events and all Personal events remain.
 
