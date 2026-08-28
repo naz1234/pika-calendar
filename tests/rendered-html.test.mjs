@@ -13,7 +13,7 @@ test("exports a deployable static calendar", async () => {
   assert.match(html, /<title>My Calendar<\/title>/i);
   assert.match(html, /mobile-first Work and Personal calendar/i);
   assert.match(html, /rel="manifest" href="\/manifest\.webmanifest"/i);
-  assert.match(html, /rel="apple-touch-icon"[^>]*href="\/icons\/calendar-apple-180\.png"/i);
+  assert.match(html, /rel="apple-touch-icon"[^>]*href="\/icons\/pika-calendar-apple-180\.png"/i);
   assert.match(html, /viewport-fit=cover/i);
   assert.match(html, /property="og:image"/i);
   assert.match(html, /My Calendar/);
@@ -50,15 +50,15 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   assert.deepEqual(
     manifest.icons.map(({ src, sizes, purpose }) => ({ src, sizes, purpose })),
     [
-      { src: "/icons/calendar-192.png", sizes: "192x192", purpose: "any" },
-      { src: "/icons/calendar-512.png", sizes: "512x512", purpose: "any" },
-      { src: "/icons/calendar-maskable-192.png", sizes: "192x192", purpose: "maskable" },
-      { src: "/icons/calendar-maskable-512.png", sizes: "512x512", purpose: "maskable" },
+      { src: "/icons/pika-calendar-192.png", sizes: "192x192", purpose: "any" },
+      { src: "/icons/pika-calendar-512.png", sizes: "512x512", purpose: "any" },
+      { src: "/icons/pika-calendar-maskable-192.png", sizes: "192x192", purpose: "maskable" },
+      { src: "/icons/pika-calendar-maskable-512.png", sizes: "512x512", purpose: "maskable" },
     ],
   );
   assert.match(source, /<div className="brand-mark" aria-hidden="true" \/>/);
   assert.doesNotMatch(source, /className="brand-mark"[^>]*>[\s\S]*?now\.getDate\(\)/s);
-  assert.match(styles, /\.brand-mark\s*\{[^}]*width:\s*48px;[^}]*height:\s*48px;[^}]*background:\s*url\("\/icons\/calendar-192\.png"\) center \/ contain no-repeat;/s);
+  assert.match(styles, /\.brand-mark\s*\{[^}]*width:\s*48px;[^}]*height:\s*48px;[^}]*background:\s*url\("\/icons\/pika-calendar-192\.png"\) center \/ contain no-repeat;/s);
   assert.doesNotMatch(styles, /\.brand-mark::before/);
   assert.match(mergeSource, /"work" \| "personal"/);
   assert.match(source, /isoWeekNumber/);
@@ -342,7 +342,7 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   }
   assert.match(styles, /:root,[\s\S]*?--remark-dot:\s*#ffc247;/);
   assert.match(styles, /:root\[data-theme="light"\][\s\S]*?--remark-dot:\s*#e6a20d;/);
-  assert.match(serviceWorker, /my-calendar-v50/);
+  assert.match(serviceWorker, /my-calendar-v51/);
   assert.match(serviceWorker, /includeUncontrolled: true/);
   assert.match(serviceWorker, /try[\s\S]*?await client\.navigate\(client\.url\);[\s\S]*?catch/);
   assert.match(serviceWorker, /client\.navigate\(client\.url\)/);
@@ -353,12 +353,24 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   assert.match(source, /registration\.update\(\)/);
   assert.match(serviceWorker, /pathname\.startsWith\("\/api\/"\)/);
 
+  for (const [filename, size, colorType] of [
+    ["pika-calendar-192.png", 192, 6],
+    ["pika-calendar-512.png", 512, 6],
+    ["pika-calendar-maskable-192.png", 192, 2],
+    ["pika-calendar-maskable-512.png", 512, 2],
+    ["pika-calendar-apple-180.png", 180, 2],
+  ]) {
+    const [exported, original] = await Promise.all([
+      readFile(path.join(clientRoot, "icons", filename)),
+      readFile(path.join(projectRoot, "public", "icons", filename)),
+    ]);
+    assert.deepEqual(exported, original, `${filename} must be exported without changes`);
+    assert.equal(exported.subarray(0, 8).toString("hex"), "89504e470d0a1a0a");
+    assert.deepEqual([exported.readUInt32BE(16), exported.readUInt32BE(20)], [size, size]);
+    assert.equal(exported[25], colorType, `${filename} must use the intended alpha format`);
+  }
+
   await Promise.all([
-    access(path.join(clientRoot, "icons", "calendar-192.png")),
-    access(path.join(clientRoot, "icons", "calendar-512.png")),
-    access(path.join(clientRoot, "icons", "calendar-maskable-192.png")),
-    access(path.join(clientRoot, "icons", "calendar-maskable-512.png")),
-    access(path.join(clientRoot, "icons", "calendar-apple-180.png")),
     access(path.join(clientRoot, "og.png")),
     access(path.join(clientRoot, "_headers")),
     access(path.join(clientRoot, "ocr", "worker.min.js")),

@@ -1818,7 +1818,7 @@ textarea:focus-visible {
   width: 48px;
   height: 48px;
   flex: 0 0 48px;
-  background: url("/icons/calendar-192.png") center / contain no-repeat;
+  background: url("/icons/pika-calendar-192.png") center / contain no-repeat;
 }
 
 .menu-header > div:nth-child(2) {
