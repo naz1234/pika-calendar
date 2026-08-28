@@ -9,25 +9,25 @@
   "orientation": "any",
   "icons": [
     {
-      "src": "/icons/calendar-192.png",
+      "src": "/icons/pika-calendar-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icons/calendar-512.png",
+      "src": "/icons/pika-calendar-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icons/calendar-maskable-192.png",
+      "src": "/icons/pika-calendar-maskable-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "/icons/calendar-maskable-512.png",
+      "src": "/icons/pika-calendar-maskable-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
