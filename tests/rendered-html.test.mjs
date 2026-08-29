@@ -230,11 +230,16 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   assert.match(calculatorTriggerMarkup, /<svg[\s\S]*?<\/svg>[\s\S]*?Calculator/);
   assert.match(source, /className="dialog salary-calculator-dialog"/);
   assert.match(source, /aria-label="Calculator salary plus laundry"/);
+  assert.match(source, /aria-label="Night shift days"/);
   assert.match(source, /aria-label="Extension days"/);
   assert.match(source, /aria-label="RDOT days"/);
   assert.match(source, /manualSalaryEstimate\.expectedSalary/);
-  assert.match(source, /3\.5 overtime hours per Extension day and 8\.5 hours per RDOT day/);
+  assert.match(source, /manualSalaryEstimate\.nightAllowance/);
+  assert.match(source, /SAR \{DEFAULT_NIGHT_ALLOWANCE_RATE\} per Night shift day/);
+  assert.match(source, /3\.5 overtime hours per Extension day, and 8\.5 hours per RDOT day/);
   assert.match(source, /standard SAR 100 laundry allowance/);
+  assert.match(styles, /\.salary-calculator-fields\s*\{[^}]*grid-template-columns:\s*repeat\(3, minmax\(0, 1fr\)\);/s);
+  assert.match(styles, /\.salary-calculator-breakdown\s*\{[^}]*grid-template-columns:\s*repeat\(3, minmax\(0, 1fr\)\);/s);
   assert.match(styles, /\.calendar-toolbar\s*\{[^}]*display:\s*grid;[^}]*place-items:\s*center;/s);
   assert.match(styles, /\.calendar-control-stack\s*\{[^}]*justify-items:\s*center;[^}]*width:\s*min\(100%, 520px\);[^}]*margin-inline:\s*auto;/s);
   assert.match(styles, /\.calendar-switcher\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1\.22fr\) minmax\(0, 1fr\) minmax\(0, 1\.08fr\);[^}]*gap:\s*2px;[^}]*width:\s*100%;/s);
@@ -242,9 +247,11 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   assert.match(styles, /\.salary-calculator-overlay\s*\{[^}]*place-items:\s*center;/s);
   assert.match(styles, /\.dialog\.salary-calculator-dialog\s*\{[^}]*width:\s*min\(100%, 460px\);[^}]*border-radius:\s*24px;/s);
   assert.match(styles, /\.summary-mobile\.monthly-shift-summary,\s*\.dialog\.salary-calculator-dialog,\s*\.dialog\.roster-archive-dialog\s*\{[^}]*border:\s*1px solid var\(--grid\);[^}]*background-color:\s*var\(--surface\);[^}]*background-image:\s*radial-gradient\(circle at 92% 8%, color-mix\(in srgb, var\(--work\) 8%, transparent\), transparent 32%\);[^}]*box-shadow:\s*0 12px 32px color-mix\(in srgb, var\(--text\) 8%, transparent\);/s);
+  const calculatorSurfaceOverride = styles.search(
+    /\.summary-mobile\.monthly-shift-summary,\s*\.dialog\.salary-calculator-dialog,\s*\.dialog\.roster-archive-dialog\s*\{/s,
+  );
   assert.ok(
-    styles.indexOf(".summary-mobile.monthly-shift-summary,\n.dialog.salary-calculator-dialog,\n.dialog.roster-archive-dialog") >
-      styles.indexOf(".dialog {")
+    calculatorSurfaceOverride > styles.indexOf(".dialog {")
   );
   assert.match(styles, /\.summary-mobile \.monthly-summary-heading h2,\s*\.salary-calculator-dialog \.dialog-header h2,\s*\.roster-archive-dialog \.dialog-header h2\s*\{[^}]*margin-top:\s*7px;[^}]*font-size:\s*1\.45rem;[^}]*font-weight:\s*500;[^}]*letter-spacing:\s*-0\.025em;[^}]*line-height:\s*1\.2;/s);
   const workEditorStart = source.indexOf("{editorIsWorkEdit ? (");
@@ -342,7 +349,7 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   }
   assert.match(styles, /:root,[\s\S]*?--remark-dot:\s*#ffc247;/);
   assert.match(styles, /:root\[data-theme="light"\][\s\S]*?--remark-dot:\s*#e6a20d;/);
-  assert.match(serviceWorker, /my-calendar-v51/);
+  assert.match(serviceWorker, /my-calendar-v52/);
   assert.match(serviceWorker, /includeUncontrolled: true/);
   assert.match(serviceWorker, /try[\s\S]*?await client\.navigate\(client\.url\);[\s\S]*?catch/);
   assert.match(serviceWorker, /client\.navigate\(client\.url\)/);

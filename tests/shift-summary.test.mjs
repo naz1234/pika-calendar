@@ -145,33 +145,39 @@ test("uses a custom salary plus laundry amount in the forecast", () => {
   });
 });
 
-test("estimates salary from manually entered Extension and RDOT days", () => {
+test("estimates salary from manually entered Night, Extension, and RDOT days", () => {
   assert.deepEqual(calculateManualSalaryEstimate({
     salaryWithLaundry: 15100,
+    nightShiftDays: 4,
     extensionDays: 3,
     rdotDays: 1,
   }), {
     salaryWithLaundry: 15100,
+    nightShiftDays: 4,
     extensionDays: 3,
     rdotDays: 1,
     basicSalary: 15000,
     overtimeHours: 19,
+    nightAllowance: 180,
     expectedOvertime: 2226.56,
-    expectedSalary: 17326.56,
+    expectedSalary: 17506.56,
   });
 });
 
 test("manual salary estimate accepts fractional days and sanitizes invalid values", () => {
   assert.deepEqual(calculateManualSalaryEstimate({
     salaryWithLaundry: Number.NaN,
+    nightShiftDays: Number.NaN,
     extensionDays: 0.5,
     rdotDays: -2,
   }), {
     salaryWithLaundry: 0,
+    nightShiftDays: 0,
     extensionDays: 0.5,
     rdotDays: 0,
     basicSalary: 0,
     overtimeHours: 1.8,
+    nightAllowance: 0,
     expectedOvertime: 0,
     expectedSalary: 0,
   });
