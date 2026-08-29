@@ -235,6 +235,13 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   assert.match(source, /aria-label="RDOT days"/);
   assert.match(source, /manualSalaryEstimate\.expectedSalary/);
   assert.match(source, /manualSalaryEstimate\.nightAllowance/);
+  const calculatorBreakdownMarkup = source.match(/<div className="salary-calculator-breakdown">([\s\S]*?)<\/div>/)?.[1] ?? "";
+  assert.doesNotMatch(calculatorBreakdownMarkup, /Salary \+ laundry/);
+  assert.match(calculatorBreakdownMarkup, /manualSalaryEstimate\.nightShiftDays/);
+  assert.match(calculatorBreakdownMarkup, /manualSalaryEstimate\.extensionHours/);
+  assert.match(calculatorBreakdownMarkup, /manualSalaryEstimate\.expectedExtensionOvertime/);
+  assert.match(calculatorBreakdownMarkup, /manualSalaryEstimate\.rdotHours/);
+  assert.match(calculatorBreakdownMarkup, /manualSalaryEstimate\.expectedRdotOvertime/);
   assert.match(source, /SAR \{DEFAULT_NIGHT_ALLOWANCE_RATE\} per Night shift day/);
   assert.match(source, /3\.5 overtime hours per Extension day, and 8\.5 hours per RDOT day/);
   assert.match(source, /standard SAR 100 laundry allowance/);
@@ -349,7 +356,7 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   }
   assert.match(styles, /:root,[\s\S]*?--remark-dot:\s*#ffc247;/);
   assert.match(styles, /:root\[data-theme="light"\][\s\S]*?--remark-dot:\s*#e6a20d;/);
-  assert.match(serviceWorker, /my-calendar-v52/);
+  assert.match(serviceWorker, /my-calendar-v53/);
   assert.match(serviceWorker, /includeUncontrolled: true/);
   assert.match(serviceWorker, /try[\s\S]*?await client\.navigate\(client\.url\);[\s\S]*?catch/);
   assert.match(serviceWorker, /client\.navigate\(client\.url\)/);
