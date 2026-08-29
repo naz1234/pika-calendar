@@ -70,6 +70,7 @@ import {
   type StoredRosterFileMetadata,
 } from "./roster-file-store";
 import {
+  DEFAULT_NIGHT_ALLOWANCE_RATE,
   DEFAULT_SALARY_WITH_LAUNDRY,
   calculateManualSalaryEstimate,
   calculateMonthlyExpectedSalary,
@@ -382,6 +383,7 @@ export default function Home() {
   const [salaryWithLaundryInput, setSalaryWithLaundryInput] = useState(String(DEFAULT_SALARY_WITH_LAUNDRY));
   const [salaryCalculatorOpen, setSalaryCalculatorOpen] = useState(false);
   const [calculatorSalaryInput, setCalculatorSalaryInput] = useState(String(DEFAULT_SALARY_WITH_LAUNDRY));
+  const [calculatorNightShiftDaysInput, setCalculatorNightShiftDaysInput] = useState("0");
   const [calculatorExtensionDaysInput, setCalculatorExtensionDaysInput] = useState("0");
   const [calculatorRdotDaysInput, setCalculatorRdotDaysInput] = useState("0");
   const [events, setEvents] = useState<CalendarEvent[]>([]);
@@ -587,9 +589,10 @@ export default function Home() {
   );
   const manualSalaryEstimate = useMemo(() => calculateManualSalaryEstimate({
     salaryWithLaundry: calculatorSalaryInput.trim() ? Number(calculatorSalaryInput) : 0,
+    nightShiftDays: calculatorNightShiftDaysInput.trim() ? Number(calculatorNightShiftDaysInput) : 0,
     extensionDays: calculatorExtensionDaysInput.trim() ? Number(calculatorExtensionDaysInput) : 0,
     rdotDays: calculatorRdotDaysInput.trim() ? Number(calculatorRdotDaysInput) : 0,
-  }), [calculatorExtensionDaysInput, calculatorRdotDaysInput, calculatorSalaryInput]);
+  }), [calculatorExtensionDaysInput, calculatorNightShiftDaysInput, calculatorRdotDaysInput, calculatorSalaryInput]);
   const salaryMonthLabel = new Intl.DateTimeFormat("en", {
     month: "long",
     year: "numeric",
@@ -2357,6 +2360,18 @@ export default function Home() {
                 </span>
               </label>
               <label className="field">
+                <span>Night shift days</span>
+                <input
+                  aria-label="Night shift days"
+                  type="number"
+                  inputMode="numeric"
+                  min="0"
+                  step="1"
+                  value={calculatorNightShiftDaysInput}
+                  onChange={(event) => setCalculatorNightShiftDaysInput(event.target.value)}
+                />
+              </label>
+              <label className="field">
                 <span>Extension days</span>
                 <input
                   aria-label="Extension days"
@@ -2386,11 +2401,15 @@ export default function Home() {
               <strong>SAR {formatSar(manualSalaryEstimate.expectedSalary)}</strong>
               <div className="salary-calculator-breakdown">
                 <span>Salary + laundry<b>SAR {formatSar(manualSalaryEstimate.salaryWithLaundry)}</b></span>
+                <span>
+                  {manualSalaryEstimate.nightShiftDays} night shift {manualSalaryEstimate.nightShiftDays === 1 ? "day" : "days"}
+                  <b>SAR {formatSar(manualSalaryEstimate.nightAllowance)}</b>
+                </span>
                 <span>{manualSalaryEstimate.overtimeHours.toFixed(1)} overtime hours<b>SAR {formatSar(manualSalaryEstimate.expectedOvertime)}</b></span>
               </div>
             </div>
             <p className="salary-calculator-note">
-              Estimate uses 3.5 overtime hours per Extension day and 8.5 hours per RDOT day. The overtime rate excludes the standard SAR 100 laundry allowance; night allowance is not included.
+              Estimate adds SAR {DEFAULT_NIGHT_ALLOWANCE_RATE} per Night shift day, 3.5 overtime hours per Extension day, and 8.5 hours per RDOT day. The overtime rate excludes the standard SAR 100 laundry allowance.
             </p>
             <div className="editor-actions salary-calculator-actions">
               <button type="button" className="primary-button" onClick={closeSalaryCalculator}>Done</button>

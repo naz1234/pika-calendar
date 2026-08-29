@@ -2465,7 +2465,7 @@ textarea:focus-visible {
 
 .salary-calculator-fields {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0 10px;
 }
 
@@ -2533,7 +2533,7 @@ textarea:focus-visible {
 
 .salary-calculator-breakdown {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
   margin-top: 10px;
   padding-top: 11px;
