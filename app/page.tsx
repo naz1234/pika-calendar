@@ -2400,12 +2400,18 @@ export default function Home() {
               <span>Estimated salary</span>
               <strong>SAR {formatSar(manualSalaryEstimate.expectedSalary)}</strong>
               <div className="salary-calculator-breakdown">
-                <span>Salary + laundry<b>SAR {formatSar(manualSalaryEstimate.salaryWithLaundry)}</b></span>
                 <span>
                   {manualSalaryEstimate.nightShiftDays} night shift {manualSalaryEstimate.nightShiftDays === 1 ? "day" : "days"}
                   <b>SAR {formatSar(manualSalaryEstimate.nightAllowance)}</b>
                 </span>
-                <span>{manualSalaryEstimate.overtimeHours.toFixed(1)} overtime hours<b>SAR {formatSar(manualSalaryEstimate.expectedOvertime)}</b></span>
+                <span>
+                  {manualSalaryEstimate.extensionHours.toFixed(1)} Extension hours
+                  <b>SAR {formatSar(manualSalaryEstimate.expectedExtensionOvertime)}</b>
+                </span>
+                <span>
+                  {manualSalaryEstimate.rdotHours.toFixed(1)} RDOT hours
+                  <b>SAR {formatSar(manualSalaryEstimate.expectedRdotOvertime)}</b>
+                </span>
               </div>
             </div>
             <p className="salary-calculator-note">

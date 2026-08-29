@@ -37,8 +37,12 @@ export type ManualSalaryEstimateInput = {
 
 export type ManualSalaryEstimate = ManualSalaryEstimateInput & {
   basicSalary: number;
+  extensionHours: number;
+  rdotHours: number;
   overtimeHours: number;
   nightAllowance: number;
+  expectedExtensionOvertime: number;
+  expectedRdotOvertime: number;
   expectedOvertime: number;
   expectedSalary: number;
 };
@@ -101,13 +105,14 @@ export function calculateManualSalaryEstimate(
   const extensionDays = nonNegativeNumber(input.extensionDays);
   const rdotDays = nonNegativeNumber(input.rdotDays);
   const basicSalary = roundCurrency(Math.max(0, salaryWithLaundry - DEFAULT_LAUNDRY_ALLOWANCE));
-  const overtimeHours = Math.round(
-    ((extensionDays * EXTENSION_OVERTIME_HOURS) + (rdotDays * NORMAL_SHIFT_HOURS)) * 10,
-  ) / 10;
+  const extensionHours = Math.round(extensionDays * EXTENSION_OVERTIME_HOURS * 10) / 10;
+  const rdotHours = Math.round(rdotDays * NORMAL_SHIFT_HOURS * 10) / 10;
+  const overtimeHours = Math.round((extensionHours + rdotHours) * 10) / 10;
   const nightAllowance = roundCurrency(nightShiftDays * DEFAULT_NIGHT_ALLOWANCE_RATE);
-  const expectedOvertime = roundCurrency(
-    basicSalary > 0 ? (basicSalary / MONTHLY_BASE_HOURS * OVERTIME_MULTIPLIER) * overtimeHours : 0,
-  );
+  const overtimeRate = basicSalary > 0 ? basicSalary / MONTHLY_BASE_HOURS * OVERTIME_MULTIPLIER : 0;
+  const expectedExtensionOvertime = roundCurrency(overtimeRate * extensionHours);
+  const expectedRdotOvertime = roundCurrency(overtimeRate * rdotHours);
+  const expectedOvertime = roundCurrency(expectedExtensionOvertime + expectedRdotOvertime);
 
   return {
     salaryWithLaundry,
@@ -115,8 +120,12 @@ export function calculateManualSalaryEstimate(
     extensionDays,
     rdotDays,
     basicSalary,
+    extensionHours,
+    rdotHours,
     overtimeHours,
     nightAllowance,
+    expectedExtensionOvertime,
+    expectedRdotOvertime,
     expectedOvertime,
     expectedSalary: roundCurrency(salaryWithLaundry + nightAllowance + expectedOvertime),
   };
