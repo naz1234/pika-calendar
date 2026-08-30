@@ -15,6 +15,7 @@ test("exports a deployable static calendar", async () => {
   assert.match(html, /rel="manifest" href="\/manifest\.webmanifest"/i);
   assert.match(html, /rel="apple-touch-icon"[^>]*href="\/icons\/pika-calendar-apple-180\.png"/i);
   assert.match(html, /viewport-fit=cover/i);
+  assert.match(html, /name="theme-color" content="#150b1d"/i);
   assert.match(html, /property="og:image"/i);
   assert.match(html, /My Calendar/);
   assert.doesNotMatch(html, /codex-preview|react-loading-skeleton|Starter Project/i);
@@ -46,6 +47,8 @@ test("ships automatic shared sync, roster import, and installable app assets", a
 
   assert.equal(manifest.name, "My Calendar");
   assert.equal(manifest.display, "standalone");
+  assert.equal(manifest.background_color, "#150b1d");
+  assert.equal(manifest.theme_color, "#150b1d");
   assert.equal(manifest.icons.length, 4);
   assert.deepEqual(
     manifest.icons.map(({ src, sizes, purpose }) => ({ src, sizes, purpose })),
@@ -356,7 +359,16 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   }
   assert.match(styles, /:root,[\s\S]*?--remark-dot:\s*#ffc247;/);
   assert.match(styles, /:root\[data-theme="light"\][\s\S]*?--remark-dot:\s*#e6a20d;/);
-  assert.match(serviceWorker, /my-calendar-v53/);
+  const pikaMobileTheme = styles.slice(styles.indexOf("/* Mobile Pika family theme"));
+  assert.ok(pikaMobileTheme.length > 0, "mobile Pika family theme must be present");
+  assert.match(pikaMobileTheme, /@media \(max-width: 899px\)\s*\{[\s\S]*?--bg:\s*#150b1d;[\s\S]*?--work:\s*#f05aa2;[\s\S]*?--header-accent:\s*#c747b6;/s);
+  assert.match(pikaMobileTheme, /:root\[data-theme="light"\]\s*\{[\s\S]*?--bg:\s*#fff1f7;[\s\S]*?--text:\s*#172653;[\s\S]*?--header-accent:\s*#bd43ae;/s);
+  assert.match(pikaMobileTheme, /\.topbar\s*\{[^}]*border-radius:\s*29px;[^}]*background:[^}]*#ff75aa[^}]*#ac65df/s);
+  assert.match(pikaMobileTheme, /\.month-swipe-panel > \.month-card\s*\{[^}]*border-radius:\s*23px;[^}]*background-image:[^}]*#e28cff[^}]*#ff70a7/s);
+  assert.match(pikaMobileTheme, /\.summary-mobile\.monthly-shift-summary\s*\{[^}]*#ba6de1/s);
+  assert.match(pikaMobileTheme, /\.salary-received-panel\.summary-mobile\s*\{[^}]*#ff669f/s);
+  assert.match(pikaMobileTheme, /\.agenda-add,[\s\S]*?\.primary-button,[\s\S]*?\.personal-day-add\s*\{[^}]*linear-gradient\(135deg, #ef5aa0, #a448cf\)/s);
+  assert.match(serviceWorker, /my-calendar-v54/);
   assert.match(serviceWorker, /includeUncontrolled: true/);
   assert.match(serviceWorker, /try[\s\S]*?await client\.navigate\(client\.url\);[\s\S]*?catch/);
   assert.match(serviceWorker, /client\.navigate\(client\.url\)/);

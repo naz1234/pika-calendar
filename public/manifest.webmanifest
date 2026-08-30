@@ -4,8 +4,8 @@
   "description": "A private Work and Personal calendar with week numbers.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0b0e13",
-  "theme_color": "#0b0e13",
+  "background_color": "#150b1d",
+  "theme_color": "#150b1d",
   "orientation": "any",
   "icons": [
     {
