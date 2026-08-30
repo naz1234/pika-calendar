@@ -3913,28 +3913,28 @@ textarea:focus-visible {
   }
 }
 
-/* Mobile Pika family theme: berry, blush, lavender, and ink from the app icon. */
+/* Mobile Pika Salary theme: forest, mint, cream, plum, and restrained blush. */
 @media (max-width: 899px) {
   :root,
   :root[data-theme="dark"] {
-    --bg: #150b1d;
-    --surface: #21122b;
-    --surface-raised: #2b1835;
-    --surface-soft: #372041;
-    --grid: #643b69;
-    --grid-soft: #47294d;
-    --text: #fff8fc;
-    --muted: #c3a8c1;
-    --muted-strong: #ead8e8;
-    --work: #f05aa2;
-    --work-strong: #d83e91;
-    --work-soft: rgba(240, 90, 162, 0.18);
-    --personal: #ff6f91;
-    --personal-strong: #ea4d78;
-    --personal-soft: rgba(255, 111, 145, 0.18);
-    --header-accent: #c747b6;
-    --header-icon: #f1b3ff;
-    --header-accent-shadow: rgba(199, 71, 182, 0.38);
+    --bg: #12281f;
+    --surface: #1b382d;
+    --surface-raised: #234337;
+    --surface-soft: #294b3a;
+    --grid: #49624f;
+    --grid-soft: #324e3d;
+    --text: #faf8e9;
+    --muted: #b5c3ac;
+    --muted-strong: #e7eadc;
+    --work: #9acf94;
+    --work-strong: #6fb574;
+    --work-soft: rgba(154, 207, 148, 0.16);
+    --personal: #d7a8d8;
+    --personal-strong: #b57bb8;
+    --personal-soft: rgba(215, 168, 216, 0.15);
+    --header-accent: #9acf94;
+    --header-icon: #d7a8d8;
+    --header-accent-shadow: rgba(111, 181, 116, 0.28);
     --shift-early-ink: #ffc95c;
     --shift-early-bg: #4a321d;
     --shift-late-ink: #6fdaed;
@@ -3946,29 +3946,29 @@ textarea:focus-visible {
     --remark-dot: #ffad36;
     --selected-pulse: #d58cff;
     --danger: #ff7891;
-    --shadow: 0 24px 70px rgba(6, 1, 12, 0.52);
+    --shadow: 0 24px 70px rgba(5, 17, 12, 0.5);
     color-scheme: dark;
   }
 
   :root[data-theme="light"] {
-    --bg: #fff1f7;
-    --surface: #fffafd;
-    --surface-raised: #ffffff;
-    --surface-soft: #fbe7f3;
-    --grid: #e9bdd9;
-    --grid-soft: #f2d8e8;
-    --text: #172653;
-    --muted: #8f7189;
-    --muted-strong: #624866;
-    --work: #d24398;
-    --work-strong: #bc347f;
-    --work-soft: rgba(210, 67, 152, 0.13);
-    --personal: #ee527a;
-    --personal-strong: #db3e69;
-    --personal-soft: rgba(238, 82, 122, 0.13);
-    --header-accent: #bd43ae;
-    --header-icon: #752e9b;
-    --header-accent-shadow: rgba(189, 67, 174, 0.24);
+    --bg: #eef7e8;
+    --surface: #fffdf5;
+    --surface-raised: #fffdf9;
+    --surface-soft: #e5f0dd;
+    --grid: #c7d5bf;
+    --grid-soft: #dce8d5;
+    --text: #1b3045;
+    --muted: #5c6a59;
+    --muted-strong: #3c4f49;
+    --work: #287444;
+    --work-strong: #205c38;
+    --work-soft: rgba(40, 116, 68, 0.11);
+    --personal: #813378;
+    --personal-strong: #60235f;
+    --personal-soft: rgba(129, 51, 120, 0.1);
+    --header-accent: #287444;
+    --header-icon: #813378;
+    --header-accent-shadow: rgba(40, 116, 68, 0.2);
     --shift-early-ink: #945a00;
     --shift-early-bg: #fff1bd;
     --shift-late-ink: #096277;
@@ -3980,7 +3980,7 @@ textarea:focus-visible {
     --remark-dot: #e8940d;
     --selected-pulse: #a74ed1;
     --danger: #c92f54;
-    --shadow: 0 24px 64px rgba(87, 38, 78, 0.2);
+    --shadow: 0 24px 64px rgba(32, 92, 56, 0.16);
     color-scheme: light;
   }
 
@@ -3990,9 +3990,9 @@ textarea:focus-visible {
 
   .calendar-app {
     background:
-      radial-gradient(circle at 10% 4%, color-mix(in srgb, #f15b9c 17%, transparent), transparent 18rem),
-      radial-gradient(circle at 94% 20%, color-mix(in srgb, #a966dc 17%, transparent), transparent 22rem),
-      radial-gradient(circle at 45% 108%, color-mix(in srgb, #ff8aad 12%, transparent), transparent 26rem),
+      radial-gradient(circle at 10% 4%, color-mix(in srgb, #6fb574 16%, transparent), transparent 18rem),
+      radial-gradient(circle at 94% 20%, color-mix(in srgb, #813378 9%, transparent), transparent 22rem),
+      radial-gradient(circle at 45% 108%, color-mix(in srgb, #d9ad70 8%, transparent), transparent 26rem),
       var(--bg);
   }
 
@@ -4002,8 +4002,8 @@ textarea:focus-visible {
     border: 1px solid color-mix(in srgb, var(--header-accent) 46%, var(--grid));
     border-radius: 29px;
     background:
-      radial-gradient(circle at 14% 5%, color-mix(in srgb, #ff75aa 18%, transparent), transparent 11rem),
-      radial-gradient(circle at 90% 100%, color-mix(in srgb, #ac65df 18%, transparent), transparent 13rem),
+      radial-gradient(circle at 14% 5%, color-mix(in srgb, #9acf94 17%, transparent), transparent 11rem),
+      radial-gradient(circle at 90% 100%, color-mix(in srgb, #d7a8d8 11%, transparent), transparent 13rem),
       color-mix(in srgb, var(--surface) 94%, transparent);
     box-shadow:
       0 18px 42px color-mix(in srgb, var(--header-accent) 16%, transparent),
@@ -4012,8 +4012,8 @@ textarea:focus-visible {
 
   .topbar::before,
   .topbar::after {
-    border-color: color-mix(in srgb, #e391ff 48%, transparent);
-    opacity: 0.52;
+    border-color: color-mix(in srgb, var(--header-accent) 46%, transparent);
+    opacity: 0.38;
   }
 
   .month-title {
@@ -4037,8 +4037,8 @@ textarea:focus-visible {
   }
 
   .calendar-switcher button.active {
-    background: linear-gradient(135deg, #ef5aa0, #a448cf);
-    box-shadow: 0 7px 20px rgba(198, 61, 161, 0.38);
+    background: linear-gradient(135deg, #287444, #205c38);
+    box-shadow: 0 7px 20px rgba(32, 92, 56, 0.3);
   }
 
   .month-swipe-panel > .month-card {
@@ -4046,8 +4046,8 @@ textarea:focus-visible {
     border-radius: 23px;
     background-color: var(--surface);
     background-image:
-      radial-gradient(circle at 100% 0, color-mix(in srgb, #e28cff 10%, transparent), transparent 13rem),
-      radial-gradient(circle at 0 100%, color-mix(in srgb, #ff70a7 8%, transparent), transparent 15rem);
+      radial-gradient(circle at 100% 0, color-mix(in srgb, #d7a8d8 9%, transparent), transparent 13rem),
+      radial-gradient(circle at 0 100%, color-mix(in srgb, #9acf94 10%, transparent), transparent 15rem);
     box-shadow:
       0 17px 38px color-mix(in srgb, var(--header-accent) 13%, transparent),
       inset 0 1px 0 color-mix(in srgb, #ffffff 9%, transparent);
@@ -4076,13 +4076,13 @@ textarea:focus-visible {
 
   .summary-mobile.monthly-shift-summary {
     background:
-      radial-gradient(circle at 94% 7%, color-mix(in srgb, #ba6de1 15%, transparent), transparent 12rem),
+      radial-gradient(circle at 94% 7%, color-mix(in srgb, #d7a8d8 13%, transparent), transparent 12rem),
       var(--surface);
   }
 
   .salary-received-panel.summary-mobile {
     background:
-      radial-gradient(circle at 94% 5%, color-mix(in srgb, #ff669f 16%, transparent), transparent 12rem),
+      radial-gradient(circle at 94% 5%, color-mix(in srgb, #9acf94 16%, transparent), transparent 12rem),
       var(--surface);
   }
 
@@ -4109,9 +4109,9 @@ textarea:focus-visible {
 
   .summary-mobile .monthly-salary-card {
     padding: 14px;
-    border: 1px solid color-mix(in srgb, var(--work) 32%, var(--grid));
+    border: 1px solid color-mix(in srgb, #d9ad70 28%, var(--grid));
     border-radius: 17px;
-    background: linear-gradient(135deg, color-mix(in srgb, var(--work-soft) 80%, var(--surface-soft)), var(--surface-soft));
+    background: linear-gradient(135deg, color-mix(in srgb, #d9ad70 14%, var(--surface)), var(--surface-soft));
   }
 
   .salary-received-input,
@@ -4138,8 +4138,8 @@ textarea:focus-visible {
     border-color: color-mix(in srgb, var(--header-accent) 34%, var(--grid));
     background-color: var(--surface-raised);
     background-image:
-      radial-gradient(circle at 100% 0, color-mix(in srgb, #d777e7 12%, transparent), transparent 17rem),
-      radial-gradient(circle at 0 100%, color-mix(in srgb, #ff6e9f 9%, transparent), transparent 19rem);
+      radial-gradient(circle at 100% 0, color-mix(in srgb, #d7a8d8 9%, transparent), transparent 17rem),
+      radial-gradient(circle at 0 100%, color-mix(in srgb, #9acf94 9%, transparent), transparent 19rem);
   }
 
   .menu-drawer {
@@ -4160,8 +4160,8 @@ textarea:focus-visible {
   .agenda-add,
   .primary-button,
   .personal-day-add {
-    background: linear-gradient(135deg, #ef5aa0, #a448cf);
-    box-shadow: 0 9px 24px rgba(198, 61, 161, 0.28);
+    background: linear-gradient(135deg, #287444, #205c38);
+    box-shadow: 0 9px 24px rgba(32, 92, 56, 0.24);
   }
 }
 
