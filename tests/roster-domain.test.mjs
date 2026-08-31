@@ -223,6 +223,7 @@ test("infers early, late, and night rest-day overtime", () => {
   assert.equal(inferRosterChoice({ rawCode: "E RD" }).choice, "early-rdot");
   assert.equal(inferRosterChoice({ rawCode: "L-RD" }).choice, "late-rdot");
   assert.equal(inferRosterChoice({ rawCode: "✓ N / RD" }).choice, "night-rdot");
+  assert.equal(inferRosterChoice({ rawCode: "NRD-", times: ["23:00"] }).choice, "night-rdot");
 });
 
 test("infers both variants of every extension from its distinguishing time", () => {
