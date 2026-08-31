@@ -122,6 +122,19 @@ test("recovers IVU's uniquely truncated 03:00 extension marker", () => {
   assert.deepEqual(observations[14].times, ["15:00"], "does not guess other incomplete times");
 });
 
+test("recovers a Night RDOT code truncated after a trailing separator", () => {
+  const observations = parseIvuPlanTextItems(
+    augustFixture(new Map([
+      [28, ["NRD-", "…", "23:00 L3P …", "07:3 … L3P …"]],
+    ])),
+    2026,
+    7,
+  );
+
+  assert.equal(observations[27].rawCode, "NRD");
+  assert.deepEqual(observations[27].times, ["23:00"]);
+});
+
 test("reads leave codes and prefers leave over a secondary planned duty", () => {
   const observations = parseIvuPlanTextItems(
     augustFixture(new Map([

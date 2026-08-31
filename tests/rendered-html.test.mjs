@@ -368,7 +368,7 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   assert.match(pikaMobileTheme, /\.summary-mobile\.monthly-shift-summary\s*\{[^}]*#d7a8d8/s);
   assert.match(pikaMobileTheme, /\.salary-received-panel\.summary-mobile\s*\{[^}]*#9acf94/s);
   assert.match(pikaMobileTheme, /\.agenda-add,[\s\S]*?\.primary-button,[\s\S]*?\.personal-day-add\s*\{[^}]*linear-gradient\(135deg, #287444, #205c38\)/s);
-  assert.match(serviceWorker, /my-calendar-v55/);
+  assert.match(serviceWorker, /my-calendar-v56/);
   assert.match(serviceWorker, /includeUncontrolled: true/);
   assert.match(serviceWorker, /try[\s\S]*?await client\.navigate\(client\.url\);[\s\S]*?catch/);
   assert.match(serviceWorker, /client\.navigate\(client\.url\)/);
