@@ -188,7 +188,8 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   assert.match(source, /summary-mobile/);
   assert.match(source, /summary-desktop/);
   assert.match(source, /swipePanels\.map\(\(panel\) =>[\s\S]*?className="month-swipe-panel"[\s\S]*?className="month-card"[\s\S]*?className="summary-mobile"[\s\S]*?summary=\{panel\.summary\}/s);
-  assert.match(styles, /\.month-swipe-panel > \.summary-mobile\s*\{[^}]*width:\s*100%;[^}]*max-width:\s*none;[^}]*margin:\s*0 0 calc\(24px \+ env\(safe-area-inset-bottom\)\);/s);
+  assert.match(styles, /\.month-swipe-panel > \.summary-mobile\s*\{[^}]*width:\s*100%;[^}]*max-width:\s*none;[^}]*margin:\s*0;/s);
+  assert.match(styles, /\.month-swipe-panel > \.summary-mobile:last-child\s*\{[^}]*margin-bottom:\s*calc\(24px \+ env\(safe-area-inset-bottom\)\);/s);
   assert.match(styles, /\.monthly-shift-summary/);
   assert.match(styles, /\.main-content\s*\{[^}]*display: block;[^}]*overflow: visible;/s);
   assert.match(styles, /@media \(min-width: 900px\)[\s\S]*?\.main-content\s*\{[^}]*display: grid;/);
@@ -368,7 +369,7 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   assert.match(pikaMobileTheme, /\.summary-mobile\.monthly-shift-summary\s*\{[^}]*#d7a8d8/s);
   assert.match(pikaMobileTheme, /\.salary-received-panel\.summary-mobile\s*\{[^}]*#9acf94/s);
   assert.match(pikaMobileTheme, /\.agenda-add,[\s\S]*?\.primary-button,[\s\S]*?\.personal-day-add\s*\{[^}]*linear-gradient\(135deg, #287444, #205c38\)/s);
-  assert.match(serviceWorker, /my-calendar-v56/);
+  assert.match(serviceWorker, /my-calendar-v57/);
   assert.match(serviceWorker, /includeUncontrolled: true/);
   assert.match(serviceWorker, /try[\s\S]*?await client\.navigate\(client\.url\);[\s\S]*?catch/);
   assert.match(serviceWorker, /client\.navigate\(client\.url\)/);

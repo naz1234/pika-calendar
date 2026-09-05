@@ -3774,7 +3774,12 @@ textarea:focus-visible {
   .month-swipe-panel > .summary-mobile {
     width: 100%;
     max-width: none;
-    margin: 0 0 calc(24px + env(safe-area-inset-bottom));
+    margin: 0;
+  }
+
+  /* Reserve bottom clearance only after the final card, not between cards. */
+  .month-swipe-panel > .summary-mobile:last-child {
+    margin-bottom: calc(24px + env(safe-area-inset-bottom));
   }
 
   .month-swipe-panel > .personal-day-details {
