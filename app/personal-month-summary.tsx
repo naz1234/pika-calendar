@@ -19,8 +19,9 @@ const STORAGE_KEY = "daymark-calendar-v1";
 
 function isValidDate(value: string) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
-  const date = new Date(`${value}T00:00:00`);
-  return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
+  const [year, month, day] = value.split("-").map(Number);
+  const date = new Date(year, month - 1, day);
+  return date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day;
 }
 
 function parseEvents() {
@@ -53,10 +54,11 @@ function overlapsMonth(event: PersonalEvent, monthKey: string) {
 }
 
 function formatDay(value: string) {
+  const [year, month, day] = value.split("-").map(Number);
   return new Intl.DateTimeFormat("en", {
     weekday: "short",
     day: "numeric",
-  }).format(new Date(`${value}T00:00:00`));
+  }).format(new Date(year, month - 1, day));
 }
 
 function formatTime(value: string) {
@@ -75,6 +77,11 @@ function eventTime(event: PersonalEvent) {
   return `${formatTime(event.startTime)}${end}${event.endsNextDay ? " (+1 day)" : ""}`;
 }
 
+function sameEvents(a: PersonalEvent[], b: PersonalEvent[]) {
+  if (a.length !== b.length) return false;
+  return a.every((event, index) => JSON.stringify(event) === JSON.stringify(b[index]));
+}
+
 export function PersonalMonthSummary() {
   const [target, setTarget] = useState<HTMLElement | null>(null);
   const [monthKey, setMonthKey] = useState("");
@@ -84,14 +91,17 @@ export function PersonalMonthSummary() {
     const refresh = () => {
       const details = document.querySelector<HTMLElement>(".personal-day-details");
       const monthInput = document.querySelector<HTMLInputElement>(".month-title-input");
-      setTarget(details);
-      setMonthKey(monthInput?.value ?? "");
-      setEvents(parseEvents());
+      const nextMonth = monthInput?.value ?? "";
+      const nextEvents = parseEvents();
+
+      setTarget((current) => (current === details ? current : details));
+      setMonthKey((current) => (current === nextMonth ? current : nextMonth));
+      setEvents((current) => (sameEvents(current, nextEvents) ? current : nextEvents));
     };
 
     refresh();
     const observer = new MutationObserver(refresh);
-    observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["value", "class"] });
+    observer.observe(document.body, { childList: true, subtree: true });
     const timer = window.setInterval(refresh, 1000);
     return () => {
       observer.disconnect();
@@ -118,6 +128,8 @@ export function PersonalMonthSummary() {
 
   if (!target || !monthKey) return null;
 
+  const [year, month] = monthKey.split("-").map(Number);
+
   return createPortal(
     <section
       aria-label={`Personal summary for ${monthKey}`}
@@ -136,7 +148,7 @@ export function PersonalMonthSummary() {
             Personal summary
           </p>
           <h3 style={{ margin: "5px 0 0", fontSize: 24, lineHeight: 1.15, color: "#203449" }}>
-            {new Intl.DateTimeFormat("en", { month: "long", year: "numeric" }).format(new Date(`${monthKey}-01T00:00:00`))}
+            {new Intl.DateTimeFormat("en", { month: "long", year: "numeric" }).format(new Date(year, month - 1, 1))}
           </h3>
         </div>
         <span style={{ flexShrink: 0, padding: "7px 10px", borderRadius: 999, background: "#e2f0df", color: "#2d6849", fontSize: 12, fontWeight: 800 }}>
