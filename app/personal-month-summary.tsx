@@ -134,42 +134,42 @@ export function PersonalMonthSummary() {
     <section
       aria-label={`Personal summary for ${monthKey}`}
       style={{
-        marginTop: 16,
-        padding: "15px 15px 17px",
+        marginTop: 12,
+        padding: "12px 12px 13px",
         border: "1px solid rgba(47, 111, 78, 0.28)",
-        borderRadius: 19,
+        borderRadius: 16,
         background: "linear-gradient(145deg, rgba(247, 250, 239, 0.98), rgba(241, 247, 232, 0.94))",
-        boxShadow: "0 10px 24px rgba(32, 63, 45, 0.07)",
+        boxShadow: "0 8px 18px rgba(32, 63, 45, 0.06)",
       }}
     >
-      <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 10, marginBottom: 12 }}>
+      <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 8, marginBottom: 9 }}>
         <div>
-          <p style={{ margin: 0, fontSize: 11, fontWeight: 800, letterSpacing: "0.16em", textTransform: "uppercase", color: "#34704d" }}>
+          <p style={{ margin: 0, fontSize: 10, fontWeight: 800, letterSpacing: "0.16em", textTransform: "uppercase", color: "#34704d" }}>
             Personal summary
           </p>
-          <h3 style={{ margin: "4px 0 0", fontSize: 22, lineHeight: 1.15, color: "#203449" }}>
+          <h3 style={{ margin: "3px 0 0", fontSize: 20, lineHeight: 1.15, color: "#203449" }}>
             {new Intl.DateTimeFormat("en", { month: "long", year: "numeric" }).format(new Date(year, month - 1, 1))}
           </h3>
         </div>
-        <span style={{ flexShrink: 0, padding: "6px 9px", borderRadius: 999, background: "#e2f0df", color: "#2d6849", fontSize: 11, fontWeight: 800 }}>
+        <span style={{ flexShrink: 0, padding: "5px 8px", borderRadius: 999, background: "#e2f0df", color: "#2d6849", fontSize: 10, fontWeight: 800 }}>
           {monthEvents.length} {monthEvents.length === 1 ? "event" : "events"}
         </span>
       </div>
 
       {grouped.length === 0 ? (
-        <div style={{ padding: "15px 14px", borderRadius: 15, background: "rgba(255,255,255,0.62)", color: "#6d786f", fontSize: 14 }}>
+        <div style={{ padding: "11px 12px", borderRadius: 13, background: "rgba(255,255,255,0.62)", color: "#6d786f", fontSize: 13 }}>
           No Personal events this month.
         </div>
       ) : (
-        <div style={{ display: "grid", gap: 10 }}>
+        <div style={{ display: "grid", gap: 7 }}>
           {grouped.map(([date, dayEvents]) => (
-            <div key={date} style={{ display: "grid", gridTemplateColumns: "76px 1fr", gap: 12, alignItems: "start", minHeight: 62, padding: "14px 14px", borderRadius: 17, background: "rgba(255,255,255,0.72)", border: "1px solid rgba(69, 100, 77, 0.12)" }}>
-              <strong style={{ color: "#63706a", fontSize: 13, paddingTop: 2 }}>{formatDay(date)}</strong>
-              <div style={{ display: "grid", gap: 8 }}>
+            <div key={date} style={{ display: "grid", gridTemplateColumns: "64px 1fr", gap: 9, alignItems: "start", minHeight: 50, padding: "10px 11px", borderRadius: 14, background: "rgba(255,255,255,0.72)", border: "1px solid rgba(69, 100, 77, 0.12)" }}>
+              <strong style={{ color: "#63706a", fontSize: 12, paddingTop: 1 }}>{formatDay(date)}</strong>
+              <div style={{ display: "grid", gap: 5 }}>
                 {dayEvents.map((event) => (
                   <div key={event.id} style={{ minWidth: 0 }}>
-                    <div style={{ color: "#203449", fontSize: 15, fontWeight: 750, lineHeight: 1.3, overflowWrap: "anywhere" }}>{event.title}</div>
-                    <div style={{ marginTop: 3, color: "#718078", fontSize: 12 }}>{eventTime(event)}</div>
+                    <div style={{ color: "#203449", fontSize: 14, fontWeight: 750, lineHeight: 1.25, overflowWrap: "anywhere" }}>{event.title}</div>
+                    <div style={{ marginTop: 2, color: "#718078", fontSize: 11 }}>{eventTime(event)}</div>
                   </div>
                 ))}
               </div>
