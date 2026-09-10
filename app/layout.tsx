@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { PersonalMonthSummary } from "./personal-month-summary";
 
 const metadataBase = new URL(
   process.env.CF_PAGES_URL ?? process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
@@ -48,7 +49,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" data-theme="dark" suppressHydrationWarning>
-      <body>{children}</body>
+      <body>
+        {children}
+        <PersonalMonthSummary />
+      </body>
     </html>
   );
 }
