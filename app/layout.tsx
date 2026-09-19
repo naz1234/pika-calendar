@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import "./personal-checklist.css";
 import { PersonalMonthSummary } from "./personal-month-summary";
 
 const metadataBase = new URL(

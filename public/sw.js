@@ -1,5 +1,5 @@
 const CACHE_PREFIX = "my-calendar-v";
-const CACHE_NAME = "my-calendar-v57";
+const CACHE_NAME = "my-calendar-v58";
 const APP_SHELL = [
   "/manifest.webmanifest",
   "/icons/pika-calendar-192.png",
