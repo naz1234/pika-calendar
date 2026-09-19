@@ -200,3 +200,21 @@ test("storage failures and failed server reads do not falsely report saving", as
   await b.sync.refresh("2026-09");
   assert.equal(b.entry().status, "synced");
 });
+
+test("default transport calls browser fetch without binding it to the sync client", async (t) => {
+  const request = transport(database(t));
+  const previousFetch = globalThis.fetch;
+  globalThis.fetch = function (...args) {
+    assert.equal(this, undefined, "Browser fetch rejects a class instance as its receiver");
+    return request(...args);
+  };
+  try {
+    let entry;
+    const sync = new PersonalChecklistSync(storage(), (entries) => { entry = entries["2026-09"]; });
+    await sync.change("2026-09", create(task("a")));
+    assert.equal(entry.status, "synced");
+    assert.equal(entry.pending.length, 0);
+  } finally {
+    globalThis.fetch = previousFetch;
+  }
+});

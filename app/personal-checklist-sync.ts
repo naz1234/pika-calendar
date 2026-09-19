@@ -19,7 +19,7 @@ export class PersonalChecklistSync {
   constructor(
     private storage: Storage | undefined,
     private notify: (entries: Record<string, ChecklistEntry>) => void,
-    private request: typeof fetch = fetch,
+    private request: typeof fetch = (input, init) => fetch(input, init),
   ) {
     try {
       for (let index = 0; index < (storage?.length ?? 0); index++) {
