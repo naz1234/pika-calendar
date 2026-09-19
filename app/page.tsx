@@ -16,6 +16,8 @@ import { flushSync } from "react-dom";
 import { SalaryReceivedPanel } from "./salary-received-panel";
 import { salaryPayMonth } from "./salary-receipts";
 import { useSalaryReceipts } from "./use-salary-receipts";
+import { PersonalChecklistPanel } from "./personal-checklist-panel";
+import { usePersonalChecklist } from "./use-personal-checklist";
 import {
   SHARED_SYNC_SECRET,
   SyncConflictError,
@@ -374,6 +376,7 @@ export default function Home() {
   const [view, setView] = useState({ year: now.getFullYear(), month: now.getMonth() });
   const workMonth = `${view.year}-${pad(view.month + 1)}`;
   const salaryReceipts = useSalaryReceipts(workMonth);
+  const personalChecklist = usePersonalChecklist(workMonth);
   const [selectedDate, setSelectedDate] = useState(todayKey);
   const [activeCalendar, setActiveCalendar] = useState<CalendarKind>("work");
   const [theme, setTheme] = useState<Theme>("dark");
@@ -1560,6 +1563,7 @@ export default function Home() {
   function handlePointerDown(event: PointerEvent<HTMLDivElement>) {
     if (!event.isPrimary || event.button !== 0 || monthSwipeTimer.current !== null) return;
     if (event.target instanceof Element && event.target.closest(".salary-received-panel")) return;
+    if (event.target instanceof Element && event.target.closest(".personal-checklist")) return;
     pointerStart.current = {
       pointerId: event.pointerId,
       startX: event.clientX,
@@ -1940,6 +1944,16 @@ export default function Home() {
                     onToggleVisibility={() => setSalaryAmountsVisible((visible) => !visible)}
                     onSave={salaryReceipts.save}
                     onBlur={salaryReceipts.flush}
+                  />
+                )}
+
+                {activeCalendar === "personal" && panel.offset === 0 && (
+                  <PersonalChecklistPanel
+                    key={workMonth}
+                    month={workMonth}
+                    monthLabel={monthLabel}
+                    entry={personalChecklist.entry}
+                    onChange={personalChecklist.change}
                   />
                 )}
 

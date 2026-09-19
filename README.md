@@ -5,6 +5,7 @@ A mobile-first shared calendar with separate **Work** and **Personal** modes. It
 ## Included
 
 - Work and Personal calendar modes
+- Monthly Personal checklist with House, Kids / School, Personal, and Other groups, notes, completion filters, and undo delete
 - Sunday-first month grid with week numbers
 - Work-roster screenshot or IVU.plan PDF import with an editable review before saving
 - Automatic Early, Late, Night, RD, extension `(EX)`, and RDOT mapping
@@ -31,6 +32,12 @@ Events are cached in the browser so the calendar keeps working offline. With the
 Anyone with the site URL can view, add, edit, or delete every Work and Personal event, and can download, rename, or delete shared roster originals. There is no login or per-user calendar. Use this mode only when that public access is acceptable.
 
 Received salary records use the same public sharing model: **anyone with the site URL can view or change them**. The eye buttons hide amounts on screen only; they are not access control.
+
+## Use the Personal checklist
+
+Switch to **Personal** and scroll below the calendar to the checklist for the displayed month. Use **Add task** to choose a category, enter a task, and optionally add a note. Tick the circle to mark a task Done, tap the pencil to edit, or delete and use **Undo** to restore it. All, Pending, and Done filters include category completion counts. Change the calendar month to open another month's list.
+
+Checklist tasks use the same public shared access as calendar events. They save automatically in separate monthly rows in the existing D1 `calendars` table; no new binding or migration is needed. Offline changes are kept on the device and retried when you reconnect or reopen the app. Changes to different tasks or fields are merged; when the same field changes on multiple devices, the last successful save wins. Deleted tasks stay deleted when a stale device syncs, unless restored with Undo. Wait for **Saved online** before switching devices. Calendar event backups and event deletion do not include checklist tasks.
 
 ## Record received salary
 
