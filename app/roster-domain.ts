@@ -455,17 +455,30 @@ export function inferRosterChoice({
   }
 
   const code = normalizeRosterCode(rawCode);
+  const extractedTimes = normalizedInputTimes(rawCode, times);
   if (code === "WR" || code === "RD") return { choice: "rd", warning: "" };
   if (code === "AL") return { choice: "al", warning: "" };
   if (code === "SL") return { choice: "sl", warning: "" };
   if (code === "E3-DC") return { choice: "early", warning: "" };
   if (code === "L3-DC") return { choice: "late", warning: "" };
-  if (code === "N3-DC") return { choice: "night", warning: "" };
+  if (code === "N3-DC") {
+    // IVU.plan can retain the base N3-DC code when the actual duty is an
+    // extended Night. In that case, the displayed hours are authoritative.
+    if (
+      extractedTimes.has("19:00") &&
+      (extractedTimes.has("07:00") || extractedTimes.has("07:30"))
+    ) {
+      return { choice: "night-ex-start", warning: "" };
+    }
+    if (extractedTimes.has("23:00") && extractedTimes.has("11:00")) {
+      return { choice: "night-ex-finish", warning: "" };
+    }
+    return { choice: "night", warning: "" };
+  }
   if (code === "E RD") return { choice: "early-rdot", warning: "" };
   if (code === "L RD") return { choice: "late-rdot", warning: "" };
   if (code === "N RD") return { choice: "night-rdot", warning: "" };
 
-  const extractedTimes = normalizedInputTimes(rawCode, times);
   if (code === "E EX") return inferExtension("early", extractedTimes);
   if (code === "L EX") return inferExtension("late", extractedTimes);
   if (code === "N EX") return inferExtension("night", extractedTimes);
