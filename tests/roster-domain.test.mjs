@@ -219,6 +219,28 @@ test("infers rest days and normal early, late, and night shifts", () => {
   );
 });
 
+test("uses IVU duty hours when N3-DC represents an extended Night", () => {
+  assert.deepEqual(
+    inferRosterChoice({ rawCode: "N3-DC", times: ["19:00", "07:00"] }),
+    { choice: "night-ex-start", warning: "" },
+    "recognizes the October 9 schedule exported by IVU.plan",
+  );
+  assert.deepEqual(
+    inferRosterChoice({ rawCode: "N3-DC", times: ["19:00", "07:30"] }),
+    { choice: "night-ex-start", warning: "" },
+    "supports older extended-Night end times",
+  );
+  assert.deepEqual(
+    inferRosterChoice({ rawCode: "N3-DC", times: ["23:00", "11:00"] }),
+    { choice: "night-ex-finish", warning: "" },
+  );
+  assert.deepEqual(
+    inferRosterChoice({ rawCode: "N3-DC", times: ["23:00", "07:30"] }),
+    { choice: "night", warning: "" },
+    "keeps ordinary Night duties unchanged",
+  );
+});
+
 test("infers early, late, and night rest-day overtime", () => {
   assert.equal(inferRosterChoice({ rawCode: "E RD" }).choice, "early-rdot");
   assert.equal(inferRosterChoice({ rawCode: "L-RD" }).choice, "late-rdot");
