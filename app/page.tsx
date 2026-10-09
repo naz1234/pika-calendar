@@ -386,9 +386,9 @@ export default function Home() {
   const [salaryWithLaundryInput, setSalaryWithLaundryInput] = useState(String(DEFAULT_SALARY_WITH_LAUNDRY));
   const [salaryCalculatorOpen, setSalaryCalculatorOpen] = useState(false);
   const [calculatorSalaryInput, setCalculatorSalaryInput] = useState(String(DEFAULT_SALARY_WITH_LAUNDRY));
-  const [calculatorNightShiftDaysInput, setCalculatorNightShiftDaysInput] = useState("0");
-  const [calculatorExtensionDaysInput, setCalculatorExtensionDaysInput] = useState("0");
-  const [calculatorRdotDaysInput, setCalculatorRdotDaysInput] = useState("0");
+  const [calculatorNightShiftDaysInput, setCalculatorNightShiftDaysInput] = useState("");
+  const [calculatorExtensionDaysInput, setCalculatorExtensionDaysInput] = useState("");
+  const [calculatorRdotDaysInput, setCalculatorRdotDaysInput] = useState("");
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [hydrated, setHydrated] = useState(false);
   const [syncStatus, setSyncStatus] = useState<SyncStatus>("connecting");
