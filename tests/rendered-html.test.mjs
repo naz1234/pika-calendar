@@ -234,6 +234,10 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   assert.match(calculatorTriggerMarkup, /<svg[\s\S]*?<\/svg>[\s\S]*?Calculator/);
   assert.match(source, /className="dialog salary-calculator-dialog"/);
   assert.match(source, /aria-label="Calculator salary plus laundry"/);
+  assert.match(source, /placeholder="Basic \+ 100 laundry"/);
+  assert.match(source, /calculatorSalaryInput, setCalculatorSalaryInput\] = useState\(""\)/);
+  assert.match(source, /aria-label="Amount received \(SAR\)"/);
+  assert.match(source, /compareSalary\(calculatorReceivedCents, Math\.round\(manualSalaryEstimate\.expectedSalary \* 100\)\)/);
   assert.match(source, /aria-label="Night shift days"/);
   assert.match(source, /aria-label="Extension days"/);
   assert.match(source, /aria-label="RDOT days"/);
@@ -372,7 +376,7 @@ test("ships automatic shared sync, roster import, and installable app assets", a
   assert.match(pikaMobileTheme, /\.summary-mobile\.monthly-shift-summary\s*\{[^}]*#d7a8d8/s);
   assert.match(pikaMobileTheme, /\.salary-received-panel\.summary-mobile\s*\{[^}]*#9acf94/s);
   assert.match(pikaMobileTheme, /\.agenda-add,[\s\S]*?\.primary-button,[\s\S]*?\.personal-day-add\s*\{[^}]*linear-gradient\(135deg, #287444, #205c38\)/s);
-  assert.match(serviceWorker, /my-calendar-v60/);
+  assert.match(serviceWorker, /my-calendar-v61/);
   assert.match(serviceWorker, /includeUncontrolled: true/);
   assert.match(serviceWorker, /try[\s\S]*?await client\.navigate\(client\.url\);[\s\S]*?catch/);
   assert.match(serviceWorker, /client\.navigate\(client\.url\)/);

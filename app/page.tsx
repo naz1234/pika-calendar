@@ -14,7 +14,7 @@ import {
 } from "react";
 import { flushSync } from "react-dom";
 import { SalaryReceivedPanel } from "./salary-received-panel";
-import { salaryPayMonth } from "./salary-receipts";
+import { compareSalary, parseSalaryCents, salaryPayMonth } from "./salary-receipts";
 import { useSalaryReceipts } from "./use-salary-receipts";
 import { PersonalChecklistPanel } from "./personal-checklist-panel";
 import { usePersonalChecklist } from "./use-personal-checklist";
@@ -385,10 +385,11 @@ export default function Home() {
   const [salaryWithLaundry, setSalaryWithLaundry] = useState(DEFAULT_SALARY_WITH_LAUNDRY);
   const [salaryWithLaundryInput, setSalaryWithLaundryInput] = useState(String(DEFAULT_SALARY_WITH_LAUNDRY));
   const [salaryCalculatorOpen, setSalaryCalculatorOpen] = useState(false);
-  const [calculatorSalaryInput, setCalculatorSalaryInput] = useState(String(DEFAULT_SALARY_WITH_LAUNDRY));
+  const [calculatorSalaryInput, setCalculatorSalaryInput] = useState("");
   const [calculatorNightShiftDaysInput, setCalculatorNightShiftDaysInput] = useState("");
   const [calculatorExtensionDaysInput, setCalculatorExtensionDaysInput] = useState("");
   const [calculatorRdotDaysInput, setCalculatorRdotDaysInput] = useState("");
+  const [calculatorReceivedInput, setCalculatorReceivedInput] = useState("");
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [hydrated, setHydrated] = useState(false);
   const [syncStatus, setSyncStatus] = useState<SyncStatus>("connecting");
@@ -590,12 +591,22 @@ export default function Home() {
     () => calculateMonthlyExpectedSalary(events, `${view.year}-${pad(view.month + 1)}`, { salaryWithLaundry }),
     [events, salaryWithLaundry, view.month, view.year],
   );
-  const manualSalaryEstimate = useMemo(() => calculateManualSalaryEstimate({
-    salaryWithLaundry: calculatorSalaryInput.trim() ? Number(calculatorSalaryInput) : 0,
-    nightShiftDays: calculatorNightShiftDaysInput.trim() ? Number(calculatorNightShiftDaysInput) : 0,
-    extensionDays: calculatorExtensionDaysInput.trim() ? Number(calculatorExtensionDaysInput) : 0,
-    rdotDays: calculatorRdotDaysInput.trim() ? Number(calculatorRdotDaysInput) : 0,
-  }), [calculatorExtensionDaysInput, calculatorNightShiftDaysInput, calculatorRdotDaysInput, calculatorSalaryInput]);
+  const calculatorSalaryCents = parseSalaryCents(calculatorSalaryInput);
+  const calculatorReceivedCents = parseSalaryCents(calculatorReceivedInput);
+  const calculatorSalaryInvalid = calculatorSalaryInput.trim() !== "" && calculatorSalaryCents === null;
+  const calculatorReceivedInvalid = calculatorReceivedInput.trim() !== "" && calculatorReceivedCents === null;
+  const manualSalaryEstimate = useMemo(() => {
+    if (calculatorSalaryCents === null) return null;
+    return calculateManualSalaryEstimate({
+      salaryWithLaundry: calculatorSalaryCents / 100,
+      nightShiftDays: Number(calculatorNightShiftDaysInput),
+      extensionDays: Number(calculatorExtensionDaysInput),
+      rdotDays: Number(calculatorRdotDaysInput),
+    });
+  }, [calculatorExtensionDaysInput, calculatorNightShiftDaysInput, calculatorRdotDaysInput, calculatorSalaryCents]);
+  const calculatorComparison = manualSalaryEstimate && calculatorReceivedCents !== null
+    ? compareSalary(calculatorReceivedCents, Math.round(manualSalaryEstimate.expectedSalary * 100))
+    : null;
   const salaryMonthLabel = new Intl.DateTimeFormat("en", {
     month: "long",
     year: "numeric",
@@ -949,7 +960,8 @@ export default function Home() {
   }
 
   function openSalaryCalculator() {
-    setCalculatorSalaryInput(String(salaryWithLaundry));
+    setCalculatorSalaryInput("");
+    setCalculatorReceivedInput("");
     setSalaryCalculatorOpen(true);
   }
 
@@ -2355,23 +2367,29 @@ export default function Home() {
               >×</button>
             </div>
             <p className="salary-calculator-intro">
-              Enter your salary and overtime days to estimate the amount you may receive.
+              Estimate your pay from your salary and shift days, then compare it with what you received.
             </p>
             <div className="salary-calculator-fields">
               <label className="field salary-calculator-salary-field">
                 <span>Salary + laundry</span>
                 <span className="salary-calculator-input">
-                  <b>SAR</b>
+                  <b aria-hidden="true">SAR</b>
                   <input
                     aria-label="Calculator salary plus laundry"
-                    type="number"
+                    aria-invalid={calculatorSalaryInvalid}
+                    aria-describedby={calculatorSalaryInvalid ? "calculator-salary-error" : undefined}
+                    type="text"
                     inputMode="decimal"
-                    min="0"
-                    step="0.01"
+                    autoComplete="off"
+                    maxLength={12}
+                    placeholder="Basic + 100 laundry"
                     value={calculatorSalaryInput}
                     onChange={(event) => setCalculatorSalaryInput(event.target.value)}
                   />
                 </span>
+                {calculatorSalaryInvalid && (
+                  <small id="calculator-salary-error" className="salary-calculator-error">Enter a valid SAR amount with up to 2 decimal places.</small>
+                )}
               </label>
               <label className="field">
                 <span>Night shift days</span>
@@ -2410,23 +2428,56 @@ export default function Home() {
                 />
               </label>
             </div>
+            <label className="field">
+              <span>Amount received</span>
+              <span className="salary-calculator-input">
+                <b aria-hidden="true">SAR</b>
+                <input
+                  aria-label="Amount received (SAR)"
+                  aria-invalid={calculatorReceivedInvalid}
+                  aria-describedby={calculatorReceivedInvalid ? "calculator-received-error" : undefined}
+                  type="text"
+                  inputMode="decimal"
+                  autoComplete="off"
+                  maxLength={12}
+                  placeholder="Optional"
+                  value={calculatorReceivedInput}
+                  onChange={(event) => setCalculatorReceivedInput(event.target.value)}
+                />
+              </span>
+              {calculatorReceivedInvalid && (
+                <small id="calculator-received-error" className="salary-calculator-error">Enter a valid SAR amount with up to 2 decimal places.</small>
+              )}
+            </label>
             <div className="salary-calculator-result" role="status" aria-live="polite">
               <span>Estimated salary</span>
-              <strong>SAR {formatSar(manualSalaryEstimate.expectedSalary)}</strong>
-              <div className="salary-calculator-breakdown">
-                <span>
-                  {manualSalaryEstimate.nightShiftDays} night shift {manualSalaryEstimate.nightShiftDays === 1 ? "day" : "days"}
-                  <b>SAR {formatSar(manualSalaryEstimate.nightAllowance)}</b>
-                </span>
-                <span>
-                  {manualSalaryEstimate.extensionHours.toFixed(1)} Extension hours
-                  <b>SAR {formatSar(manualSalaryEstimate.expectedExtensionOvertime)}</b>
-                </span>
-                <span>
-                  {manualSalaryEstimate.rdotHours.toFixed(1)} RDOT hours
-                  <b>SAR {formatSar(manualSalaryEstimate.expectedRdotOvertime)}</b>
-                </span>
-              </div>
+              {manualSalaryEstimate ? (
+                <>
+                  <strong>SAR {formatSar(manualSalaryEstimate.expectedSalary)}</strong>
+                  <div className="salary-calculator-breakdown">
+                    <span>
+                      {manualSalaryEstimate.nightShiftDays} night shift {manualSalaryEstimate.nightShiftDays === 1 ? "day" : "days"}
+                      <b>SAR {formatSar(manualSalaryEstimate.nightAllowance)}</b>
+                    </span>
+                    <span>
+                      {manualSalaryEstimate.extensionHours.toFixed(1)} Extension hours
+                      <b>SAR {formatSar(manualSalaryEstimate.expectedExtensionOvertime)}</b>
+                    </span>
+                    <span>
+                      {manualSalaryEstimate.rdotHours.toFixed(1)} RDOT hours
+                      <b>SAR {formatSar(manualSalaryEstimate.expectedRdotOvertime)}</b>
+                    </span>
+                  </div>
+                </>
+              ) : <p>Enter your salary including laundry to see the estimate.</p>}
+              {calculatorComparison && (
+                <div className={`salary-comparison salary-comparison-${calculatorComparison.status.toLowerCase()}`}>
+                  <strong>{{ Short: "Short", Exceed: "Extra", Match: "Same" }[calculatorComparison.status]}</strong>
+                  <span>
+                    SAR {formatSar(Math.abs(calculatorComparison.differenceCents) / 100)} {calculatorComparison.status === "Short" ? "below estimate" : calculatorComparison.status === "Exceed" ? "above estimate" : "difference"}
+                  </span>
+                </div>
+              )}
             </div>
             <p className="salary-calculator-note">
               Estimate adds SAR {DEFAULT_NIGHT_ALLOWANCE_RATE} per Night shift day, 3.5 overtime hours per Extension day, and 8.5 hours per RDOT day. The overtime rate excludes the standard SAR 100 laundry allowance.
